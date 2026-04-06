@@ -3,6 +3,7 @@ import { GlobeView } from "./components/globe/GlobeView";
 import { ImpactPanel } from "./components/panel/ImpactPanel";
 import { Sidebar } from "./components/sidebar/Sidebar";
 import { MobileScenarioBar } from "./components/sidebar/MobileScenarioBar";
+import { CutAction } from "./components/globe/CutAction";
 import { DataSourcesPanel } from "./components/shared/DataSourcesPanel";
 import { loadAppData } from "./data/loader";
 import { useStore } from "./state/store";
@@ -48,14 +49,26 @@ export function App() {
 
 	return (
 		<div className="relative h-full w-full bg-bg">
+			{/* Globe fills everything */}
 			<GlobeView />
-			{/* Desktop: full sidebar. Mobile: hidden, replaced by floating scenario chips */}
+
+			{/* Desktop sidebar — hidden on mobile */}
 			<div className="hidden md:block">
 				<Sidebar />
 			</div>
-			{/* Mobile: floating scenario chips at top */}
-			<MobileScenarioBar />
+
+			{/* Mobile scenario chips — hidden on desktop */}
+			<div className="md:hidden">
+				<MobileScenarioBar />
+			</div>
+
+			{/* Floating cut action — appears when cable selected */}
+			<CutAction />
+
+			{/* Impact panel — responsive (right panel desktop, bottom sheet mobile) */}
 			<ImpactPanel />
+
+			{/* Sources link — bottom center */}
 			<DataSourcesPanel />
 		</div>
 	);

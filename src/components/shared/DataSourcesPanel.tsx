@@ -5,19 +5,21 @@ export function DataSourcesPanel() {
 
 	return (
 		<>
-			{/* Positioned bottom-center so it's visible regardless of sidebar/panel state */}
 			<button
 				type="button"
 				onClick={() => setOpen(true)}
 				className="
-					absolute bottom-3 left-1/2 -translate-x-1/2 z-10
+					absolute z-10
 					px-3 py-1.5 rounded-full
 					bg-surface/70 backdrop-blur-sm border border-border/50
 					text-[10px] text-text-secondary hover:text-text-primary
 					uppercase tracking-wider transition-colors
+
+					md:bottom-3 md:left-1/2 md:-translate-x-1/2
+					max-md:bottom-[calc(45dvh+8px)] max-md:right-4 max-md:left-auto
 				"
 			>
-				Sources &amp; Methodology
+				Sources
 			</button>
 
 			{/* Panel overlay */}

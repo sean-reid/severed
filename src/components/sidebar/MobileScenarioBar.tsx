@@ -2,11 +2,6 @@ import { useCallback } from "react";
 import { useStore } from "../../state/store";
 import type { CutLocation, Scenario } from "../../data/types";
 
-/**
- * Mobile-only floating scenario chips.
- * Horizontally scrollable row at the top of the screen.
- * Tap a scenario → instant simulation → bottom sheet shows results.
- */
 export function MobileScenarioBar() {
 	const scenarios = useStore((s) => s.scenarios);
 	const chokepoints = useStore((s) => s.chokepoints);
@@ -41,42 +36,46 @@ export function MobileScenarioBar() {
 	);
 
 	return (
-		<div className="absolute top-0 left-0 right-0 z-20 md:hidden safe-top">
-			<div className="flex gap-2 px-3 pt-3 pb-2 overflow-x-auto scrollbar-none">
-				{/* Reset chip */}
-				{cuts.length > 0 && (
-					<button
-						type="button"
-						onClick={resetCuts}
-						className="
-							flex-none px-4 py-2.5 rounded-full text-xs font-medium
-							bg-cable-cut/20 border border-cable-cut/40 text-cable-cut
-							active:bg-cable-cut/30 transition-colors whitespace-nowrap
-						"
-					>
-						Reset
-					</button>
-				)}
-
-				{/* Scenario chips */}
-				{scenarios.map((scenario) => (
-					<button
-						key={scenario.id}
-						type="button"
-						onClick={() => applyScenario(scenario)}
-						className={`
-							flex-none px-4 py-2.5 rounded-full text-xs font-medium
-							whitespace-nowrap transition-colors
-							${
-								activeScenarioId === scenario.id
-									? "bg-cable-cut/20 border border-cable-cut/50 text-cable-cut"
-									: "bg-surface/90 backdrop-blur-sm border border-border text-text-primary active:bg-border/60"
-							}
-						`}
-					>
-						{scenario.name}
-					</button>
-				))}
+		<div className="absolute top-0 left-0 right-0 z-30 safe-top">
+			{/* Scroll container with fade edges */}
+			<div className="relative">
+				<div className="flex gap-2 px-4 pt-3 pb-2 overflow-x-auto scrollbar-none">
+					{cuts.length > 0 && (
+						<button
+							type="button"
+							onClick={resetCuts}
+							className="
+								flex-none h-11 px-5 rounded-full text-sm font-medium
+								bg-cable-cut/20 border border-cable-cut/40 text-cable-cut
+								active:bg-cable-cut/30 transition-colors whitespace-nowrap
+							"
+						>
+							Reset
+						</button>
+					)}
+					{scenarios.map((scenario) => (
+						<button
+							key={scenario.id}
+							type="button"
+							onClick={() => applyScenario(scenario)}
+							className={`
+								flex-none h-11 px-5 rounded-full text-sm font-medium
+								whitespace-nowrap transition-colors
+								${
+									activeScenarioId === scenario.id
+										? "bg-cable-cut/20 border border-cable-cut/50 text-cable-cut"
+										: "bg-surface/90 backdrop-blur-sm border border-border/70 text-text-primary active:bg-border/50"
+								}
+							`}
+						>
+							{scenario.name}
+						</button>
+					))}
+					{/* End spacer so last chip isn't flush with edge */}
+					<div className="flex-none w-4" />
+				</div>
+				{/* Right fade to hint more content */}
+				<div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-bg/80 to-transparent pointer-events-none" />
 			</div>
 		</div>
 	);

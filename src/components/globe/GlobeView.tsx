@@ -228,22 +228,25 @@ export function GlobeView() {
 
 	return (
 		<>
-			{/* Recenter button — rendered outside the map div so z-index works */}
+			{/* Recenter button — 48px touch target, above bottom sheet on mobile */}
 			<button
 				type="button"
 				onClick={resetView}
 				className="
-					absolute bottom-12 left-3 z-30
-					w-9 h-9 rounded-lg
+					absolute z-30
+					w-12 h-12 rounded-2xl
 					bg-surface/80 backdrop-blur-sm border border-border/50
 					flex items-center justify-center
 					text-text-secondary hover:text-text-primary
 					active:bg-border/50 transition-colors
 					shadow-lg shadow-black/20
+
+					md:bottom-4 md:left-4
+					max-md:bottom-[calc(45dvh+8px)] max-md:left-4
 				"
 				title="Reset map view"
 			>
-				<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+				<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
 					<circle cx="8" cy="8" r="3" />
 					<line x1="8" y1="1" x2="8" y2="3" />
 					<line x1="8" y1="13" x2="8" y2="15" />
