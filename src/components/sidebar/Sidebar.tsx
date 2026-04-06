@@ -1,10 +1,9 @@
 import { useCallback } from "react";
 import { useStore } from "../../state/store";
-import type { CutLocation, Scenario } from "../../data/types";
+import type { CutLocation } from "../../data/types";
 
 export function Sidebar() {
 	const scenarios = useStore((s) => s.scenarios);
-	const chokepoints = useStore((s) => s.chokepoints);
 	const cuts = useStore((s) => s.cuts);
 	const activeScenarioId = useStore((s) => s.activeScenarioId);
 	const selectedCableId = useStore((s) => s.selectedCableId);
@@ -19,47 +18,7 @@ export function Sidebar() {
 
 	const selectedCable = selectedCableId ? cablesById.get(selectedCableId) : null;
 
-	const applyScenario = useCallback(
-		(scenario: Scenario) => {
-			// Reset existing cuts
-			resetCuts();
-
-			// Apply each cut location from the scenario
-			for (const cutLoc of scenario.cutLocations) {
-				if (cutLoc.type === "chokepoint" && cutLoc.id) {
-					const chokepoint = chokepoints.find((c) => c.id === cutLoc.id);
-					if (!chokepoint) continue;
-					// Get center of chokepoint polygon for lat/lng
-					const coords = chokepoint.polygon.coordinates[0];
-					const centerLat =
-						coords.reduce((sum, c) => sum + c[1], 0) / coords.length;
-					const centerLng =
-						coords.reduce((sum, c) => sum + c[0], 0) / coords.length;
-
-					const cut: CutLocation = {
-						id: `scenario-${scenario.id}-${cutLoc.id}`,
-						type: "chokepoint",
-						lat: centerLat,
-						lng: centerLng,
-						chokepointId: cutLoc.id,
-						affectedSegmentIds: [],
-					};
-					addCut(cut);
-				} else if (cutLoc.type === "point" && cutLoc.lat != null && cutLoc.lng != null) {
-					const cut: CutLocation = {
-						id: `scenario-${scenario.id}-point-${cutLoc.lat}-${cutLoc.lng}`,
-						type: "point",
-						lat: cutLoc.lat,
-						lng: cutLoc.lng,
-						radius: 150,
-						affectedSegmentIds: [],
-					};
-					addCut(cut);
-				}
-			}
-		},
-		[chokepoints, addCut, resetCuts],
-	);
+	const storeApplyScenario = useStore((s) => s.applyScenario);
 
 	const cutSelectedCable = useCallback(() => {
 		if (!selectedCable) return;
@@ -192,23 +151,30 @@ export function Sidebar() {
 						Scenarios
 					</div>
 					<div className="flex flex-col gap-1.5">
-						{scenarios.map((scenario) => (
-							<button
-								key={scenario.id}
-								type="button"
-								onClick={() => applyScenario(scenario)}
-								className={`
-									text-left px-3 py-2 rounded-lg border transition-colors text-xs
-									${
-										activeScenarioId === scenario.id
-											? "border-cable-cut/60 bg-cable-cut/10 text-cable-cut font-semibold"
+						{scenarios.map((scenario) => {
+							const isActive = activeScenarioId === scenario.id;
+							return (
+								<button
+									key={scenario.id}
+									type="button"
+									onClick={() => storeApplyScenario(scenario.id)}
+									className={`
+										text-left px-3 py-2 rounded-lg border transition-colors text-xs
+										${isActive
+											? "border-cable-cut bg-cable-cut/15 text-cable-cut font-semibold"
 											: "border-border/50 text-text-primary hover:bg-border/30"
-									}
-								`}
-							>
-								{scenario.name}
-							</button>
-						))}
+										}
+									`}
+								>
+									<div className="flex items-center gap-2">
+										{isActive && (
+											<span className="w-1.5 h-1.5 rounded-full bg-cable-cut flex-none" />
+										)}
+										{scenario.name}
+									</div>
+								</button>
+							);
+						})}
 					</div>
 
 					{/* Panel toggle */}

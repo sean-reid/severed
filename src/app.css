@@ -51,3 +51,10 @@ body {
 .safe-bottom {
 	padding-bottom: env(safe-area-inset-bottom);
 }
+
+/* Mobile: draggable sheet height via CSS var. */
+@media (max-width: 767px) {
+	.impact-sheet {
+		height: var(--sheet-h, 45dvh);
+	}
+}

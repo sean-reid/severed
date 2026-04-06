@@ -1253,10 +1253,12 @@ function main() {
     if (nearestId) {
       // Merge: create alias from synthetic ID to real metro
       metroAliases.set(id, nearestId);
-      // Also mark the real metro as a hub if the synthetic is a hub
-      if (MANUAL_HUB_IDS.has(id)) {
-        const realMetro = metros.find((m) => m.id === nearestId);
-        if (realMetro) realMetro.isHub = true;
+      const realMetro = metros.find((m) => m.id === nearestId);
+      if (realMetro) {
+        // Use the well-known city name instead of the obscure landing station name
+        // e.g., "Pevensey Bay" becomes "London", "Cayeux-sur-Mer" becomes "Paris"
+        realMetro.name = info.name;
+        if (MANUAL_HUB_IDS.has(id)) realMetro.isHub = true;
       }
     } else {
       // No nearby metro — add as standalone

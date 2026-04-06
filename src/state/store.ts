@@ -128,8 +128,41 @@ export const useStore = create<StoreState>((set) => ({
 		set((s) => {
 			const scenario = s.scenarios.find((sc) => sc.id === scenarioId);
 			if (!scenario) return s;
-			// Scenarios set cuts via the engine — we just mark the active scenario
-			return { activeScenarioId: scenarioId };
+
+			const newCuts: CutLocation[] = [];
+			for (const cutLoc of scenario.cutLocations) {
+				if (cutLoc.type === "chokepoint" && cutLoc.id) {
+					const chokepoint = s.chokepoints.find((c) => c.id === cutLoc.id);
+					if (!chokepoint) continue;
+					const coords = chokepoint.polygon.coordinates[0];
+					const centerLat = coords.reduce((sum, c) => sum + c[1], 0) / coords.length;
+					const centerLng = coords.reduce((sum, c) => sum + c[0], 0) / coords.length;
+					newCuts.push({
+						id: `scenario-${scenarioId}-${cutLoc.id}`,
+						type: "chokepoint",
+						lat: centerLat,
+						lng: centerLng,
+						chokepointId: cutLoc.id,
+						affectedSegmentIds: [],
+					});
+				} else if (cutLoc.type === "point" && cutLoc.lat != null && cutLoc.lng != null) {
+					newCuts.push({
+						id: `scenario-${scenarioId}-point-${cutLoc.lat}-${cutLoc.lng}`,
+						type: "point",
+						lat: cutLoc.lat,
+						lng: cutLoc.lng,
+						radius: 150,
+						affectedSegmentIds: [],
+					});
+				}
+			}
+
+			return {
+				cuts: newCuts,
+				activeScenarioId: scenarioId,
+				simulation: null,
+				selectedCableId: null,
+			};
 		}),
 
 	resetCuts: () =>

@@ -48,34 +48,6 @@ export function ImpactPanel() {
 		[metrosById, selectMetro, flyToLocation],
 	);
 
-	// ── Closed state: show reopen button ──
-
-	if (!panelOpen) {
-		return (
-			<button
-				type="button"
-				onClick={togglePanel}
-				className="
-					absolute right-3 top-3 z-20
-					w-12 h-12 rounded-2xl bg-surface/95 backdrop-blur-sm
-					border border-border flex items-center justify-center
-					text-text-secondary hover:text-text-primary active:bg-border/60
-					transition-colors shadow-lg shadow-black/30
-					md:top-3
-					max-md:top-auto max-md:bottom-20 max-md:right-4
-				"
-				title="Show impact panel"
-			>
-				<svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-					<rect x="3" y="3" width="12" height="12" rx="2" />
-					<line x1="7" y1="7" x2="7" y2="11" />
-					<line x1="9" y1="9" x2="9" y2="11" />
-					<line x1="11" y1="5" x2="11" y2="11" />
-				</svg>
-			</button>
-		);
-	}
-
 	// ── Data ──
 
 	const hasCuts = cuts.length > 0;
@@ -120,20 +92,48 @@ export function ImpactPanel() {
 	}, [sheetHeight, SNAP_PEEK, SNAP_HALF, SNAP_FULL]);
 
 	return (
+		<>
+		{/* Reopen button — visible when panel is hidden */}
+		{!panelOpen && (
+			<button
+				type="button"
+				onClick={togglePanel}
+				className="
+					absolute z-20
+					w-12 h-12 rounded-2xl bg-surface border border-border
+					flex items-center justify-center
+					text-text-secondary hover:text-text-primary active:bg-border/60
+					transition-colors shadow-lg shadow-black/30
+					md:right-3 md:top-3
+					max-md:right-4 max-md:bottom-20 max-md:top-auto
+				"
+				title="Show impact panel"
+			>
+				<svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+					<rect x="3" y="3" width="12" height="12" rx="2" />
+					<line x1="7" y1="7" x2="7" y2="11" />
+					<line x1="9" y1="9" x2="9" y2="11" />
+					<line x1="11" y1="5" x2="11" y2="11" />
+				</svg>
+			</button>
+		)}
+
+		{/* Main panel */}
 		<div
 			className={`
+				impact-sheet
 				absolute z-20 flex flex-col overflow-hidden
-				bg-surface/95 backdrop-blur-sm
+				bg-surface border-border
 
-				md:right-0 md:top-0 md:w-80 md:h-full md:border-l md:border-border
+				md:right-0 md:top-0 md:w-80 md:h-full md:border-l
 
 				max-md:bottom-0 max-md:left-0 max-md:right-0
-				max-md:border-t max-md:border-border max-md:rounded-t-2xl
+				max-md:border-t max-md:rounded-t-2xl
 				${dragging ? "" : "max-md:transition-[height] max-md:duration-300 max-md:ease-out"}
+				${panelOpen ? "" : "translate-x-full max-md:translate-x-0 max-md:translate-y-full"}
+				transition-transform duration-300 ease-out
 			`}
-			style={{
-				height: `${sheetHeight}dvh`,
-			}}
+			style={{ "--sheet-h": `${sheetHeight}dvh` } as React.CSSProperties}
 		>
 			{/* ── Mobile drag zone ── */}
 			<div
@@ -414,5 +414,6 @@ export function ImpactPanel() {
 				</div>
 			)}
 		</div>
+		</>
 	);
 }

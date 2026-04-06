@@ -147,7 +147,7 @@ export function DataSourcesPanel() {
 
 							<section className="pt-2 border-t border-border/50">
 								<a
-									href="https://github.com/seanreid/severed"
+									href="https://github.com/sean-reid/severed"
 									target="_blank"
 									rel="noopener noreferrer"
 									className="inline-flex items-center gap-1.5 text-xs text-cable-high hover:text-text-primary transition-colors"
