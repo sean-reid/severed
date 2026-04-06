@@ -242,11 +242,11 @@ export function GlobeView() {
 
 	return (
 		<>
-			{/* Recenter button — 48px touch target, above bottom sheet on mobile */}
+			{/* Recenter button — hidden on mobile when cable card is showing */}
 			<button
 				type="button"
 				onClick={resetView}
-				className="
+				className={`
 					absolute z-30
 					w-12 h-12 rounded-2xl
 					bg-surface/80 backdrop-blur-sm border border-border/50
@@ -255,7 +255,8 @@ export function GlobeView() {
 					active:bg-border/50 transition-colors
 					shadow-lg shadow-black/20
 					md:bottom-4 md:left-4 max-md:left-4
-				"
+					${selectedCableId ? "max-md:hidden" : ""}
+				`}
 				style={{
 					bottom: typeof window !== "undefined" && window.innerWidth < 768
 						? `calc(${mobileSheetHeight}dvh + 8px)`

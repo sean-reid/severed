@@ -87,9 +87,12 @@ export function CutAction() {
 					</button>
 				</div>
 
-				{/* Expanded: full details */}
+				{/* Expanded: full details — tap to collapse */}
 				{expanded && (
-					<div className="px-4 pb-3 pt-1 border-t border-border/50">
+					<div
+						className="px-4 pb-3 pt-1 border-t border-border/50 cursor-pointer active:bg-border/10"
+						onClick={() => setExpanded(false)}
+					>
 						<div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
 							<div className="text-text-secondary">RFS</div>
 							<div className="font-data text-right">{selectedCable.rfsYear}</div>
