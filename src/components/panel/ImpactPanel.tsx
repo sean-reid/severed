@@ -1,5 +1,5 @@
 import { useStore } from "../../state/store";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 export function ImpactPanel() {
 	const simulation = useStore((s) => s.simulation);
@@ -30,7 +30,13 @@ export function ImpactPanel() {
 		},
 		[cablesById, addCut],
 	);
-	const [expanded, setExpanded] = useState(true);
+	// Mobile bottom sheet: three snap points as % of viewport height
+	const SNAP_PEEK = 25;
+	const SNAP_HALF = 45;
+	const SNAP_FULL = 85;
+	const [sheetHeight, setSheetHeight] = useState(SNAP_HALF);
+	const [dragging, setDragging] = useState(false);
+	const dragRef = useRef<{ startY: number; startH: number } | null>(null);
 
 	const onMetroClick = useCallback(
 		(metroId: string) => {
@@ -82,29 +88,65 @@ export function ImpactPanel() {
 
 	// ── Render ──
 
+	const onTouchStart = useCallback((e: React.TouchEvent) => {
+		setDragging(true);
+		dragRef.current = {
+			startY: e.touches[0].clientY,
+			startH: sheetHeight,
+		};
+	}, [sheetHeight]);
+
+	const onTouchMove = useCallback((e: React.TouchEvent) => {
+		if (!dragRef.current) return;
+		const dy = dragRef.current.startY - e.touches[0].clientY;
+		const dvh = (dy / window.innerHeight) * 100;
+		const newH = Math.max(SNAP_PEEK, Math.min(SNAP_FULL, dragRef.current.startH + dvh));
+		setSheetHeight(newH);
+	}, [SNAP_PEEK, SNAP_FULL]);
+
+	const onTouchEnd = useCallback(() => {
+		if (!dragRef.current) return;
+		// Snap to nearest snap point
+		const snaps = [SNAP_PEEK, SNAP_HALF, SNAP_FULL];
+		let nearest = SNAP_HALF;
+		let minDist = Infinity;
+		for (const s of snaps) {
+			const d = Math.abs(sheetHeight - s);
+			if (d < minDist) { minDist = d; nearest = s; }
+		}
+		setSheetHeight(nearest);
+		setDragging(false);
+		dragRef.current = null;
+	}, [sheetHeight, SNAP_PEEK, SNAP_HALF, SNAP_FULL]);
+
 	return (
 		<div
 			className={`
 				absolute z-20 flex flex-col overflow-hidden
 				bg-surface/95 backdrop-blur-sm
-				transition-all duration-300 ease-out
 
 				md:right-0 md:top-0 md:w-80 md:h-full md:border-l md:border-border
 
 				max-md:bottom-0 max-md:left-0 max-md:right-0
 				max-md:border-t max-md:border-border max-md:rounded-t-2xl
-				${expanded ? "max-md:h-[75dvh]" : "max-md:h-[40dvh]"}
+				${dragging ? "" : "max-md:transition-[height] max-md:duration-300 max-md:ease-out"}
 			`}
+			style={{
+				height: `${sheetHeight}dvh`,
+			}}
 		>
-			{/* ── Mobile drag handle (toggles half/full height) ── */}
-			<button
-				type="button"
-				className="flex justify-center items-center h-11 w-full md:hidden shrink-0"
-				onClick={() => setExpanded((e) => !e)}
+			{/* ── Mobile drag zone ── */}
+			<div
+				className="md:hidden shrink-0 touch-none"
+				onTouchStart={onTouchStart}
+				onTouchMove={onTouchMove}
+				onTouchEnd={onTouchEnd}
 			>
-				<div className="w-10 h-1 rounded-full bg-text-secondary/40" />
-				<span className="sr-only">{expanded ? "Collapse" : "Expand"}</span>
-			</button>
+				{/* Drag handle */}
+				<div className="flex justify-center items-center h-11 w-full">
+					<div className="w-10 h-1 rounded-full bg-text-secondary/40" />
+				</div>
+			</div>
 
 			{/* ── Header ── */}
 			<div className="flex items-center justify-between px-4 py-2 border-b border-border shrink-0">
