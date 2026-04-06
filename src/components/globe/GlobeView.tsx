@@ -11,8 +11,14 @@ import type { Cable, Metro } from "../../data/types";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 function DeckGLOverlay(props: { layers: Layer[] }) {
-	const overlay = useControl<MapboxOverlay>(() => new MapboxOverlay({ interleaved: false }));
-	overlay.setProps({ layers: props.layers });
+	const overlay = useControl<MapboxOverlay>(
+		() => new MapboxOverlay({ interleaved: false }),
+	);
+	overlay.setProps({
+		layers: props.layers,
+		// Expand pick radius for easier mobile taps on thin cable lines
+		pickingRadius: 20,
+	});
 	return null;
 }
 
@@ -104,7 +110,10 @@ export function GlobeView() {
 					getLineWidth: (d: { properties: { cable: Cable } }) =>
 						cableWidthScale(d.properties.cable.designCapacityTbps),
 					lineWidthUnits: "pixels" as const,
+					lineWidthMinPixels: 1,
 					pickable: true,
+					autoHighlight: true,
+					highlightColor: [147, 197, 253, 140],
 					onClick: (info: { object?: { properties: { cable: Cable } } }) => {
 						if (info.object) {
 							lastDeckClickTime.current = Date.now();

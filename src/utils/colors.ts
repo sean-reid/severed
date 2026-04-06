@@ -10,7 +10,7 @@ export const impactColorScale = scaleSequential(interpolateViridis).domain([0, 1
  * Cable width scale: log of capacity → pixel width.
  * Much thinner — let the map breathe.
  */
-export const cableWidthScale = scaleLog().domain([0.1, 500]).range([0.4, 2.5]).clamp(true);
+export const cableWidthScale = scaleLog().domain([0.1, 500]).range([0.8, 3]).clamp(true);
 
 /**
  * Cable color by capacity tier.
