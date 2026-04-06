@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useStore } from "../../state/store";
 import type { CutLocation } from "../../data/types";
 
@@ -6,9 +6,13 @@ export function Sidebar() {
 	const scenarios = useStore((s) => s.scenarios);
 	const activeScenarioId = useStore((s) => s.activeScenarioId);
 	const selectedCableId = useStore((s) => s.selectedCableId);
+	const selectedMetroId = useStore((s) => s.selectedMetroId);
 	const cablesById = useStore((s) => s.cablesById);
+	const cables = useStore((s) => s.cables);
+	const metrosById = useStore((s) => s.metrosById);
 	const addCut = useStore((s) => s.addCut);
 	const selectCable = useStore((s) => s.selectCable);
+	const selectMetro = useStore((s) => s.selectMetro);
 	const sidebarOpen = useStore((s) => s.sidebarOpen);
 	const toggleSidebar = useStore((s) => s.toggleSidebar);
 	const panelOpen = useStore((s) => s.panelOpen);
@@ -143,6 +147,15 @@ export function Sidebar() {
 					</div>
 				)}
 
+				{/* Selected metro info */}
+				<SelectedMetroInfo
+					metroId={selectedMetroId}
+					metrosById={metrosById}
+					cables={cables}
+					selectMetro={selectMetro}
+					selectCable={selectCable}
+				/>
+
 				{/* Scenarios */}
 				<div className="flex-1 overflow-y-auto px-4 py-3">
 					<div className="text-[10px] text-text-secondary uppercase tracking-wider mb-2">
@@ -194,5 +207,84 @@ export function Sidebar() {
 
 			</div>
 		</>
+	);
+}
+
+// ── Metro info sub-component ──
+
+function SelectedMetroInfo({
+	metroId,
+	metrosById,
+	cables,
+	selectMetro,
+	selectCable,
+}: {
+	metroId: string | null;
+	metrosById: Map<string, { id: string; name: string; countryCode: string; isHub: boolean; landingStationCount: number }>;
+	cables: { id: string; name: string; designCapacityTbps: number; segments: { from: string; to: string }[] }[];
+	selectMetro: (id: string | null) => void;
+	selectCable: (id: string | null) => void;
+}) {
+	const metro = metroId ? metrosById.get(metroId) : null;
+
+	const connectedCables = useMemo(() => {
+		if (!metroId) return [];
+		return cables.filter((c) =>
+			c.segments.some((s) => s.from === metroId || s.to === metroId),
+		);
+	}, [metroId, cables]);
+
+	if (!metro) return null;
+
+	return (
+		<div className="px-4 py-3 border-b border-border bg-border/20">
+			<div className="flex items-center justify-between">
+				<div>
+					<div className="text-xs text-text-secondary uppercase">Selected Metro</div>
+					<div className="text-sm font-semibold text-text-primary mt-1">
+						{metro.name}
+					</div>
+					<div className="flex items-center gap-2 mt-0.5">
+						<span className="text-[10px] text-text-secondary">{metro.countryCode}</span>
+						{metro.isHub && (
+							<span className="text-[9px] px-1.5 py-0.5 rounded-full bg-cable-high/20 text-cable-high">
+								hub
+							</span>
+						)}
+					</div>
+				</div>
+				<button
+					type="button"
+					onClick={() => selectMetro(null)}
+					className="text-text-secondary/50 hover:text-text-primary text-xs"
+				>
+					Close
+				</button>
+			</div>
+
+			<div className="mt-2 text-xs text-text-secondary">
+				{metro.landingStationCount} landing station{metro.landingStationCount !== 1 ? "s" : ""} &middot;{" "}
+				{connectedCables.length} cable{connectedCables.length !== 1 ? "s" : ""}
+			</div>
+
+			{connectedCables.length > 0 && (
+				<div className="mt-2 pt-2 border-t border-border/50 max-h-40 overflow-y-auto">
+					<div className="text-[9px] text-text-secondary/50 uppercase mb-1">Connected cables</div>
+					{connectedCables.map((c) => (
+						<button
+							key={c.id}
+							type="button"
+							onClick={() => selectCable(c.id)}
+							className="w-full flex justify-between text-xs py-1 px-1 -mx-1 rounded hover:bg-border/30 text-left transition-colors"
+						>
+							<span className="text-text-primary truncate">{c.name}</span>
+							<span className="font-data text-text-secondary/60 ml-2 flex-none">
+								{c.designCapacityTbps.toFixed(0)} Tbps
+							</span>
+						</button>
+					))}
+				</div>
+			)}
+		</div>
 	);
 }
