@@ -31,14 +31,17 @@ export function MobileScenarioBar() {
 							onClick={() => applyScenario(scenario.id)}
 							className={`
 								flex-none h-11 px-5 rounded-full text-sm font-medium
-								whitespace-nowrap transition-colors
+								whitespace-nowrap transition-colors flex items-center gap-2
 								${
 									activeScenarioId === scenario.id
-										? "bg-cable-cut/20 border border-cable-cut/50 text-cable-cut"
+										? "bg-cable-cut border-2 border-cable-cut text-white"
 										: "bg-surface/90 backdrop-blur-sm border border-border/70 text-text-primary active:bg-border/50"
 								}
 							`}
 						>
+							{activeScenarioId === scenario.id && (
+								<span className="w-1.5 h-1.5 rounded-full bg-white flex-none" />
+							)}
 							{scenario.name}
 						</button>
 					))}

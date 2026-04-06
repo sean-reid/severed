@@ -4,12 +4,10 @@ import type { CutLocation } from "../../data/types";
 
 export function Sidebar() {
 	const scenarios = useStore((s) => s.scenarios);
-	const cuts = useStore((s) => s.cuts);
 	const activeScenarioId = useStore((s) => s.activeScenarioId);
 	const selectedCableId = useStore((s) => s.selectedCableId);
 	const cablesById = useStore((s) => s.cablesById);
 	const addCut = useStore((s) => s.addCut);
-	const resetCuts = useStore((s) => s.resetCuts);
 	const selectCable = useStore((s) => s.selectCable);
 	const sidebarOpen = useStore((s) => s.sidebarOpen);
 	const toggleSidebar = useStore((s) => s.toggleSidebar);
@@ -193,22 +191,6 @@ export function Sidebar() {
 					)}
 				</div>
 
-				{/* Reset button */}
-				{cuts.length > 0 && (
-					<div className="px-4 py-2 border-t border-border">
-						<button
-							type="button"
-							onClick={resetCuts}
-							className="
-								w-full py-1.5 rounded-lg border border-border
-								text-text-secondary text-[10px] uppercase tracking-wider
-								hover:bg-border/30 transition-colors
-							"
-						>
-							Reset All Cuts
-						</button>
-					</div>
-				)}
 
 			</div>
 		</>

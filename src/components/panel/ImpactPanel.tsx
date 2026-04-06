@@ -34,9 +34,15 @@ export function ImpactPanel() {
 	const SNAP_PEEK = 25;
 	const SNAP_HALF = 45;
 	const SNAP_FULL = 85;
-	const [sheetHeight, setSheetHeight] = useState(SNAP_HALF);
+	const [sheetHeight, setSheetHeightLocal] = useState(SNAP_HALF);
+	const setMobileSheetHeight = useStore((s) => s.setMobileSheetHeight);
 	const [dragging, setDragging] = useState(false);
 	const dragRef = useRef<{ startY: number; startH: number } | null>(null);
+
+	const setSheetHeight = useCallback((h: number) => {
+		setSheetHeightLocal(h);
+		setMobileSheetHeight(h);
+	}, [setMobileSheetHeight]);
 
 	const onMetroClick = useCallback(
 		(metroId: string) => {
@@ -135,67 +141,67 @@ export function ImpactPanel() {
 			`}
 			style={{ "--sheet-h": `${sheetHeight}dvh` } as React.CSSProperties}
 		>
-			{/* ── Mobile drag zone ── */}
+			{/* ── Draggable top region (mobile): handle + header + stats ── */}
 			<div
-				className="md:hidden shrink-0 touch-none"
+				className="shrink-0 max-md:touch-none max-md:cursor-grab max-md:active:cursor-grabbing"
 				onTouchStart={onTouchStart}
 				onTouchMove={onTouchMove}
 				onTouchEnd={onTouchEnd}
 			>
-				{/* Drag handle */}
-				<div className="flex justify-center items-center h-11 w-full">
-					<div className="w-10 h-1 rounded-full bg-text-secondary/40" />
+				{/* Drag handle (mobile only) */}
+				<div className="flex justify-center items-center h-8 w-full md:hidden">
+					<div className="w-12 h-1.5 rounded-full bg-text-secondary/30" />
 				</div>
-			</div>
 
-			{/* ── Header ── */}
-			<div className="flex items-center justify-between px-4 py-2 border-b border-border shrink-0">
-				<h2 className="font-data text-xs font-semibold tracking-wider text-text-secondary">
-					IMPACT
-				</h2>
-				<div className="flex items-center gap-4">
-					{hasCuts && (
+				{/* Header */}
+				<div className="flex items-center justify-between px-4 py-2 border-b border-border">
+					<h2 className="font-data text-xs font-semibold tracking-wider text-text-secondary">
+						IMPACT
+					</h2>
+					<div className="flex items-center gap-4">
+						{hasCuts && (
+							<button
+								type="button"
+								onClick={resetCuts}
+								className="text-cable-cut hover:text-cable-cut/80 text-xs py-1 transition-colors"
+							>
+								Reset
+							</button>
+						)}
 						<button
 							type="button"
-							onClick={resetCuts}
-							className="text-cable-cut hover:text-cable-cut/80 text-xs py-1 transition-colors"
+							onClick={togglePanel}
+							className="text-text-secondary/60 hover:text-text-primary text-xs py-1 transition-colors"
 						>
-							Reset
+							Hide
 						</button>
-					)}
-					<button
-						type="button"
-						onClick={togglePanel}
-						className="text-text-secondary/60 hover:text-text-primary text-xs py-1 transition-colors"
-					>
-						Hide
-					</button>
+					</div>
 				</div>
-			</div>
 
-			{/* ── Summary stats ── */}
-			{hasCuts && simulation && (
-				<div className="grid grid-cols-3 gap-1 px-4 py-3 border-b border-border shrink-0">
-					<div className="text-center">
-						<div className="font-data text-lg font-semibold text-cable-cut">
-							{simulation.cablesAffected}
+				{/* Summary stats */}
+				{hasCuts && simulation && (
+					<div className="grid grid-cols-3 gap-1 px-4 py-3 border-b border-border">
+						<div className="text-center">
+							<div className="font-data text-lg font-semibold text-cable-cut">
+								{simulation.cablesAffected}
+							</div>
+							<div className="text-[10px] text-text-secondary/60 uppercase">cables</div>
 						</div>
-						<div className="text-[10px] text-text-secondary/60 uppercase">cables</div>
-					</div>
-					<div className="text-center">
-						<div className="font-data text-lg font-semibold text-accent">
-							{simulation.totalCapacityRemovedTbps.toFixed(0)}
+						<div className="text-center">
+							<div className="font-data text-lg font-semibold text-accent">
+								{simulation.totalCapacityRemovedTbps.toFixed(0)}
+							</div>
+							<div className="text-[10px] text-text-secondary/60 uppercase">Tbps lost</div>
 						</div>
-						<div className="text-[10px] text-text-secondary/60 uppercase">Tbps lost</div>
-					</div>
-					<div className="text-center">
-						<div className="font-data text-lg font-semibold text-text-primary">
-							{simulation.metrosAffected}
+						<div className="text-center">
+							<div className="font-data text-lg font-semibold text-text-primary">
+								{simulation.metrosAffected}
+							</div>
+							<div className="text-[10px] text-text-secondary/60 uppercase">affected</div>
 						</div>
-						<div className="text-[10px] text-text-secondary/60 uppercase">affected</div>
 					</div>
-				</div>
-			)}
+				)}
+			</div>
 
 			{/* ── Redundancy callout ── */}
 			{hasCuts && absorbed.length > 0 && affected.length === 0 && (

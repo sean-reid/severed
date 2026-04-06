@@ -11,6 +11,7 @@ export function CutAction() {
 	const cablesById = useStore((s) => s.cablesById);
 	const addCut = useStore((s) => s.addCut);
 	const selectCable = useStore((s) => s.selectCable);
+	const mobileSheetHeight = useStore((s) => s.mobileSheetHeight);
 
 	const selectedCable = selectedCableId ? cablesById.get(selectedCableId) : null;
 
@@ -32,10 +33,8 @@ export function CutAction() {
 
 	return (
 		<div
-			className="
-				absolute z-10 md:hidden
-				max-md:bottom-[calc(45dvh+8px)] max-md:left-1/2 max-md:-translate-x-1/2
-			"
+			className="absolute z-10 md:hidden left-1/2 -translate-x-1/2"
+			style={{ bottom: `calc(${mobileSheetHeight}dvh + 8px)` }}
 		>
 			<div className="flex items-center gap-2 bg-surface/95 backdrop-blur-sm rounded-2xl border border-border shadow-xl shadow-black/30 px-4 py-2.5">
 				<div className="text-sm text-text-primary font-medium truncate max-w-[180px]">

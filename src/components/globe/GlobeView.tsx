@@ -37,6 +37,9 @@ export function GlobeView() {
 	const selectMetro = useStore((s) => s.selectMetro);
 	const hoverCable = useStore((s) => s.hoverCable);
 	const simulation = useStore((s) => s.simulation);
+	const mobileSheetHeight = useStore((s) => s.mobileSheetHeight);
+	const hasCuts = useStore((s) => s.cuts.length > 0);
+	const resetCuts = useStore((s) => s.resetCuts);
 	const flyTo = useStore((s) => s.flyTo);
 	const clearFlyTo = useStore((s) => s.clearFlyTo);
 	const selectedMetroId = useStore((s) => s.selectedMetroId);
@@ -242,10 +245,13 @@ export function GlobeView() {
 					text-text-secondary hover:text-text-primary
 					active:bg-border/50 transition-colors
 					shadow-lg shadow-black/20
-
-					md:bottom-4 md:left-4
-					max-md:bottom-[calc(40dvh+8px)] max-md:left-4
+					md:bottom-4 md:left-4 max-md:left-4
 				"
+				style={{
+					bottom: typeof window !== "undefined" && window.innerWidth < 768
+						? `calc(${mobileSheetHeight}dvh + 8px)`
+						: undefined,
+				}}
 				title="Reset map view"
 			>
 				<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -256,6 +262,26 @@ export function GlobeView() {
 					<line x1="13" y1="8" x2="15" y2="8" />
 				</svg>
 			</button>
+
+			{/* Desktop reset button — next to crosshairs */}
+			{hasCuts && (
+				<button
+					type="button"
+					onClick={resetCuts}
+					className="
+						absolute z-30 hidden md:flex
+						bottom-4 left-[4.5rem]
+						h-12 px-4 rounded-2xl
+						bg-surface/80 backdrop-blur-sm border border-border/50
+						items-center gap-2
+						text-cable-cut text-xs font-medium
+						hover:bg-cable-cut/10 active:bg-cable-cut/20 transition-colors
+						shadow-lg shadow-black/20
+					"
+				>
+					Reset
+				</button>
+			)}
 
 			<div className="absolute inset-0">
 			<MapGL

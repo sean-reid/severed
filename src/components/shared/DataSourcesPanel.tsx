@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useStore } from "../../state/store";
 
 export function DataSourcesPanel() {
 	const [open, setOpen] = useState(false);
+	const mobileSheetHeight = useStore((s) => s.mobileSheetHeight);
 
 	return (
 		<>
@@ -14,10 +16,14 @@ export function DataSourcesPanel() {
 					bg-surface/70 backdrop-blur-sm border border-border/50
 					text-[10px] text-text-secondary hover:text-text-primary
 					uppercase tracking-wider transition-colors
-
 					md:bottom-3 md:left-1/2 md:-translate-x-1/2
-					max-md:bottom-[calc(40dvh+8px)] max-md:right-4 max-md:left-auto
+					max-md:right-4 max-md:left-auto
 				"
+				style={{
+					bottom: typeof window !== "undefined" && window.innerWidth < 768
+						? `calc(${mobileSheetHeight}dvh + 8px)`
+						: undefined,
+				}}
 			>
 				Sources
 			</button>
