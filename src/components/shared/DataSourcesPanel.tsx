@@ -4,13 +4,14 @@ import { useStore } from "../../state/store";
 export function DataSourcesPanel() {
 	const [open, setOpen] = useState(false);
 	const mobileSheetHeight = useStore((s) => s.mobileSheetHeight);
+	const selectedCableId = useStore((s) => s.selectedCableId);
 
 	return (
 		<>
 			<button
 				type="button"
 				onClick={() => setOpen(true)}
-				className="
+				className={`
 					absolute z-10
 					px-3 py-1.5 rounded-full
 					bg-surface/70 backdrop-blur-sm border border-border/50
@@ -18,7 +19,8 @@ export function DataSourcesPanel() {
 					uppercase tracking-wider transition-colors
 					md:bottom-3 md:left-1/2 md:-translate-x-1/2
 					max-md:right-4 max-md:left-auto
-				"
+					${selectedCableId ? "max-md:hidden" : ""}
+				`}
 				style={{
 					bottom: typeof window !== "undefined" && window.innerWidth < 768
 						? `calc(${mobileSheetHeight}dvh + 8px)`
