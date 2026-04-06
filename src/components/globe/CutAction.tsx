@@ -33,9 +33,9 @@ export function CutAction() {
 	return (
 		<div
 			className="
-				absolute z-30
-				md:bottom-4 md:left-1/2 md:-translate-x-1/2
-				max-md:bottom-[calc(45dvh+8px)] max-md:left-1/2 max-md:-translate-x-1/2
+				absolute z-10
+				md:bottom-4 md:left-1/2 md:-translate-x-1/2 md:z-30
+				max-md:bottom-[calc(40dvh+8px)] max-md:left-1/2 max-md:-translate-x-1/2
 			"
 		>
 			<div className="flex items-center gap-2 bg-surface/95 backdrop-blur-sm rounded-2xl border border-border shadow-xl shadow-black/30 px-4 py-2.5">

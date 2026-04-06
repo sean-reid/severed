@@ -15,6 +15,7 @@ interface SimulationState {
 	totalCapacityRemovedTbps: number;
 	metrosAffected: number;
 	cablesAffected: number;
+	affectedEdgeIds: string[];
 }
 
 interface StoreState {

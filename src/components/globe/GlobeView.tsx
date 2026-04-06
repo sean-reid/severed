@@ -57,23 +57,25 @@ export function GlobeView() {
 		}
 	}, [flyTo, clearFlyTo]);
 
-	const cutSegmentIds = useMemo(() => {
+	// Resolved affected cable IDs — from simulation engine + direct cable cuts
+	const cutCableIds = useMemo(() => {
 		const ids = new Set<string>();
+		// From simulation (resolves chokepoint polygon → segment intersection)
+		if (simulation?.affectedEdgeIds) {
+			for (const edgeId of simulation.affectedEdgeIds) {
+				const cableId = edgeId.split(":")[0];
+				if (cableId !== "terr") ids.add(cableId);
+			}
+		}
+		// From direct cable cuts (Cut button)
 		for (const cut of cuts) {
 			for (const segId of cut.affectedSegmentIds) {
-				ids.add(segId);
+				const cableId = segId.split(":")[0];
+				if (cableId !== "terr") ids.add(cableId);
 			}
 		}
 		return ids;
-	}, [cuts]);
-
-	const cutCableIds = useMemo(() => {
-		const ids = new Set<string>();
-		for (const segId of cutSegmentIds) {
-			ids.add(segId.split(":")[0]);
-		}
-		return ids;
-	}, [cutSegmentIds]);
+	}, [simulation, cuts]);
 
 	// biome-ignore lint: complex layer construction
 	const layers = useMemo((): Layer[] => {
@@ -242,7 +244,7 @@ export function GlobeView() {
 					shadow-lg shadow-black/20
 
 					md:bottom-4 md:left-4
-					max-md:bottom-[calc(45dvh+8px)] max-md:left-4
+					max-md:bottom-[calc(40dvh+8px)] max-md:left-4
 				"
 				title="Reset map view"
 			>

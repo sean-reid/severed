@@ -16,7 +16,7 @@ export function DataSourcesPanel() {
 					uppercase tracking-wider transition-colors
 
 					md:bottom-3 md:left-1/2 md:-translate-x-1/2
-					max-md:bottom-[calc(45dvh+8px)] max-md:right-4 max-md:left-auto
+					max-md:bottom-[calc(40dvh+8px)] max-md:right-4 max-md:left-auto
 				"
 			>
 				Sources

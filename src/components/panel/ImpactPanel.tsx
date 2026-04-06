@@ -11,9 +11,26 @@ export function ImpactPanel() {
 	const selectedMetroId = useStore((s) => s.selectedMetroId);
 	const selectMetro = useStore((s) => s.selectMetro);
 	const flyToLocation = useStore((s) => s.flyToLocation);
-	const selectCable = useStore((s) => s.selectCable);
+	const addCut = useStore((s) => s.addCut);
+	const cablesById = useStore((s) => s.cablesById);
 	const resetCuts = useStore((s) => s.resetCuts);
-	const [expanded, setExpanded] = useState(false);
+
+	const cutCableById = useCallback(
+		(cableId: string) => {
+			const cable = cablesById.get(cableId);
+			if (!cable) return;
+			const segmentIds = cable.segments.map((_s: unknown, i: number) => `${cableId}:${i}`);
+			addCut({
+				id: `cable-${cableId}`,
+				type: "point",
+				lat: 0,
+				lng: 0,
+				affectedSegmentIds: segmentIds,
+			});
+		},
+		[cablesById, addCut],
+	);
+	const [expanded, setExpanded] = useState(true);
 
 	const onMetroClick = useCallback(
 		(metroId: string) => {
@@ -76,16 +93,17 @@ export function ImpactPanel() {
 
 				max-md:bottom-0 max-md:left-0 max-md:right-0
 				max-md:border-t max-md:border-border max-md:rounded-t-2xl
-				${expanded ? "max-md:h-[85dvh]" : "max-md:h-[45dvh]"}
+				${expanded ? "max-md:h-[75dvh]" : "max-md:h-[40dvh]"}
 			`}
 		>
-			{/* ── Mobile drag handle (44px touch target) ── */}
+			{/* ── Mobile drag handle (toggles half/full height) ── */}
 			<button
 				type="button"
 				className="flex justify-center items-center h-11 w-full md:hidden shrink-0"
-				onClick={() => setExpanded(!expanded)}
+				onClick={() => setExpanded((e) => !e)}
 			>
 				<div className="w-10 h-1 rounded-full bg-text-secondary/40" />
+				<span className="sr-only">{expanded ? "Collapse" : "Expand"}</span>
 			</button>
 
 			{/* ── Header ── */}
@@ -219,17 +237,9 @@ export function ImpactPanel() {
 							{selectedImpact.reroutedVia.map((r, i) => {
 								const isSubCable = r.type === "submarine" && r.cableId;
 								return (
-									<button
+									<div
 										key={`detail-reroute-${i}`}
-										type="button"
-										onClick={() => {
-											if (isSubCable && r.cableId) selectCable(r.cableId);
-										}}
-										className={`
-											w-full flex items-center justify-between text-sm py-1.5 px-2 -mx-2 rounded-lg
-											transition-colors text-left
-											${isSubCable ? "active:bg-cable-high/10" : ""}
-										`}
+										className="flex items-center justify-between text-sm py-1.5"
 									>
 										<div className="flex items-center gap-2 min-w-0">
 											<span
@@ -239,22 +249,25 @@ export function ImpactPanel() {
 												}}
 											/>
 											<span className="text-text-primary truncate">{r.name}</span>
-										</div>
-										<div className="flex items-center gap-2 flex-none ml-2">
-											<span className="font-data text-text-secondary/70 text-xs">
+											<span className="font-data text-text-secondary/70 text-xs flex-none">
 												{r.additionalLoadTbps.toFixed(0)} Tbps
 											</span>
-											{isSubCable && (
-												<svg width="12" height="12" viewBox="0 0 10 10" fill="none"
-													stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"
-													className="text-text-secondary/40"
-												>
-													<line x1="2" y1="8" x2="8" y2="2" />
-													<polyline points="4,2 8,2 8,6" />
-												</svg>
-											)}
 										</div>
-									</button>
+										{isSubCable && r.cableId && (
+											<button
+												type="button"
+												onClick={() => cutCableById(r.cableId!)}
+												className="
+													flex-none ml-2 px-2.5 py-1 rounded-lg
+													text-[10px] font-semibold uppercase
+													text-cable-cut bg-cable-cut/10 border border-cable-cut/30
+													active:bg-cable-cut/20 transition-colors
+												"
+											>
+												Cut
+											</button>
+										)}
+									</div>
 								);
 							})}
 						</div>

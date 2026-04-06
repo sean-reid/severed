@@ -27,6 +27,7 @@ export interface SimulationOutput {
 	totalCapacityRemovedTbps: number;
 	metrosAffected: number;
 	cablesAffected: number;
+	affectedEdgeIds: string[];
 }
 
 interface BaselineMetrics {
@@ -215,7 +216,7 @@ export function runSimulation(input: SimulationInput): SimulationOutput {
 			redundancyAbsorbed: false,
 			reroutedVia: [],
 		}));
-		return { impacts, totalCapacityRemovedTbps: 0, metrosAffected: 0, cablesAffected: 0 };
+		return { impacts, totalCapacityRemovedTbps: 0, metrosAffected: 0, cablesAffected: 0, affectedEdgeIds: [] };
 	}
 
 	// Resolve which edges are affected
@@ -321,5 +322,6 @@ export function runSimulation(input: SimulationInput): SimulationOutput {
 		totalCapacityRemovedTbps: Math.round(totalCapacityRemoved * 100) / 100,
 		metrosAffected,
 		cablesAffected: affectedCableIds.size,
+		affectedEdgeIds: [...affectedEdgeIds],
 	};
 }
