@@ -164,12 +164,34 @@ export function DataSourcesPanel() {
 								</ul>
 							</section>
 
-							<section className="pt-2 border-t border-border/50">
+							<section className="pt-2 border-t border-border/50 flex flex-col gap-2">
+								<a
+									href="https://sean-reid.github.io/blog/severed.html"
+									target="_blank"
+									rel="noopener noreferrer"
+									className="inline-flex items-center gap-1.5 text-xs text-cable-high hover:text-text-primary transition-colors"
+								>
+									<svg
+										width="14"
+										height="14"
+										viewBox="0 0 16 16"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="1.5"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									>
+										<title>Blog post</title>
+										<path d="M2 3h12v10H2z" />
+										<path d="M5 6h6M5 8.5h4" />
+									</svg>
+									Read the methodology and findings
+								</a>
 								<a
 									href="https://github.com/sean-reid/severed"
 									target="_blank"
 									rel="noopener noreferrer"
-									className="inline-flex items-center gap-1.5 text-xs text-cable-high hover:text-text-primary transition-colors"
+									className="inline-flex items-center gap-1.5 text-xs text-text-secondary/60 hover:text-text-primary transition-colors"
 								>
 									<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
 										<title>GitHub</title>
