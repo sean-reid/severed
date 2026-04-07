@@ -1649,9 +1649,9 @@ function main() {
 				[132.0, 5.0],
 				[130.0, 2.0], // south of Morotai, east of Halmahera
 				[128.5, -1.0], // Halmahera Sea
-				[127.0, -3.5], // Banda Sea, passing south of Sulawesi SE arm
-				[125.0, -5.0], // Banda Sea
-				[122.5, -5.5], // Flores Sea, south of Sulawesi SE tip
+				[127.0, -4.0], // Banda Sea, south of Sulawesi SE arm
+				[125.0, -5.5], // Banda Sea
+				[122.5, -6.0], // Flores Sea, just south of Jeneponto/S Sulawesi tip
 				[118.0, -5.0], // south of Sumbawa
 				[116.0, -5.5], // Java Sea
 				// Branch south to Tanjung Pakis
