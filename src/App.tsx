@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { GlobeView } from "./components/globe/GlobeView";
-import { ImpactPanel } from "./components/panel/ImpactPanel";
-import { Sidebar } from "./components/sidebar/Sidebar";
-import { MobileScenarioBar } from "./components/sidebar/MobileScenarioBar";
 import { CutAction } from "./components/globe/CutAction";
+import { GlobeView } from "./components/globe/GlobeView";
 import { TerrestrialCard } from "./components/globe/TerrestrialCard";
+import { ImpactPanel } from "./components/panel/ImpactPanel";
 import { DataSourcesPanel } from "./components/shared/DataSourcesPanel";
+import { MobileScenarioBar } from "./components/sidebar/MobileScenarioBar";
+import { Sidebar } from "./components/sidebar/Sidebar";
 import { loadAppData } from "./data/loader";
 import { useStore } from "./state/store";
 

@@ -1,15 +1,9 @@
-import { describe, it, expect, beforeAll, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 
 vi.setConfig({ testTimeout: 30000 });
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import type {
-	Cable,
-	Chokepoint,
-	CutLocation,
-	Metro,
-	TerrestrialEdge,
-} from "../../data/types";
+import type { Cable, Chokepoint, CutLocation, Metro, TerrestrialEdge } from "../../data/types";
 import { runSimulation } from "../simulation";
 import type { SimulationInput } from "../simulation";
 
@@ -59,24 +53,15 @@ function chokepointCut(id: string): CutLocation {
 	};
 }
 
-function findMetroImpact(
-	result: ReturnType<typeof simulate>,
-	metroIdSubstring: string,
-) {
+function findMetroImpact(result: ReturnType<typeof simulate>, metroIdSubstring: string) {
 	return result.impacts.find((i) => i.metroId.includes(metroIdSubstring));
 }
 
-function findCountryImpacts(
-	result: ReturnType<typeof simulate>,
-	countryCode: string,
-) {
+function findCountryImpacts(result: ReturnType<typeof simulate>, countryCode: string) {
 	return result.impacts.filter((i) => i.countryCode === countryCode);
 }
 
-function maxLossForCountry(
-	result: ReturnType<typeof simulate>,
-	countryCode: string,
-): number {
+function maxLossForCountry(result: ReturnType<typeof simulate>, countryCode: string): number {
 	const impacts = findCountryImpacts(result, countryCode);
 	if (impacts.length === 0) return 0;
 	return Math.max(...impacts.map((i) => i.bandwidthLossPct));
@@ -97,9 +82,7 @@ describe("Baseline (no cuts)", () => {
 			return metro?.isHub && metro.landingStationCount > 0;
 		});
 		// At least some connected hubs should have bandwidth
-		const hubsWithBandwidth = connectedHubs.filter(
-			(i) => i.baselineBandwidthTbps > 0,
-		);
+		const hubsWithBandwidth = connectedHubs.filter((i) => i.baselineBandwidthTbps > 0);
 		expect(hubsWithBandwidth.length).toBeGreaterThan(0);
 	});
 });
@@ -257,10 +240,7 @@ describe("Simulation performance", () => {
 
 	it("completes multi-cut simulation within budget", () => {
 		const start = performance.now();
-		simulate([
-			chokepointCut("bab-al-mandab"),
-			chokepointCut("luzon-strait"),
-		]);
+		simulate([chokepointCut("bab-al-mandab"), chokepointCut("luzon-strait")]);
 		const elapsed = performance.now() - start;
 
 		expect(elapsed).toBeLessThan(30000);

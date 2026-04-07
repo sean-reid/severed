@@ -1,5 +1,5 @@
-import { useStore } from "../../state/store";
 import { useCallback, useRef, useState } from "react";
+import { useStore } from "../../state/store";
 
 export function ImpactPanel() {
 	const simulation = useStore((s) => s.simulation);
@@ -41,10 +41,13 @@ export function ImpactPanel() {
 	const [dragging, setDragging] = useState(false);
 	const dragRef = useRef<{ startY: number; startH: number } | null>(null);
 
-	const setSheetHeight = useCallback((h: number) => {
-		setSheetHeightLocal(h);
-		setMobileSheetHeight(h);
-	}, [setMobileSheetHeight]);
+	const setSheetHeight = useCallback(
+		(h: number) => {
+			setSheetHeightLocal(h);
+			setMobileSheetHeight(h);
+		},
+		[setMobileSheetHeight],
+	);
 
 	const onMetroClick = useCallback(
 		(metroId: string) => {
@@ -68,45 +71,54 @@ export function ImpactPanel() {
 
 	// ── Render ──
 
-	const onTouchStart = useCallback((e: React.TouchEvent) => {
-		setDragging(true);
-		dragRef.current = {
-			startY: e.touches[0].clientY,
-			startH: sheetHeight,
-		};
-	}, [sheetHeight]);
+	const onTouchStart = useCallback(
+		(e: React.TouchEvent) => {
+			setDragging(true);
+			dragRef.current = {
+				startY: e.touches[0].clientY,
+				startH: sheetHeight,
+			};
+		},
+		[sheetHeight],
+	);
 
-	const onTouchMove = useCallback((e: React.TouchEvent) => {
-		if (!dragRef.current) return;
-		const dy = dragRef.current.startY - e.touches[0].clientY;
-		const dvh = (dy / window.innerHeight) * 100;
-		const newH = Math.max(SNAP_PEEK, Math.min(SNAP_FULL, dragRef.current.startH + dvh));
-		setSheetHeight(newH);
-	}, [SNAP_PEEK, SNAP_FULL]);
+	const onTouchMove = useCallback(
+		(e: React.TouchEvent) => {
+			if (!dragRef.current) return;
+			const dy = dragRef.current.startY - e.touches[0].clientY;
+			const dvh = (dy / window.innerHeight) * 100;
+			const newH = Math.max(SNAP_PEEK, Math.min(SNAP_FULL, dragRef.current.startH + dvh));
+			setSheetHeight(newH);
+		},
+		[setSheetHeight],
+	);
 
 	const onTouchEnd = useCallback(() => {
 		if (!dragRef.current) return;
 		// Snap to nearest snap point
 		const snaps = [SNAP_PEEK, SNAP_HALF, SNAP_FULL];
 		let nearest = SNAP_HALF;
-		let minDist = Infinity;
+		let minDist = Number.POSITIVE_INFINITY;
 		for (const s of snaps) {
 			const d = Math.abs(sheetHeight - s);
-			if (d < minDist) { minDist = d; nearest = s; }
+			if (d < minDist) {
+				minDist = d;
+				nearest = s;
+			}
 		}
 		setSheetHeight(nearest);
 		setDragging(false);
 		dragRef.current = null;
-	}, [sheetHeight, SNAP_PEEK, SNAP_HALF, SNAP_FULL]);
+	}, [sheetHeight, setSheetHeight]);
 
 	return (
 		<>
-		{/* Reopen button — visible when panel is hidden */}
-		{!panelOpen && (
-			<button
-				type="button"
-				onClick={togglePanel}
-				className="
+			{/* Reopen button — visible when panel is hidden */}
+			{!panelOpen && (
+				<button
+					type="button"
+					onClick={togglePanel}
+					className="
 					absolute z-20
 					w-12 h-12 rounded-2xl bg-surface border border-border
 					flex items-center justify-center
@@ -115,20 +127,29 @@ export function ImpactPanel() {
 					md:right-3 md:top-3
 					max-md:right-4 max-md:bottom-20 max-md:top-auto
 				"
-				title="Show impact panel"
-			>
-				<svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-					<rect x="3" y="3" width="12" height="12" rx="2" />
-					<line x1="7" y1="7" x2="7" y2="11" />
-					<line x1="9" y1="9" x2="9" y2="11" />
-					<line x1="11" y1="5" x2="11" y2="11" />
-				</svg>
-			</button>
-		)}
+					title="Show impact panel"
+				>
+					<svg
+						width="20"
+						height="20"
+						viewBox="0 0 18 18"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="1.5"
+						strokeLinecap="round"
+					>
+						<title>Show impact panel</title>
+						<rect x="3" y="3" width="12" height="12" rx="2" />
+						<line x1="7" y1="7" x2="7" y2="11" />
+						<line x1="9" y1="9" x2="9" y2="11" />
+						<line x1="11" y1="5" x2="11" y2="11" />
+					</svg>
+				</button>
+			)}
 
-		{/* Main panel */}
-		<div
-			className={`
+			{/* Main panel */}
+			<div
+				className={`
 				impact-sheet
 				absolute z-20 flex flex-col overflow-hidden
 				bg-surface border-border
@@ -141,295 +162,289 @@ export function ImpactPanel() {
 				${panelOpen ? "" : "translate-x-full max-md:translate-x-0 max-md:translate-y-full"}
 				transition-transform duration-300 ease-out
 			`}
-			style={{ "--sheet-h": `${sheetHeight}dvh` } as React.CSSProperties}
-		>
-			{/* ── Draggable top region (mobile): handle + header + stats ── */}
-			<div
-				className="shrink-0 max-md:touch-none max-md:cursor-grab max-md:active:cursor-grabbing"
-				onTouchStart={onTouchStart}
-				onTouchMove={onTouchMove}
-				onTouchEnd={onTouchEnd}
+				style={{ "--sheet-h": `${sheetHeight}dvh` } as React.CSSProperties}
 			>
-				{/* Drag handle (mobile only) */}
-				<div className="flex justify-center items-center h-8 w-full md:hidden">
-					<div className="w-12 h-1.5 rounded-full bg-text-secondary/30" />
-				</div>
+				{/* ── Draggable top region (mobile): handle + header + stats ── */}
+				<div
+					className="shrink-0 max-md:touch-none max-md:cursor-grab max-md:active:cursor-grabbing"
+					onTouchStart={onTouchStart}
+					onTouchMove={onTouchMove}
+					onTouchEnd={onTouchEnd}
+				>
+					{/* Drag handle (mobile only) */}
+					<div className="flex justify-center items-center h-8 w-full md:hidden">
+						<div className="w-12 h-1.5 rounded-full bg-text-secondary/30" />
+					</div>
 
-				{/* Header */}
-				<div className="flex items-center justify-between px-4 py-2 border-b border-border">
-					<h2 className="font-data text-xs font-semibold tracking-wider text-text-secondary">
-						IMPACT
-					</h2>
-					<div className="flex items-center gap-4">
-						{hasCuts && (
+					{/* Header */}
+					<div className="flex items-center justify-between px-4 py-2 border-b border-border">
+						<h2 className="font-data text-xs font-semibold tracking-wider text-text-secondary">
+							IMPACT
+						</h2>
+						<div className="flex items-center gap-4">
+							{hasCuts && (
+								<button
+									type="button"
+									onClick={resetCuts}
+									className="text-cable-cut hover:text-cable-cut/80 text-xs py-1 transition-colors"
+								>
+									Reset
+								</button>
+							)}
 							<button
 								type="button"
-								onClick={resetCuts}
-								className="text-cable-cut hover:text-cable-cut/80 text-xs py-1 transition-colors"
+								onClick={togglePanel}
+								className="text-text-secondary/60 hover:text-text-primary text-xs py-1 transition-colors"
 							>
-								Reset
+								Hide
 							</button>
-						)}
-						<button
-							type="button"
-							onClick={togglePanel}
-							className="text-text-secondary/60 hover:text-text-primary text-xs py-1 transition-colors"
-						>
-							Hide
-						</button>
+						</div>
 					</div>
+
+					{/* Summary stats */}
+					{hasCuts && simulation && (
+						<div className="grid grid-cols-3 gap-1 px-4 py-3 border-b border-border">
+							<div className="text-center">
+								<div className="font-data text-lg font-semibold text-cable-cut">
+									{simulation.cablesAffected}
+								</div>
+								<div className="text-[10px] text-text-secondary/60 uppercase">cables</div>
+							</div>
+							<div className="text-center">
+								<div className="font-data text-lg font-semibold text-accent">
+									{simulation.totalCapacityRemovedTbps.toFixed(0)}
+								</div>
+								<div className="text-[10px] text-text-secondary/60 uppercase">Tbps lost</div>
+							</div>
+							<div className="text-center">
+								<div className="font-data text-lg font-semibold text-text-primary">
+									{simulation.metrosAffected}
+								</div>
+								<div className="text-[10px] text-text-secondary/60 uppercase">affected</div>
+							</div>
+						</div>
+					)}
 				</div>
 
-				{/* Summary stats */}
-				{hasCuts && simulation && (
-					<div className="grid grid-cols-3 gap-1 px-4 py-3 border-b border-border">
-						<div className="text-center">
-							<div className="font-data text-lg font-semibold text-cable-cut">
-								{simulation.cablesAffected}
-							</div>
-							<div className="text-[10px] text-text-secondary/60 uppercase">cables</div>
-						</div>
-						<div className="text-center">
-							<div className="font-data text-lg font-semibold text-accent">
-								{simulation.totalCapacityRemovedTbps.toFixed(0)}
-							</div>
-							<div className="text-[10px] text-text-secondary/60 uppercase">Tbps lost</div>
-						</div>
-						<div className="text-center">
-							<div className="font-data text-lg font-semibold text-text-primary">
-								{simulation.metrosAffected}
-							</div>
-							<div className="text-[10px] text-text-secondary/60 uppercase">affected</div>
+				{/* ── Redundancy callout ── */}
+				{hasCuts && absorbed.length > 0 && affected.length === 0 && (
+					<div className="mx-4 my-3 rounded-xl bg-redundancy/10 border border-redundancy/20 px-4 py-3 shrink-0">
+						<div className="text-sm font-semibold text-redundancy">Network absorbed this cut</div>
+						<div className="text-xs text-text-secondary mt-1 leading-relaxed">
+							Alternative paths carry equivalent capacity. No measurable impact.
 						</div>
 					</div>
 				)}
-			</div>
 
-			{/* ── Redundancy callout ── */}
-			{hasCuts && absorbed.length > 0 && affected.length === 0 && (
-				<div className="mx-4 my-3 rounded-xl bg-redundancy/10 border border-redundancy/20 px-4 py-3 shrink-0">
-					<div className="text-sm font-semibold text-redundancy">
-						Network absorbed this cut
+				{/* ── Loading ── */}
+				{simulating && (
+					<div className="flex items-center justify-center py-10 shrink-0">
+						<div className="text-sm text-text-secondary animate-pulse">Simulating...</div>
 					</div>
-					<div className="text-xs text-text-secondary mt-1 leading-relaxed">
-						Alternative paths carry equivalent capacity. No measurable impact.
+				)}
+
+				{/* ── Empty state ── */}
+				{!hasCuts && (
+					<div className="flex flex-col items-center justify-center flex-1 px-8 text-center">
+						<div className="text-text-secondary/70 text-sm leading-relaxed">
+							Select a scenario or tap a cable to simulate a failure.
+						</div>
 					</div>
-				</div>
-			)}
+				)}
 
-			{/* ── Loading ── */}
-			{simulating && (
-				<div className="flex items-center justify-center py-10 shrink-0">
-					<div className="text-sm text-text-secondary animate-pulse">Simulating...</div>
-				</div>
-			)}
-
-			{/* ── Empty state ── */}
-			{!hasCuts && (
-				<div className="flex flex-col items-center justify-center flex-1 px-8 text-center">
-					<div className="text-text-secondary/70 text-sm leading-relaxed">
-						Select a scenario or tap a cable to simulate a failure.
-					</div>
-				</div>
-			)}
-
-			{/* ── Selected metro detail ── */}
-			{selectedImpact && selectedMetroId && (
-				<div className="px-4 py-3 border-b border-border bg-border/10 shrink-0">
-					<div className="flex items-center justify-between mb-3">
-						<div>
-							<div className="text-base font-semibold text-text-primary">
-								{metrosById.get(selectedMetroId)?.name}
+				{/* ── Selected metro detail ── */}
+				{selectedImpact && selectedMetroId && (
+					<div className="px-4 py-3 border-b border-border bg-border/10 shrink-0">
+						<div className="flex items-center justify-between mb-3">
+							<div>
+								<div className="text-base font-semibold text-text-primary">
+									{metrosById.get(selectedMetroId)?.name}
+								</div>
+								<div className="text-xs text-text-secondary">
+									{metrosById.get(selectedMetroId)?.countryCode}
+								</div>
 							</div>
-							<div className="text-xs text-text-secondary">
-								{metrosById.get(selectedMetroId)?.countryCode}
+							<button
+								type="button"
+								onClick={() => selectMetro(null)}
+								className="text-xs text-text-secondary/60 hover:text-text-primary py-1 px-2 transition-colors"
+							>
+								Back
+							</button>
+						</div>
+						<div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+							<div className="text-text-secondary">Bandwidth lost</div>
+							<div className="font-data text-right text-cable-cut font-medium">
+								{selectedImpact.bandwidthLossPct.toFixed(1)}%
+							</div>
+							<div className="text-text-secondary">Remaining</div>
+							<div className="font-data text-right">
+								{selectedImpact.remainingBandwidthTbps.toFixed(0)} Tbps
+							</div>
+							<div className="text-text-secondary">Baseline</div>
+							<div className="font-data text-right text-text-secondary/70">
+								{selectedImpact.baselineBandwidthTbps.toFixed(0)} Tbps
+							</div>
+							<div className="text-text-secondary">Latency change</div>
+							<div className="font-data text-right">
+								{selectedImpact.latencyDeltaMs > 0
+									? `+${selectedImpact.latencyDeltaMs.toFixed(1)} ms`
+									: selectedImpact.isolated
+										? "N/A"
+										: "none"}
+							</div>
+							<div className="text-text-secondary">Path diversity</div>
+							<div className="font-data text-right">
+								{selectedImpact.remainingPathDiversity} / {selectedImpact.baselinePathDiversity}
 							</div>
 						</div>
-						<button
-							type="button"
-							onClick={() => selectMetro(null)}
-							className="text-xs text-text-secondary/60 hover:text-text-primary py-1 px-2 transition-colors"
-						>
-							Back
-						</button>
-					</div>
-					<div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-						<div className="text-text-secondary">Bandwidth lost</div>
-						<div className="font-data text-right text-cable-cut font-medium">
-							{selectedImpact.bandwidthLossPct.toFixed(1)}%
-						</div>
-						<div className="text-text-secondary">Remaining</div>
-						<div className="font-data text-right">
-							{selectedImpact.remainingBandwidthTbps.toFixed(0)} Tbps
-						</div>
-						<div className="text-text-secondary">Baseline</div>
-						<div className="font-data text-right text-text-secondary/70">
-							{selectedImpact.baselineBandwidthTbps.toFixed(0)} Tbps
-						</div>
-						<div className="text-text-secondary">Latency change</div>
-						<div className="font-data text-right">
-							{selectedImpact.latencyDeltaMs > 0
-								? `+${selectedImpact.latencyDeltaMs.toFixed(1)} ms`
-								: selectedImpact.isolated
-									? "N/A"
-									: "none"}
-						</div>
-						<div className="text-text-secondary">Path diversity</div>
-						<div className="font-data text-right">
-							{selectedImpact.remainingPathDiversity} / {selectedImpact.baselinePathDiversity}
-						</div>
-					</div>
-					{selectedImpact.reroutedVia.length > 0 && (
-						<div className="mt-3 pt-2.5 border-t border-border/50">
-							<div className="text-[10px] text-text-secondary/60 uppercase mb-1.5">
-								Traffic shifts to
-							</div>
-							{selectedImpact.reroutedVia.map((r, i) => {
-								const isSubCable = r.type === "submarine" && r.cableId;
-								const isTerrestrial = r.type === "terrestrial" && r.terrestrialId;
-								return (
-									<div
-										key={`detail-reroute-${i}`}
-										className="flex items-center justify-between text-sm py-1.5"
-									>
-										<button
-											type="button"
-											onClick={() => {
-												if (isTerrestrial) selectTerrestrial(r.terrestrialId!);
-												else if (isSubCable) selectCable(r.cableId!);
-											}}
-											className="flex items-center gap-2 min-w-0 text-left hover:opacity-80 transition-opacity"
+						{selectedImpact.reroutedVia.length > 0 && (
+							<div className="mt-3 pt-2.5 border-t border-border/50">
+								<div className="text-[10px] text-text-secondary/60 uppercase mb-1.5">
+									Traffic shifts to
+								</div>
+								{selectedImpact.reroutedVia.map((r, i) => {
+									const isSubCable = r.type === "submarine" && r.cableId;
+									const isTerrestrial = r.type === "terrestrial" && r.terrestrialId;
+									return (
+										<div
+											key={`reroute-${r.cableId ?? r.terrestrialId ?? r.name}`}
+											className="flex items-center justify-between text-sm py-1.5"
 										>
-											<span
-												className="w-2 h-2 rounded-full flex-none"
-												style={{
-													backgroundColor: r.type === "terrestrial" ? "#22d3ee" : "#60a5fa",
-												}}
-											/>
-											<span className="text-text-primary truncate">{r.name}</span>
-											<span className="font-data text-text-secondary/70 text-xs flex-none">
-												{r.additionalLoadTbps.toFixed(0)} Tbps
-											</span>
-										</button>
-										{isSubCable && r.cableId && (
 											<button
 												type="button"
-												onClick={() => cutCableById(r.cableId!)}
-												className="
+												onClick={() => {
+													if (isTerrestrial && r.terrestrialId) selectTerrestrial(r.terrestrialId);
+													else if (isSubCable && r.cableId) selectCable(r.cableId);
+												}}
+												className="flex items-center gap-2 min-w-0 text-left hover:opacity-80 transition-opacity"
+											>
+												<span
+													className="w-2 h-2 rounded-full flex-none"
+													style={{
+														backgroundColor: r.type === "terrestrial" ? "#22d3ee" : "#60a5fa",
+													}}
+												/>
+												<span className="text-text-primary truncate">{r.name}</span>
+												<span className="font-data text-text-secondary/70 text-xs flex-none">
+													{r.additionalLoadTbps.toFixed(0)} Tbps
+												</span>
+											</button>
+											{isSubCable && r.cableId && (
+												<button
+													type="button"
+													onClick={() => {
+														if (r.cableId) cutCableById(r.cableId);
+													}}
+													className="
 													flex-none ml-2 px-2.5 py-1 rounded-lg
 													text-[10px] font-semibold uppercase
 													text-cable-cut bg-cable-cut/10 border border-cable-cut/30
 													active:bg-cable-cut/20 transition-colors
 												"
-											>
-												Cut
-											</button>
-										)}
-									</div>
-								);
-							})}
-						</div>
-					)}
-				</div>
-			)}
-
-			{/* ── Metro ranking list ── */}
-			{hasCuts && !simulating && affected.length > 0 && (
-				<div className="flex-1 overflow-y-auto overscroll-contain">
-					{/* Column headers */}
-					<div className="flex items-center gap-2 px-4 py-2 text-[10px] text-text-secondary/50 uppercase tracking-wider border-b border-border/50 sticky top-0 bg-surface/95 z-10">
-						<div className="flex-1">Location</div>
-						<div className="w-16 text-right">Loss</div>
-						<div className="w-14 text-right">Latency</div>
+												>
+													Cut
+												</button>
+											)}
+										</div>
+									);
+								})}
+							</div>
+						)}
 					</div>
+				)}
 
-					{affected.map((impact) => {
-						const metro = metrosById.get(impact.metroId);
-						if (!metro) return null;
-						const isSelected = impact.metroId === selectedMetroId;
+				{/* ── Metro ranking list ── */}
+				{hasCuts && !simulating && affected.length > 0 && (
+					<div className="flex-1 overflow-y-auto overscroll-contain">
+						{/* Column headers */}
+						<div className="flex items-center gap-2 px-4 py-2 text-[10px] text-text-secondary/50 uppercase tracking-wider border-b border-border/50 sticky top-0 bg-surface/95 z-10">
+							<div className="flex-1">Location</div>
+							<div className="w-16 text-right">Loss</div>
+							<div className="w-14 text-right">Latency</div>
+						</div>
 
-						return (
-							<button
-								key={impact.metroId}
-								type="button"
-								onClick={() => onMetroClick(impact.metroId)}
-								className={`
+						{affected.map((impact) => {
+							const metro = metrosById.get(impact.metroId);
+							if (!metro) return null;
+							const isSelected = impact.metroId === selectedMetroId;
+
+							return (
+								<button
+									key={impact.metroId}
+									type="button"
+									onClick={() => onMetroClick(impact.metroId)}
+									className={`
 									w-full flex items-center gap-2 px-4 min-h-[48px] py-2.5 text-left
 									transition-colors border-b border-border/15
-									${isSelected
-										? "bg-cable-high/10"
-										: "active:bg-border/30"
-									}
+									${isSelected ? "bg-cable-high/10" : "active:bg-border/30"}
 								`}
-							>
-								{/* Name */}
-								<div className="flex-1 min-w-0">
-									<div className="text-sm text-text-primary truncate leading-snug">
-										{metro.name}
+								>
+									{/* Name */}
+									<div className="flex-1 min-w-0">
+										<div className="text-sm text-text-primary truncate leading-snug">
+											{metro.name}
+										</div>
+										<div className="text-[10px] text-text-secondary/50 leading-snug">
+											{metro.countryCode}
+										</div>
 									</div>
-									<div className="text-[10px] text-text-secondary/50 leading-snug">
-										{metro.countryCode}
-									</div>
-								</div>
 
-								{/* Bandwidth loss */}
-								<div className="w-16 text-right">
-									{impact.isolated ? (
-										<span className="font-data text-xs text-cable-cut font-bold">
-											OFFLINE
-										</span>
-									) : (
-										<>
-											<div
-												className="font-data text-xs font-medium"
-												style={{
-													color:
-														impact.bandwidthLossPct > 80
-															? "#ef4444"
-															: impact.bandwidthLossPct > 50
-																? "#f59e0b"
-																: impact.bandwidthLossPct > 20
-																	? "#fde047"
-																	: "#94a3b8",
-												}}
-											>
-												-{impact.bandwidthLossPct.toFixed(0)}%
-											</div>
-											<div className="h-1 rounded-full bg-border/50 mt-1 overflow-hidden">
+									{/* Bandwidth loss */}
+									<div className="w-16 text-right">
+										{impact.isolated ? (
+											<span className="font-data text-xs text-cable-cut font-bold">OFFLINE</span>
+										) : (
+											<>
 												<div
-													className="h-full rounded-full"
+													className="font-data text-xs font-medium"
 													style={{
-														width: `${100 - impact.bandwidthLossPct}%`,
-														backgroundColor:
-															impact.bandwidthLossPct > 50 ? "#f59e0b" : "#22c55e",
+														color:
+															impact.bandwidthLossPct > 80
+																? "#ef4444"
+																: impact.bandwidthLossPct > 50
+																	? "#f59e0b"
+																	: impact.bandwidthLossPct > 20
+																		? "#fde047"
+																		: "#94a3b8",
 													}}
-												/>
-											</div>
-										</>
-									)}
-								</div>
+												>
+													-{impact.bandwidthLossPct.toFixed(0)}%
+												</div>
+												<div className="h-1 rounded-full bg-border/50 mt-1 overflow-hidden">
+													<div
+														className="h-full rounded-full"
+														style={{
+															width: `${100 - impact.bandwidthLossPct}%`,
+															backgroundColor: impact.bandwidthLossPct > 50 ? "#f59e0b" : "#22c55e",
+														}}
+													/>
+												</div>
+											</>
+										)}
+									</div>
 
-								{/* Latency */}
-								<div className="w-14 text-right">
-									{impact.latencyDeltaMs > 0 ? (
-										<span className="font-data text-xs text-accent">
-											+{impact.latencyDeltaMs.toFixed(0)}ms
-										</span>
-									) : impact.isolated ? (
-										<span className="font-data text-xs text-cable-cut">—</span>
-									) : (
-										<span className="font-data text-xs text-text-secondary/40">—</span>
-									)}
-								</div>
-							</button>
-						);
-					})}
+									{/* Latency */}
+									<div className="w-14 text-right">
+										{impact.latencyDeltaMs > 0 ? (
+											<span className="font-data text-xs text-accent">
+												+{impact.latencyDeltaMs.toFixed(0)}ms
+											</span>
+										) : impact.isolated ? (
+											<span className="font-data text-xs text-cable-cut">—</span>
+										) : (
+											<span className="font-data text-xs text-text-secondary/40">—</span>
+										)}
+									</div>
+								</button>
+							);
+						})}
 
-					{/* Bottom padding for safe area */}
-					<div className="h-6 safe-bottom" />
-				</div>
-			)}
-		</div>
+						{/* Bottom padding for safe area */}
+						<div className="h-6 safe-bottom" />
+					</div>
+				)}
+			</div>
 		</>
 	);
 }

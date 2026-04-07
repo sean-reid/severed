@@ -57,10 +57,22 @@ export function TerrestrialCard() {
 					</button>
 					<button
 						type="button"
-						onClick={() => { selectTerrestrial(null); setExpanded(false); }}
+						onClick={() => {
+							selectTerrestrial(null);
+							setExpanded(false);
+						}}
 						className="flex-none p-2 text-text-secondary/60 active:text-text-primary transition-colors"
 					>
-						<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+						<svg
+							width="16"
+							height="16"
+							viewBox="0 0 16 16"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+						>
+							<title>Close</title>
 							<line x1="4" y1="4" x2="12" y2="12" />
 							<line x1="12" y1="4" x2="4" y2="12" />
 						</svg>
@@ -68,9 +80,13 @@ export function TerrestrialCard() {
 				</div>
 
 				{expanded && (
-					<div
-						className="px-4 pb-3 pt-1 border-t border-border/50"
+					<button
+						type="button"
+						className="px-4 pb-3 pt-1 border-t border-border/50 w-full text-left"
 						onClick={() => setExpanded(false)}
+						onKeyDown={(e) => {
+							if (e.key === "Enter") setExpanded(false);
+						}}
 					>
 						<div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
 							<div className="text-text-secondary">Distance</div>
@@ -85,15 +101,11 @@ export function TerrestrialCard() {
 
 						<div className="mt-2 pt-2 border-t border-border/30">
 							<div className="text-[10px] text-text-secondary/50 uppercase mb-1">Source</div>
-							<div className="text-xs text-text-secondary leading-relaxed">
-								{edge.source}
-							</div>
+							<div className="text-xs text-text-secondary leading-relaxed">{edge.source}</div>
 						</div>
 
 						{edge.notes && (
-							<div className="text-[10px] text-cable-high/70 mt-1.5 italic">
-								{edge.notes}
-							</div>
+							<div className="text-[10px] text-cable-high/70 mt-1.5 italic">{edge.notes}</div>
 						)}
 
 						{edge.sourceUrl && (
@@ -104,7 +116,17 @@ export function TerrestrialCard() {
 								className="inline-flex items-center gap-1 mt-2 text-[10px] text-cable-high hover:text-text-primary transition-colors"
 								onClick={(e) => e.stopPropagation()}
 							>
-								<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+								<svg
+									width="10"
+									height="10"
+									viewBox="0 0 16 16"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+								>
+									<title>External link</title>
 									<path d="M12 8.5v5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 0 13.5v-9A1.5 1.5 0 0 1 1.5 3H7" />
 									<path d="M10 1h5v5" />
 									<path d="M7 9 15 1" />
@@ -112,7 +134,7 @@ export function TerrestrialCard() {
 								Source
 							</a>
 						)}
-					</div>
+					</button>
 				)}
 			</div>
 		</div>

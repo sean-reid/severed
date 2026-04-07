@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
-import { useStore } from "../../state/store";
 import type { CutLocation } from "../../data/types";
+import { useStore } from "../../state/store";
 import { confidenceColors } from "../../utils/colors";
 
 export function CutAction() {
@@ -77,10 +77,22 @@ export function CutAction() {
 					</button>
 					<button
 						type="button"
-						onClick={() => { selectCable(null); setExpanded(false); }}
+						onClick={() => {
+							selectCable(null);
+							setExpanded(false);
+						}}
 						className="flex-none p-2 text-text-secondary/60 active:text-text-primary transition-colors"
 					>
-						<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+						<svg
+							width="16"
+							height="16"
+							viewBox="0 0 16 16"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+						>
+							<title>Close</title>
 							<line x1="4" y1="4" x2="12" y2="12" />
 							<line x1="12" y1="4" x2="4" y2="12" />
 						</svg>
@@ -89,23 +101,23 @@ export function CutAction() {
 
 				{/* Expanded: full details — tap to collapse */}
 				{expanded && (
-					<div
-						className="px-4 pb-3 pt-1 border-t border-border/50 cursor-pointer active:bg-border/10"
+					<button
+						type="button"
+						className="px-4 pb-3 pt-1 border-t border-border/50 cursor-pointer active:bg-border/10 w-full text-left"
 						onClick={() => setExpanded(false)}
+						onKeyDown={(e) => {
+							if (e.key === "Enter") setExpanded(false);
+						}}
 					>
 						<div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
 							<div className="text-text-secondary">RFS</div>
 							<div className="font-data text-right">{selectedCable.rfsYear}</div>
 							<div className="text-text-secondary">Length</div>
 							<div className="font-data text-right">
-								{selectedCable.lengthKm > 0
-									? `${selectedCable.lengthKm.toLocaleString()} km`
-									: "—"}
+								{selectedCable.lengthKm > 0 ? `${selectedCable.lengthKm.toLocaleString()} km` : "—"}
 							</div>
 							<div className="text-text-secondary">Fiber pairs</div>
-							<div className="font-data text-right">
-								{selectedCable.fiberPairs ?? "Unknown"}
-							</div>
+							<div className="font-data text-right">{selectedCable.fiberPairs ?? "Unknown"}</div>
 							<div className="text-text-secondary">Segments</div>
 							<div className="font-data text-right">{selectedCable.segments.length}</div>
 							<div className="text-text-secondary">Capacity source</div>
@@ -137,7 +149,17 @@ export function CutAction() {
 								className="inline-flex items-center gap-1 mt-2 text-[10px] text-cable-high hover:text-text-primary transition-colors"
 								onClick={(e) => e.stopPropagation()}
 							>
-								<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+								<svg
+									width="10"
+									height="10"
+									viewBox="0 0 16 16"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+								>
+									<title>External link</title>
 									<path d="M12 8.5v5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 0 13.5v-9A1.5 1.5 0 0 1 1.5 3H7" />
 									<path d="M10 1h5v5" />
 									<path d="M7 9 15 1" />
@@ -145,7 +167,7 @@ export function CutAction() {
 								Source
 							</a>
 						)}
-					</div>
+					</button>
 				)}
 			</div>
 		</div>

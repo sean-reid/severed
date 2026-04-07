@@ -3,12 +3,7 @@ const EARTH_RADIUS_KM = 6371;
 /**
  * Great-circle distance between two points in km (Haversine formula).
  */
-export function haversineKm(
-	lat1: number,
-	lng1: number,
-	lat2: number,
-	lng2: number,
-): number {
+export function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
 	const toRad = (d: number) => (d * Math.PI) / 180;
 	const dLat = toRad(lat2 - lat1);
 	const dLng = toRad(lng2 - lng1);
@@ -21,11 +16,7 @@ export function haversineKm(
 /**
  * Check if a point is inside a polygon (ray casting algorithm).
  */
-export function pointInPolygon(
-	lat: number,
-	lng: number,
-	polygon: number[][],
-): boolean {
+export function pointInPolygon(lat: number, lng: number, polygon: number[][]): boolean {
 	let inside = false;
 	for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
 		const [xi, yi] = polygon[i];

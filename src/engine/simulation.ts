@@ -7,12 +7,9 @@ import type {
 	RerouteExplanation,
 	TerrestrialEdge,
 } from "../data/types";
-import { NetworkGraph } from "./graph";
-import {
-	dijkstraDistance,
-	reconstructPath,
-} from "./pathfinding";
 import { pointInPolygon } from "../utils/geo";
+import { NetworkGraph } from "./graph";
+import { dijkstraDistance, reconstructPath } from "./pathfinding";
 
 export interface SimulationInput {
 	metros: Metro[];
@@ -120,7 +117,7 @@ function computeBaseline(graph: NetworkGraph): BaselineMetrics {
 	// Initialize
 	for (const [metroId] of graph.nodes) {
 		bandwidth.set(metroId, 0);
-		latency.set(metroId, Infinity);
+		latency.set(metroId, Number.POSITIVE_INFINITY);
 		const adj = graph.adjacency.get(metroId);
 		diversity.set(metroId, adj ? new Set(adj.map((e) => e.cableId ?? e.id)).size : 0);
 	}
@@ -131,8 +128,8 @@ function computeBaseline(graph: NetworkGraph): BaselineMetrics {
 
 		for (const [metroId] of graph.nodes) {
 			// Latency: track minimum to any hub
-			const d = dist.get(metroId) ?? Infinity;
-			const currentLat = latency.get(metroId) ?? Infinity;
+			const d = dist.get(metroId) ?? Number.POSITIVE_INFINITY;
+			const currentLat = latency.get(metroId) ?? Number.POSITIVE_INFINITY;
 			if (d * 0.005 < currentLat) {
 				latency.set(metroId, d * 0.005); // km to ms
 			}
@@ -150,7 +147,10 @@ function computeBaseline(graph: NetworkGraph): BaselineMetrics {
 	for (const hubId of graph.hubIds) {
 		const adj = graph.adjacency.get(hubId);
 		if (adj) {
-			bandwidth.set(hubId, adj.reduce((sum, e) => sum + e.capacityTbps, 0));
+			bandwidth.set(
+				hubId,
+				adj.reduce((sum, e) => sum + e.capacityTbps, 0),
+			);
 		}
 	}
 
@@ -217,7 +217,13 @@ export function runSimulation(input: SimulationInput): SimulationOutput {
 			redundancyAbsorbed: false,
 			reroutedVia: [],
 		}));
-		return { impacts, totalCapacityRemovedTbps: 0, metrosAffected: 0, cablesAffected: 0, affectedEdgeIds: [] };
+		return {
+			impacts,
+			totalCapacityRemovedTbps: 0,
+			metrosAffected: 0,
+			cablesAffected: 0,
+			affectedEdgeIds: [],
+		};
 	}
 
 	// Resolve which edges are affected
@@ -234,7 +240,7 @@ export function runSimulation(input: SimulationInput): SimulationOutput {
 	// Same hub-first Dijkstra approach for damaged graph
 	for (const [metroId] of damagedGraph.nodes) {
 		damagedBandwidth.set(metroId, 0);
-		damagedLatency.set(metroId, Infinity);
+		damagedLatency.set(metroId, Number.POSITIVE_INFINITY);
 		const adj = damagedGraph.adjacency.get(metroId);
 		damagedDiversity.set(metroId, adj ? new Set(adj.map((e) => e.cableId ?? e.id)).size : 0);
 	}
@@ -242,8 +248,8 @@ export function runSimulation(input: SimulationInput): SimulationOutput {
 	for (const hubId of damagedGraph.hubIds) {
 		const { dist, prev } = dijkstraDistance(damagedGraph, hubId);
 		for (const [metroId] of damagedGraph.nodes) {
-			const d = dist.get(metroId) ?? Infinity;
-			const currentLat = damagedLatency.get(metroId) ?? Infinity;
+			const d = dist.get(metroId) ?? Number.POSITIVE_INFINITY;
+			const currentLat = damagedLatency.get(metroId) ?? Number.POSITIVE_INFINITY;
 			if (d * 0.005 < currentLat) {
 				damagedLatency.set(metroId, d * 0.005);
 			}
@@ -257,7 +263,10 @@ export function runSimulation(input: SimulationInput): SimulationOutput {
 	for (const hubId of damagedGraph.hubIds) {
 		const adj = damagedGraph.adjacency.get(hubId);
 		if (adj) {
-			damagedBandwidth.set(hubId, adj.reduce((sum, e) => sum + e.capacityTbps, 0));
+			damagedBandwidth.set(
+				hubId,
+				adj.reduce((sum, e) => sum + e.capacityTbps, 0),
+			);
 		}
 	}
 
@@ -278,21 +287,20 @@ export function runSimulation(input: SimulationInput): SimulationOutput {
 		const bBase = baseline.bandwidth.get(m.id) ?? 0;
 		const bDamaged = damagedBandwidth.get(m.id) ?? 0;
 		const lBase = baseline.latency.get(m.id) ?? 0;
-		const lDamaged = damagedLatency.get(m.id) ?? Infinity;
+		const lDamaged = damagedLatency.get(m.id) ?? Number.POSITIVE_INFINITY;
 		const dBase = baseline.diversity.get(m.id) ?? 0;
 		const dDamaged = damagedDiversity.get(m.id) ?? 0;
 
 		const lossPct = bBase > 0 ? ((bBase - bDamaged) / bBase) * 100 : 0;
 		const isolated = bDamaged === 0 && bBase > 0;
 		const redundancyAbsorbed = lossPct < 3 && bBase > 0;
-		const latencyDelta = lDamaged === Infinity ? Infinity : lDamaged - lBase;
+		const latencyDelta =
+			lDamaged === Number.POSITIVE_INFINITY ? Number.POSITIVE_INFINITY : lDamaged - lBase;
 
 		if (lossPct > 0.1) metrosAffected++;
 
 		const reroutedVia =
-			lossPct > 0 && !isolated
-				? computeRerouting(baselineGraph, damagedGraph, m.id)
-				: [];
+			lossPct > 0 && !isolated ? computeRerouting(baselineGraph, damagedGraph, m.id) : [];
 
 		return {
 			metroId: m.id,
@@ -301,8 +309,10 @@ export function runSimulation(input: SimulationInput): SimulationOutput {
 			remainingBandwidthTbps: Math.round(bDamaged * 100) / 100,
 			bandwidthLossPct: Math.round(lossPct * 10) / 10,
 			baselineLatencyMs: Math.round(lBase * 100) / 100,
-			reroutedLatencyMs: lDamaged === Infinity ? -1 : Math.round(lDamaged * 100) / 100,
-			latencyDeltaMs: latencyDelta === Infinity ? -1 : Math.round(latencyDelta * 100) / 100,
+			reroutedLatencyMs:
+				lDamaged === Number.POSITIVE_INFINITY ? -1 : Math.round(lDamaged * 100) / 100,
+			latencyDeltaMs:
+				latencyDelta === Number.POSITIVE_INFINITY ? -1 : Math.round(latencyDelta * 100) / 100,
 			baselinePathDiversity: dBase,
 			remainingPathDiversity: dDamaged,
 			isolated,

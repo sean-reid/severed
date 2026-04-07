@@ -1,1 +1,44 @@
-[{"id":"red-sea-crisis","name":"Red Sea Crisis","description":"Simulates cable cuts in the Bab al-Mandab strait, similar to the February 2024 Houthi-related cable damage. ~15 cables carry the majority of Europe-Asia traffic through this chokepoint.","cutLocations":[{"type":"chokepoint","id":"bab-al-mandab"}],"historicalDate":"2024-02-24","repairTimeDays":56},{"id":"malacca-strait","name":"Strait of Malacca Disruption","description":"Cables through the Strait of Malacca are severed, disrupting the primary route between Southeast Asia, East Asia, and the Indian Ocean.","cutLocations":[{"type":"chokepoint","id":"strait-of-malacca"}]},{"id":"baltic-sabotage","name":"Baltic Sea Sabotage","description":"Simulates cable cuts in the Baltic Sea, similar to the November 2024 incidents. Tests Northern European redundancy via terrestrial backup.","cutLocations":[{"type":"chokepoint","id":"baltic-sea"}],"historicalDate":"2024-11-17","repairTimeDays":10},{"id":"luzon-strait-earthquake","name":"Luzon Strait Earthquake","description":"Major earthquake triggers submarine landslide in the Luzon Strait, cutting multiple trans-Pacific cables. Similar to the 2006 Hengchun event.","cutLocations":[{"type":"chokepoint","id":"luzon-strait"}],"historicalDate":"2006-12-26","repairTimeDays":35},{"id":"guam-hub-failure","name":"Guam Hub Failure","description":"All cables landing at Guam are severed. Tests the impact of losing a critical Pacific routing hub.","cutLocations":[{"type":"chokepoint","id":"guam"}]},{"id":"english-channel-cut","name":"English Channel Cut","description":"Cables through the English Channel are severed, testing UK connectivity resilience and transatlantic cable routing.","cutLocations":[{"type":"chokepoint","id":"english-channel"}]}]
+[
+	{
+		"id": "red-sea-crisis",
+		"name": "Red Sea Crisis",
+		"description": "Simulates cable cuts in the Bab al-Mandab strait, similar to the February 2024 Houthi-related cable damage. ~15 cables carry the majority of Europe-Asia traffic through this chokepoint.",
+		"cutLocations": [{ "type": "chokepoint", "id": "bab-al-mandab" }],
+		"historicalDate": "2024-02-24",
+		"repairTimeDays": 56
+	},
+	{
+		"id": "malacca-strait",
+		"name": "Strait of Malacca Disruption",
+		"description": "Cables through the Strait of Malacca are severed, disrupting the primary route between Southeast Asia, East Asia, and the Indian Ocean.",
+		"cutLocations": [{ "type": "chokepoint", "id": "strait-of-malacca" }]
+	},
+	{
+		"id": "baltic-sabotage",
+		"name": "Baltic Sea Sabotage",
+		"description": "Simulates cable cuts in the Baltic Sea, similar to the November 2024 incidents. Tests Northern European redundancy via terrestrial backup.",
+		"cutLocations": [{ "type": "chokepoint", "id": "baltic-sea" }],
+		"historicalDate": "2024-11-17",
+		"repairTimeDays": 10
+	},
+	{
+		"id": "luzon-strait-earthquake",
+		"name": "Luzon Strait Earthquake",
+		"description": "Major earthquake triggers submarine landslide in the Luzon Strait, cutting multiple trans-Pacific cables. Similar to the 2006 Hengchun event.",
+		"cutLocations": [{ "type": "chokepoint", "id": "luzon-strait" }],
+		"historicalDate": "2006-12-26",
+		"repairTimeDays": 35
+	},
+	{
+		"id": "guam-hub-failure",
+		"name": "Guam Hub Failure",
+		"description": "All cables landing at Guam are severed. Tests the impact of losing a critical Pacific routing hub.",
+		"cutLocations": [{ "type": "chokepoint", "id": "guam" }]
+	},
+	{
+		"id": "english-channel-cut",
+		"name": "English Channel Cut",
+		"description": "Cables through the English Channel are severed, testing UK connectivity resilience and transatlantic cable routing.",
+		"cutLocations": [{ "type": "chokepoint", "id": "english-channel" }]
+	}
+]

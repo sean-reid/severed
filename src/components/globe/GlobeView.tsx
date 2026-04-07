@@ -1,19 +1,17 @@
+import type { Layer } from "@deck.gl/core";
+import { GeoJsonLayer, PathLayer, ScatterplotLayer } from "@deck.gl/layers";
+import { MapboxOverlay } from "@deck.gl/mapbox";
 import { useEffect, useMemo, useRef } from "react";
 import { Map as MapGL, useControl } from "react-map-gl/maplibre";
 import type { MapRef } from "react-map-gl/maplibre";
-import { MapboxOverlay } from "@deck.gl/mapbox";
-import { GeoJsonLayer, PathLayer, ScatterplotLayer } from "@deck.gl/layers";
-import type { Layer } from "@deck.gl/core";
-import { useStore } from "../../state/store";
-import { useSimulation } from "../../engine/useSimulation";
-import { cableColor, cableWidthScale, CUT_COLOR, TERRESTRIAL_COLOR } from "../../utils/colors";
 import type { Cable, Metro, TerrestrialEdge } from "../../data/types";
+import { useSimulation } from "../../engine/useSimulation";
+import { useStore } from "../../state/store";
+import { CUT_COLOR, TERRESTRIAL_COLOR, cableColor, cableWidthScale } from "../../utils/colors";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 function DeckGLOverlay(props: { layers: Layer[] }) {
-	const overlay = useControl<MapboxOverlay>(
-		() => new MapboxOverlay({ interleaved: false }),
-	);
+	const overlay = useControl<MapboxOverlay>(() => new MapboxOverlay({ interleaved: false }));
 	overlay.setProps({
 		layers: props.layers,
 		// Expand pick radius for easier mobile taps on thin cable lines
@@ -88,7 +86,6 @@ export function GlobeView() {
 		return ids;
 	}, [simulation, cuts]);
 
-	// biome-ignore lint: complex layer construction
 	const layers = useMemo((): Layer[] => {
 		const result: Layer[] = [];
 
@@ -141,7 +138,10 @@ export function GlobeView() {
 					const to = metrosMap.get(t.to);
 					if (!from || !to) return null;
 					return {
-						path: [[from.lng, from.lat], [to.lng, to.lat]] as [number, number][],
+						path: [
+							[from.lng, from.lat],
+							[to.lng, to.lat],
+						] as [number, number][],
 						edge: t,
 					};
 				})
@@ -154,10 +154,9 @@ export function GlobeView() {
 					getPath: (d: { path: [number, number][] }) => d.path,
 					getColor: (d: { edge: TerrestrialEdge }) =>
 						d.edge.id === selectedTerrestrialId
-							? [34, 211, 238, 220] as [number, number, number, number]
+							? ([34, 211, 238, 220] as [number, number, number, number])
 							: TERRESTRIAL_COLOR,
-					getWidth: (d: { edge: TerrestrialEdge }) =>
-						d.edge.id === selectedTerrestrialId ? 3 : 1,
+					getWidth: (d: { edge: TerrestrialEdge }) => (d.edge.id === selectedTerrestrialId ? 3 : 1),
 					widthUnits: "pixels" as const,
 					pickable: true,
 					autoHighlight: true,
@@ -279,13 +278,24 @@ export function GlobeView() {
 					${selectedCableId ? "max-md:hidden" : ""}
 				`}
 				style={{
-					bottom: typeof window !== "undefined" && window.innerWidth < 768
-						? `calc(${mobileSheetHeight}dvh + 8px)`
-						: undefined,
+					bottom:
+						typeof window !== "undefined" && window.innerWidth < 768
+							? `calc(${mobileSheetHeight}dvh + 8px)`
+							: undefined,
 				}}
 				title="Reset map view"
 			>
-				<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+				<svg
+					width="18"
+					height="18"
+					viewBox="0 0 16 16"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="1.5"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+				>
+					<title>Recenter map</title>
 					<circle cx="8" cy="8" r="3" />
 					<line x1="8" y1="1" x2="8" y2="3" />
 					<line x1="8" y1="13" x2="8" y2="15" />
@@ -315,23 +325,23 @@ export function GlobeView() {
 			)}
 
 			<div className="absolute inset-0">
-			<MapGL
-				ref={mapRef}
-				initialViewState={INITIAL_VIEW}
-				mapStyle={DARK_BASEMAP}
-				style={{ width: "100%", height: "100%" }}
-				attributionControl={false}
-				onClick={() => {
-					// Deck.gl onClick sets a timestamp. If it fired within
-					// the last 100ms, a layer handled this click — don't deselect.
-					if (Date.now() - lastDeckClickTime.current < 100) return;
-					selectCable(null);
-					selectMetro(null);
-					selectTerrestrial(null);
-				}}
-			>
-				<DeckGLOverlay layers={layers} />
-			</MapGL>
+				<MapGL
+					ref={mapRef}
+					initialViewState={INITIAL_VIEW}
+					mapStyle={DARK_BASEMAP}
+					style={{ width: "100%", height: "100%" }}
+					attributionControl={false}
+					onClick={() => {
+						// Deck.gl onClick sets a timestamp. If it fired within
+						// the last 100ms, a layer handled this click — don't deselect.
+						if (Date.now() - lastDeckClickTime.current < 100) return;
+						selectCable(null);
+						selectMetro(null);
+						selectTerrestrial(null);
+					}}
+				>
+					<DeckGLOverlay layers={layers} />
+				</MapGL>
 			</div>
 		</>
 	);

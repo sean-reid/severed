@@ -25,7 +25,9 @@ export function dijkstraDistance(graph: NetworkGraph, source: string): DijkstraR
 
 	while (queue.length > 0) {
 		queue.sort((a, b) => a.dist - b.dist);
-		const { node: u } = queue.shift()!;
+		const next = queue.shift();
+		if (!next) break;
+		const { node: u } = next;
 		if (visited.has(u)) continue;
 		visited.add(u);
 
@@ -35,8 +37,10 @@ export function dijkstraDistance(graph: NetworkGraph, source: string): DijkstraR
 		for (const edge of adj) {
 			const v = edge.to;
 			if (visited.has(v)) continue;
-			const alt = dist.get(u)! + edge.distanceKm;
-			if (alt < dist.get(v)!) {
+			const uDist = dist.get(u) ?? Number.POSITIVE_INFINITY;
+			const vDist = dist.get(v) ?? Number.POSITIVE_INFINITY;
+			const alt = uDist + edge.distanceKm;
+			if (alt < vDist) {
 				dist.set(v, alt);
 				prev.set(v, { node: u, edge });
 				queue.push({ node: v, dist: alt });
@@ -56,11 +60,11 @@ export function reconstructPath(
 ): GraphEdge[] {
 	const path: GraphEdge[] = [];
 	let current = target;
-	while (prev.get(current)) {
-		const entry = prev.get(current)!;
+	for (;;) {
+		const entry = prev.get(current);
+		if (!entry) break;
 		path.unshift(entry.edge);
 		current = entry.node;
 	}
 	return path;
 }
-

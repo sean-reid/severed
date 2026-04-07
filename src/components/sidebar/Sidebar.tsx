@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react";
-import { useStore } from "../../state/store";
 import type { CutLocation, TerrestrialEdge } from "../../data/types";
+import { useStore } from "../../state/store";
 
 export function Sidebar() {
 	const scenarios = useStore((s) => s.scenarios);
@@ -21,7 +21,9 @@ export function Sidebar() {
 	const togglePanel = useStore((s) => s.togglePanel);
 
 	const selectedCable = selectedCableId ? cablesById.get(selectedCableId) : null;
-	const selectedTerrestrial = selectedTerrestrialId ? terrestrial.find((t) => t.id === selectedTerrestrialId) : null;
+	const selectedTerrestrial = selectedTerrestrialId
+		? terrestrial.find((t) => t.id === selectedTerrestrialId)
+		: null;
 	const selectTerrestrial = useStore((s) => s.selectTerrestrial);
 
 	const storeApplyScenario = useStore((s) => s.applyScenario);
@@ -29,9 +31,7 @@ export function Sidebar() {
 	const cutSelectedCable = useCallback(() => {
 		if (!selectedCable) return;
 		// Cut the entire cable by adding all its segment IDs
-		const segmentIds = selectedCable.segments.map(
-			(_seg, i) => `${selectedCable.id}:${i}`,
-		);
+		const segmentIds = selectedCable.segments.map((_seg, i) => `${selectedCable.id}:${i}`);
 		const cut: CutLocation = {
 			id: `cable-${selectedCable.id}`,
 			type: "point",
@@ -58,12 +58,30 @@ export function Sidebar() {
 				"
 			>
 				{sidebarOpen ? (
-					<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+					<svg
+						width="18"
+						height="18"
+						viewBox="0 0 18 18"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+						strokeLinecap="round"
+					>
+						<title>Close sidebar</title>
 						<line x1="4" y1="4" x2="14" y2="14" />
 						<line x1="14" y1="4" x2="4" y2="14" />
 					</svg>
 				) : (
-					<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+					<svg
+						width="18"
+						height="18"
+						viewBox="0 0 18 18"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+						strokeLinecap="round"
+					>
+						<title>Open sidebar</title>
 						<line x1="3" y1="5" x2="15" y2="5" />
 						<line x1="3" y1="9" x2="15" y2="9" />
 						<line x1="3" y1="13" x2="15" y2="13" />
@@ -83,9 +101,7 @@ export function Sidebar() {
 			>
 				{/* Header */}
 				<div className="px-4 py-4 border-b border-border">
-					<h1 className="font-data text-lg font-bold tracking-widest text-cable-high">
-						SEVERED
-					</h1>
+					<h1 className="font-data text-lg font-bold tracking-widest text-cable-high">SEVERED</h1>
 					<p className="text-[10px] text-text-secondary mt-1 uppercase tracking-wider">
 						Submarine Cable Failure Simulator
 					</p>
@@ -95,9 +111,7 @@ export function Sidebar() {
 				{selectedCable && (
 					<div className="px-4 py-3 border-b border-border bg-border/20">
 						<div className="text-xs text-text-secondary uppercase">Selected Cable</div>
-						<div className="text-sm font-semibold text-text-primary mt-1">
-							{selectedCable.name}
-						</div>
+						<div className="text-sm font-semibold text-text-primary mt-1">{selectedCable.name}</div>
 						<div className="flex items-center gap-2 mt-1">
 							<span className="font-data text-xs text-text-secondary">
 								{selectedCable.designCapacityTbps.toFixed(0)} Tbps
@@ -144,7 +158,17 @@ export function Sidebar() {
 									rel="noopener noreferrer"
 									className="inline-flex items-center gap-0.5 text-[9px] text-cable-high hover:text-text-primary transition-colors"
 								>
-									<svg width="8" height="8" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+									<svg
+										width="8"
+										height="8"
+										viewBox="0 0 16 16"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									>
+										<title>External link</title>
 										<path d="M12 8.5v5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 0 13.5v-9A1.5 1.5 0 0 1 1.5 3H7" />
 										<path d="M10 1h5v5" />
 										<path d="M7 9 15 1" />
@@ -201,9 +225,10 @@ export function Sidebar() {
 									onClick={() => storeApplyScenario(scenario.id)}
 									className={`
 										text-left px-3 py-2 rounded-lg border transition-colors text-xs
-										${isActive
-											? "border-cable-cut bg-cable-cut/15 text-cable-cut font-semibold"
-											: "border-border/50 text-text-primary hover:bg-border/30"
+										${
+											isActive
+												? "border-cable-cut bg-cable-cut/15 text-cable-cut font-semibold"
+												: "border-border/50 text-text-primary hover:bg-border/30"
 										}
 									`}
 								>
@@ -233,8 +258,6 @@ export function Sidebar() {
 						</button>
 					)}
 				</div>
-
-
 			</div>
 		</>
 	);
@@ -250,8 +273,16 @@ function SelectedMetroInfo({
 	selectCable,
 }: {
 	metroId: string | null;
-	metrosById: Map<string, { id: string; name: string; countryCode: string; isHub: boolean; landingStationCount: number }>;
-	cables: { id: string; name: string; designCapacityTbps: number; segments: { from: string; to: string }[] }[];
+	metrosById: Map<
+		string,
+		{ id: string; name: string; countryCode: string; isHub: boolean; landingStationCount: number }
+	>;
+	cables: {
+		id: string;
+		name: string;
+		designCapacityTbps: number;
+		segments: { from: string; to: string }[];
+	}[];
 	selectMetro: (id: string | null) => void;
 	selectCable: (id: string | null) => void;
 }) {
@@ -259,9 +290,7 @@ function SelectedMetroInfo({
 
 	const connectedCables = useMemo(() => {
 		if (!metroId) return [];
-		return cables.filter((c) =>
-			c.segments.some((s) => s.from === metroId || s.to === metroId),
-		);
+		return cables.filter((c) => c.segments.some((s) => s.from === metroId || s.to === metroId));
 	}, [metroId, cables]);
 
 	if (!metro) return null;
@@ -271,9 +300,7 @@ function SelectedMetroInfo({
 			<div className="flex items-center justify-between">
 				<div>
 					<div className="text-xs text-text-secondary uppercase">Selected Metro</div>
-					<div className="text-sm font-semibold text-text-primary mt-1">
-						{metro.name}
-					</div>
+					<div className="text-sm font-semibold text-text-primary mt-1">{metro.name}</div>
 					<div className="flex items-center gap-2 mt-0.5">
 						<span className="text-[10px] text-text-secondary">{metro.countryCode}</span>
 						{metro.isHub && (
@@ -293,8 +320,8 @@ function SelectedMetroInfo({
 			</div>
 
 			<div className="mt-2 text-xs text-text-secondary">
-				{metro.landingStationCount} landing station{metro.landingStationCount !== 1 ? "s" : ""} &middot;{" "}
-				{connectedCables.length} cable{connectedCables.length !== 1 ? "s" : ""}
+				{metro.landingStationCount} landing station{metro.landingStationCount !== 1 ? "s" : ""}{" "}
+				&middot; {connectedCables.length} cable{connectedCables.length !== 1 ? "s" : ""}
 			</div>
 
 			{connectedCables.length > 0 && (
@@ -333,8 +360,10 @@ function SelectedTerrestrialInfo({
 	const fromMetro = metrosById.get(edge.from);
 	const toMetro = metrosById.get(edge.to);
 	const confidenceColor =
-		edge.confidence === "verified" ? "#60a5fa"
-			: edge.confidence === "estimated" ? "#f59e0b"
+		edge.confidence === "verified"
+			? "#60a5fa"
+			: edge.confidence === "estimated"
+				? "#f59e0b"
 				: "#94a3b8";
 
 	return (
@@ -375,20 +404,12 @@ function SelectedTerrestrialInfo({
 			</div>
 
 			{edge.operators.length > 0 && (
-				<div className="text-[10px] text-text-secondary mt-1.5">
-					{edge.operators.join(", ")}
-				</div>
+				<div className="text-[10px] text-text-secondary mt-1.5">{edge.operators.join(", ")}</div>
 			)}
 
-			<div className="text-[10px] text-text-secondary/60 mt-1.5 leading-relaxed">
-				{edge.source}
-			</div>
+			<div className="text-[10px] text-text-secondary/60 mt-1.5 leading-relaxed">{edge.source}</div>
 
-			{edge.notes && (
-				<div className="text-[10px] text-cable-high/70 mt-1 italic">
-					{edge.notes}
-				</div>
-			)}
+			{edge.notes && <div className="text-[10px] text-cable-high/70 mt-1 italic">{edge.notes}</div>}
 
 			{edge.sourceUrl && (
 				<a
@@ -397,7 +418,17 @@ function SelectedTerrestrialInfo({
 					rel="noopener noreferrer"
 					className="inline-flex items-center gap-1 mt-2 text-[10px] text-cable-high hover:text-text-primary transition-colors"
 				>
-					<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+					<svg
+						width="10"
+						height="10"
+						viewBox="0 0 16 16"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+					>
+						<title>External link</title>
 						<path d="M12 8.5v5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 0 13.5v-9A1.5 1.5 0 0 1 1.5 3H7" />
 						<path d="M10 1h5v5" />
 						<path d="M7 9 15 1" />

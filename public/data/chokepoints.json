@@ -1,1 +1,56 @@
-[{"id":"bab-al-mandab","name":"Bab al-Mandab (Red Sea)","polygon":{"type":"Polygon","coordinates":[[[42.5,11.5],[44.5,11.5],[44.5,13.5],[42.5,13.5],[42.5,11.5]]]},"description":"Narrow strait connecting the Red Sea to the Gulf of Aden. ~15 submarine cables transit this chokepoint carrying the majority of Europe-Asia traffic."},{"id":"strait-of-malacca","name":"Strait of Malacca","polygon":{"type":"Polygon","coordinates":[[[99,0.5],[104.5,0.5],[104.5,4],[99,4],[99,0.5]]]},"description":"Strait between Malaysia and Indonesia. Major bottleneck for cables connecting Southeast Asia, East Asia, and the Indian Ocean."},{"id":"baltic-sea","name":"Baltic Sea","polygon":{"type":"Polygon","coordinates":[[[12,54],[26,54],[26,60],[12,60],[12,54]]]},"description":"Semi-enclosed sea in Northern Europe. Multiple submarine cables connecting Nordic and Baltic states. Recent sabotage incidents (2024)."},{"id":"luzon-strait","name":"Luzon Strait","polygon":{"type":"Polygon","coordinates":[[[119,18.5],[123,18.5],[123,21.5],[119,21.5],[119,18.5]]]},"description":"Strait between Taiwan and the Philippines. Major junction for trans-Pacific cables. Vulnerable to earthquakes and submarine landslides."},{"id":"guam","name":"Guam","polygon":{"type":"Polygon","coordinates":[[[143.5,12.5],[146,12.5],[146,14.5],[143.5,14.5],[143.5,12.5]]]},"description":"Pacific island hub where many trans-Pacific cables converge. Single-point-of-failure risk for Pacific connectivity."},{"id":"english-channel","name":"English Channel","polygon":{"type":"Polygon","coordinates":[[[-2,49.5],[2,49.5],[2,51.5],[-2,51.5],[-2,49.5]]]},"description":"Narrow strait between England and France. Critical junction for transatlantic cables connecting to Europe and UK-continent links."}]
+[
+	{
+		"id": "bab-al-mandab",
+		"name": "Bab al-Mandab (Red Sea)",
+		"polygon": {
+			"type": "Polygon",
+			"coordinates": [[[42.5, 11.5], [44.5, 11.5], [44.5, 13.5], [42.5, 13.5], [42.5, 11.5]]]
+		},
+		"description": "Narrow strait connecting the Red Sea to the Gulf of Aden. ~15 submarine cables transit this chokepoint carrying the majority of Europe-Asia traffic."
+	},
+	{
+		"id": "strait-of-malacca",
+		"name": "Strait of Malacca",
+		"polygon": {
+			"type": "Polygon",
+			"coordinates": [[[99, 0.5], [104.5, 0.5], [104.5, 4], [99, 4], [99, 0.5]]]
+		},
+		"description": "Strait between Malaysia and Indonesia. Major bottleneck for cables connecting Southeast Asia, East Asia, and the Indian Ocean."
+	},
+	{
+		"id": "baltic-sea",
+		"name": "Baltic Sea",
+		"polygon": {
+			"type": "Polygon",
+			"coordinates": [[[12, 54], [26, 54], [26, 60], [12, 60], [12, 54]]]
+		},
+		"description": "Semi-enclosed sea in Northern Europe. Multiple submarine cables connecting Nordic and Baltic states. Recent sabotage incidents (2024)."
+	},
+	{
+		"id": "luzon-strait",
+		"name": "Luzon Strait",
+		"polygon": {
+			"type": "Polygon",
+			"coordinates": [[[119, 18.5], [123, 18.5], [123, 21.5], [119, 21.5], [119, 18.5]]]
+		},
+		"description": "Strait between Taiwan and the Philippines. Major junction for trans-Pacific cables. Vulnerable to earthquakes and submarine landslides."
+	},
+	{
+		"id": "guam",
+		"name": "Guam",
+		"polygon": {
+			"type": "Polygon",
+			"coordinates": [[[143.5, 12.5], [146, 12.5], [146, 14.5], [143.5, 14.5], [143.5, 12.5]]]
+		},
+		"description": "Pacific island hub where many trans-Pacific cables converge. Single-point-of-failure risk for Pacific connectivity."
+	},
+	{
+		"id": "english-channel",
+		"name": "English Channel",
+		"polygon": {
+			"type": "Polygon",
+			"coordinates": [[[-2, 49.5], [2, 49.5], [2, 51.5], [-2, 51.5], [-2, 49.5]]]
+		},
+		"description": "Narrow strait between England and France. Critical junction for transatlantic cables connecting to Europe and UK-continent links."
+	}
+]
