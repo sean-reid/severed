@@ -32,10 +32,12 @@ export function CutAction() {
 	if (!selectedCable) return null;
 
 	const conf = selectedCable.capacityConfidence;
+	// Hide card when sheet is too tall -- card would overlap scenario bar
+	const cardHidden = mobileSheetHeight > 55;
 
 	return (
 		<div
-			className={`absolute z-20 md:hidden left-3 right-3 ${sheetDragging ? "" : "transition-[bottom] duration-300 ease-out"}`}
+			className={`absolute z-20 md:hidden left-3 right-3 ${sheetDragging ? "" : "transition-[bottom,opacity] duration-300 ease-out"} ${cardHidden ? "opacity-0 pointer-events-none" : "opacity-100"}`}
 			style={{ bottom: `calc(${mobileSheetHeight}dvh + 12px)` }}
 		>
 			<div className="bg-surface border border-border rounded-2xl shadow-xl shadow-black/40 overflow-hidden">

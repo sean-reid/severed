@@ -135,23 +135,9 @@ export function ImpactPanel() {
 		}
 
 		setSheetHeight(target);
-		// If dragging up past where cards would overlap, dismiss them
-		if (target > 55) {
-			selectCable(null);
-			selectMetro(null);
-			selectTerrestrial(null);
-		}
 		setDragging(false);
 		dragRef.current = null;
-	}, [
-		sheetHeight,
-		setSheetHeight,
-		setDragging,
-		SNAPS,
-		selectCable,
-		selectMetro,
-		selectTerrestrial,
-	]);
+	}, [sheetHeight, setSheetHeight, setDragging, SNAPS]);
 
 	return (
 		<>
