@@ -75,9 +75,9 @@ export function DataSourcesPanel() {
 									>
 										TeleGeography's Submarine Cable Map
 									</a>{" "}
-									(CC BY-SA, ~692 cables). TeleGeography does not publish capacity. 34 major cables
-									have verified or estimated capacity from press releases and industry sources (with
-									direct links). The remaining ~560 use an RFS-year heuristic:
+									(CC BY-SA, ~692 cables). TeleGeography does not publish capacity. 110 cables have
+									verified or estimated capacity from press releases and industry sources (with
+									direct links). The remaining ~484 use an RFS-year heuristic:
 								</p>
 								<div className="mt-2 font-data text-xs grid grid-cols-2 gap-x-4 gap-y-0.5 pl-2">
 									<span className="text-text-secondary/60">Before 2005</span>
@@ -144,8 +144,8 @@ export function DataSourcesPanel() {
 							<section>
 								<h3 className="text-text-primary font-semibold mb-2">Simulation</h3>
 								<p>
-									Graph model with ~920 metro nodes, ~1,500 cable segments, ~116 terrestrial edges,
-									and ~63 hub metros. Cutting a cable removes only the segments at the cut location.
+									Graph model with 922 metro nodes, ~1,500 cable segments, 116 terrestrial edges,
+									and 73 hub metros. Cutting a cable removes only the segments at the cut location.
 									Impact is the change in aggregate bottleneck bandwidth from each metro to the hub
 									set.
 								</p>
