@@ -15,6 +15,7 @@ export function Sidebar() {
 	const addCut = useStore((s) => s.addCut);
 	const selectCable = useStore((s) => s.selectCable);
 	const selectMetro = useStore((s) => s.selectMetro);
+	const flyToLocation = useStore((s) => s.flyToLocation);
 	const sidebarOpen = useStore((s) => s.sidebarOpen);
 	const toggleSidebar = useStore((s) => s.toggleSidebar);
 	const panelOpen = useStore((s) => s.panelOpen);
@@ -232,6 +233,7 @@ export function Sidebar() {
 					selectMetro={selectMetro}
 					selectCable={selectCable}
 					selectTerrestrial={selectTerrestrial}
+					flyToLocation={flyToLocation}
 				/>
 
 				{/* Scenarios */}
@@ -297,11 +299,20 @@ function SelectedMetroInfo({
 	selectMetro,
 	selectCable,
 	selectTerrestrial,
+	flyToLocation,
 }: {
 	metroId: string | null;
 	metrosById: Map<
 		string,
-		{ id: string; name: string; countryCode: string; isHub: boolean; landingStationCount: number }
+		{
+			id: string;
+			name: string;
+			countryCode: string;
+			isHub: boolean;
+			landingStationCount: number;
+			lat: number;
+			lng: number;
+		}
 	>;
 	cables: {
 		id: string;
@@ -313,6 +324,7 @@ function SelectedMetroInfo({
 	selectMetro: (id: string | null) => void;
 	selectCable: (id: string | null) => void;
 	selectTerrestrial: (id: string | null) => void;
+	flyToLocation: (lng: number, lat: number, zoom?: number) => void;
 }) {
 	const metro = metroId ? metrosById.get(metroId) : null;
 
@@ -366,7 +378,16 @@ function SelectedMetroInfo({
 						<button
 							key={c.id}
 							type="button"
-							onClick={() => selectCable(c.id)}
+							onClick={() => {
+								selectCable(c.id);
+								const seg = c.segments[0];
+								if (seg) {
+									const from = metrosById.get(seg.from);
+									const to = metrosById.get(seg.to);
+									if (from && to)
+										flyToLocation((from.lng + to.lng) / 2, (from.lat + to.lat) / 2, 4);
+								}
+							}}
 							className="w-full flex justify-between text-xs py-1 px-1 -mx-1 rounded hover:bg-border/30 text-left transition-colors"
 						>
 							<span className="text-text-primary truncate">{c.name}</span>
@@ -388,7 +409,13 @@ function SelectedMetroInfo({
 							<button
 								key={t.id}
 								type="button"
-								onClick={() => selectTerrestrial(t.id)}
+								onClick={() => {
+									selectTerrestrial(t.id);
+									const from = metrosById.get(t.from);
+									const to = metrosById.get(t.to);
+									if (from && to)
+										flyToLocation((from.lng + to.lng) / 2, (from.lat + to.lat) / 2, 5);
+								}}
 								className="w-full flex justify-between text-xs py-1 px-1 -mx-1 rounded hover:bg-border/30 text-left transition-colors"
 							>
 								<span className="text-terrestrial truncate">{otherName}</span>

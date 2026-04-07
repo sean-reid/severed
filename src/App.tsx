@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { CutAction } from "./components/globe/CutAction";
 import { GlobeView } from "./components/globe/GlobeView";
+import { MetroCard } from "./components/globe/MetroCard";
 import { TerrestrialCard } from "./components/globe/TerrestrialCard";
 import { ImpactPanel } from "./components/panel/ImpactPanel";
 import { SearchOverlay } from "./components/search/SearchOverlay";
@@ -91,6 +92,9 @@ export function App() {
 
 			{/* Floating cut action — appears when cable selected */}
 			<CutAction />
+
+			{/* Floating metro info — appears when metro selected on mobile */}
+			<MetroCard />
 
 			{/* Floating terrestrial info — appears when terrestrial edge selected */}
 			<TerrestrialCard />

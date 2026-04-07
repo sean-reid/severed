@@ -193,7 +193,13 @@ export function ImpactPanel() {
 							)}
 							<button
 								type="button"
-								onClick={togglePanel}
+								onClick={() => {
+									if (window.innerWidth < 768) {
+										setSheetHeight(SNAP_PEEK);
+									} else {
+										togglePanel();
+									}
+								}}
 								className="text-text-secondary/60 hover:text-text-primary text-xs py-1 transition-colors"
 							>
 								Hide
