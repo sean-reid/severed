@@ -4094,7 +4094,6 @@ function main() {
 						"asia-africa-europe-1-aae-1",
 						"asia-pacific-gateway-apg",
 						"tata-tgn-intra-asia-tgn-ia",
-						"seamewe-5",
 					],
 				},
 			],
@@ -4103,6 +4102,68 @@ function main() {
 			sourceUrls: [
 				"https://www.theregister.com/2023/02/23/vietnam_submarine_cable_outages/",
 				"https://www.theregister.com/2024/06/18/vietnam_internet_cables/",
+			],
+		},
+		{
+			id: "tonga-2022",
+			name: "Tonga Eruption (2022)",
+			description:
+				"Hunga Tonga eruption on January 15, 2022 destroyed ~200 km of the Tonga Cable. Tonga was cut off from global communications for over 5 weeks.",
+			cutLocations: [{ type: "cable", cableIds: ["tonga-cable"] }],
+			historicalDate: "2022-01-15",
+			repairTimeDays: 38,
+			sourceUrls: [
+				"https://en.wikipedia.org/wiki/2022_Hunga_Tonga%E2%80%93Hunga_Ha%CA%BBapai_eruption_and_tsunami",
+			],
+		},
+		{
+			id: "east-africa-2024",
+			name: "East Africa Cuts (2024)",
+			description:
+				"EASSy and Seacom cables cut near Durban, South Africa on May 12, 2024, compounding damage from the February Red Sea cuts. Kenya, Tanzania, Uganda saw 10-33% traffic drops.",
+			cutLocations: [
+				{
+					type: "cable",
+					cableIds: ["eastern-africa-submarine-system-eassy", "seacomtata-tgn-eurasia"],
+				},
+			],
+			historicalDate: "2024-05-12",
+			repairTimeDays: 14,
+			sourceUrls: [
+				"https://blog.cloudflare.com/east-african-internet-connectivity-again-impacted-by-submarine-cable-cuts/",
+			],
+		},
+		{
+			id: "egypt-2022",
+			name: "Egypt Landing Damage (2022)",
+			description:
+				"AAE-1 and SMW-5 cables cut at their landing points in Egypt (Abu Talat and Zafarana) on June 7, 2022. Disrupted connectivity across Middle East, Africa, and Asia.",
+			cutLocations: [
+				{
+					type: "cable",
+					cableIds: ["asia-africa-europe-1-aae-1", "seamewe-5"],
+				},
+			],
+			historicalDate: "2022-06-07",
+			repairTimeDays: 1,
+			sourceUrls: ["https://blog.cloudflare.com/aae-1-smw5-cable-cuts/"],
+		},
+		{
+			id: "japan-tohoku-2011",
+			name: "Japan Tohoku Earthquake (2011)",
+			description:
+				"M9.0 earthquake and tsunami on March 11, 2011 severed 7 of 12 trans-Pacific cables (58%). China Telecom lost 22% of trans-Pacific capacity. Landing stations at Kita Ibaraki and Ajigaura isolated.",
+			cutLocations: [
+				{
+					type: "cable",
+					cableIds: ["apcn-2", "eac-c2c", "flag-north-asia-loopreach-north-asia-loop", "fea"],
+				},
+			],
+			historicalDate: "2011-03-11",
+			repairTimeDays: 30,
+			sourceUrls: [
+				"https://www.submarinenetworks.com/en/nv/news/cables-cut-after-magnitude-89-earthquake-in-japan",
+				"https://www.lightwaveonline.com/network-design/article/16660580/fiber-effect-of-japan-earthquake-still-sorting-out",
 			],
 		},
 	];
