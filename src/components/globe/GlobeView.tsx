@@ -251,9 +251,12 @@ export function GlobeView() {
 	]);
 
 	const resetView = () => {
-		mapRef.current?.flyTo({
-			center: [INITIAL_VIEW.longitude, INITIAL_VIEW.latitude],
-			zoom: INITIAL_VIEW.zoom,
+		const map = mapRef.current;
+		if (!map) return;
+		const center = map.getCenter();
+		map.flyTo({
+			center: [center.lng, center.lat],
+			zoom: 2,
 			pitch: 0,
 			bearing: 0,
 			duration: 1200,
