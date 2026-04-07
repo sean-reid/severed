@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import type { CutLocation } from "../../data/types";
+import { useSheetCap } from "../../hooks/useSheetCap";
 import { useStore } from "../../state/store";
 import { confidenceColors } from "../../utils/colors";
 
@@ -13,6 +14,7 @@ export function CutAction() {
 	const [expanded, setExpanded] = useState(false);
 
 	const selectedCable = selectedCableId ? cablesById.get(selectedCableId) : null;
+	useSheetCap(selectedCable !== null);
 
 	const cutCable = useCallback(() => {
 		if (!selectedCable) return;

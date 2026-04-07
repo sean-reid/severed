@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSheetCap } from "../../hooks/useSheetCap";
 import { useStore } from "../../state/store";
 import { confidenceColors } from "../../utils/colors";
 
@@ -14,6 +15,8 @@ export function TerrestrialCard() {
 	const edge = selectedTerrestrialId
 		? terrestrial.find((t) => t.id === selectedTerrestrialId)
 		: null;
+
+	useSheetCap(edge !== null);
 
 	if (!edge) return null;
 
