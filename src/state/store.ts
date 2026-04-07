@@ -157,6 +157,20 @@ export const useStore = create<StoreState>((set) => ({
 						chokepointId: cutLoc.id,
 						affectedSegmentIds: [],
 					});
+				} else if (cutLoc.type === "cable" && cutLoc.cableIds) {
+					// Cut specific cables by ID -- most accurate for historical events
+					for (const cableId of cutLoc.cableIds) {
+						const cable = s.cablesById.get(cableId);
+						if (!cable) continue;
+						const segmentIds = cable.segments.map((_s, i) => `${cableId}:${i}`);
+						newCuts.push({
+							id: `scenario-${scenarioId}-cable-${cableId}`,
+							type: "point",
+							lat: 0,
+							lng: 0,
+							affectedSegmentIds: segmentIds,
+						});
+					}
 				} else if (cutLoc.type === "point" && cutLoc.lat != null && cutLoc.lng != null) {
 					newCuts.push({
 						id: `scenario-${scenarioId}-point-${cutLoc.lat}-${cutLoc.lng}`,

@@ -70,10 +70,11 @@ export interface Chokepoint {
 // ── Scenarios ──
 
 export interface ScenarioCut {
-	type: "chokepoint" | "point";
+	type: "chokepoint" | "point" | "cable";
 	id?: string;
 	lat?: number;
 	lng?: number;
+	cableIds?: string[];
 }
 
 export interface Scenario {

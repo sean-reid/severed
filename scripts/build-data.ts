@@ -4009,7 +4009,17 @@ function main() {
 			name: "Red Sea Crisis (2024)",
 			description:
 				"4 cables (Seacom, TGN-Gulf, AAE-1, EIG) cut in the Red Sea, February 2024. 25% of Asia-Europe data traffic disrupted.",
-			cutLocations: [{ type: "chokepoint", id: "bab-al-mandab" }],
+			cutLocations: [
+				{
+					type: "cable",
+					cableIds: [
+						"asia-africa-europe-1-aae-1",
+						"europe-india-gateway-eig",
+						"seacomtata-tgn-eurasia",
+						"tata-tgn-gulf",
+					],
+				},
+			],
 			historicalDate: "2024-02-24",
 			repairTimeDays: 56,
 			sourceUrls: [
@@ -4022,7 +4032,17 @@ function main() {
 			name: "West Africa Cuts (2024)",
 			description:
 				"4 cables (WACS, MainOne, SAT-3, ACE) severed off Abidjan at the Le Trou Sans Fond submarine canyon on March 14, 2024. 13 African countries impacted.",
-			cutLocations: [{ type: "chokepoint", id: "west-africa-abidjan" }],
+			cutLocations: [
+				{
+					type: "cable",
+					cableIds: [
+						"west-africa-cable-system-wacs",
+						"mainone",
+						"sat-3wasc",
+						"africa-coast-to-europe-ace",
+					],
+				},
+			],
 			historicalDate: "2024-03-14",
 			repairTimeDays: 28,
 			sourceUrls: [
@@ -4034,7 +4054,7 @@ function main() {
 			name: "Baltic Sea Sabotage (2024)",
 			description:
 				"BCS East-West Interlink and C-Lion1 cables damaged November 17-18, 2024. Chinese vessel Yi Peng 3 suspected. High terrestrial redundancy limited impact.",
-			cutLocations: [{ type: "chokepoint", id: "baltic-sea" }],
+			cutLocations: [{ type: "cable", cableIds: ["bcs-east-west-interlink", "c-lion1"] }],
 			historicalDate: "2024-11-17",
 			repairTimeDays: 10,
 			sourceUrls: ["https://en.wikipedia.org/wiki/2024_Baltic_Sea_submarine_cable_disruptions"],
@@ -4054,7 +4074,7 @@ function main() {
 			name: "Mediterranean Cuts (2008)",
 			description:
 				"SEA-ME-WE 4 and FLAG cables cut near Alexandria, Egypt on January 30, 2008. 70% disruption in Egypt, 60% in India, affecting 14 countries.",
-			cutLocations: [{ type: "chokepoint", id: "alexandria" }],
+			cutLocations: [{ type: "cable", cableIds: ["seamewe-4", "fea"] }],
 			historicalDate: "2008-01-30",
 			repairTimeDays: 14,
 			sourceUrls: ["https://en.wikipedia.org/wiki/2008_submarine_cable_disruption"],
@@ -4064,7 +4084,18 @@ function main() {
 			name: "Vietnam Cable Failures (2023)",
 			description:
 				"All 5 international cables (AAE-1, IA, AAG, APG, SMW-3) connecting Vietnam were damaged or degraded. 75% of international capacity lost.",
-			cutLocations: [{ type: "chokepoint", id: "south-china-sea-vietnam" }],
+			cutLocations: [
+				{
+					type: "cable",
+					cableIds: [
+						"asia-america-gateway-aag-cable-system",
+						"asia-africa-europe-1-aae-1",
+						"asia-pacific-gateway-apg",
+						"tata-tgn-intra-asia-tgn-ia",
+						"seamewe-5",
+					],
+				},
+			],
 			historicalDate: "2023-02-01",
 			repairTimeDays: 60,
 			sourceUrls: [
