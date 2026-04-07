@@ -280,15 +280,16 @@ export function GlobeView() {
 					active:bg-border/50
 					shadow-lg shadow-black/20
 					md:bottom-4 md:left-4 max-md:left-3
-					${sheetDragging ? "" : "transition-all duration-300 ease-out"}
+					${sheetDragging ? "" : "max-md:transition-all max-md:duration-300 max-md:ease-out"}
 					${mobileSheetHeight > 55 ? "max-md:opacity-0 max-md:pointer-events-none" : ""}
 				`}
-				style={{
-					bottom:
-						typeof window !== "undefined" && window.innerWidth < 768
-							? `min(calc(100dvh - 70px), calc(${mobileSheetHeight}dvh + ${mobileCardHeight > 0 ? mobileCardHeight + 20 : 8}px))`
-							: undefined,
-				}}
+				style={
+					typeof window !== "undefined" && window.innerWidth < 768
+						? {
+								bottom: `calc(${mobileSheetHeight}dvh + ${mobileCardHeight > 0 ? mobileCardHeight + 20 : 8}px)`,
+							}
+						: undefined
+				}
 				title="Reset map view"
 			>
 				<svg
