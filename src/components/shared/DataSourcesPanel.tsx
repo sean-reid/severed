@@ -145,7 +145,7 @@ export function DataSourcesPanel() {
 								<h3 className="text-text-primary font-semibold mb-2">Simulation</h3>
 								<p>
 									Graph model with 922 metro nodes, ~1,500 cable segments, 116 terrestrial edges,
-									and 73 hub metros. Cutting a cable removes only the segments at the cut location.
+									and 81 hub metros. Cutting a cable removes only the segments at the cut location.
 									Impact is the change in aggregate bottleneck bandwidth from each metro to the hub
 									set.
 								</p>

@@ -1096,6 +1096,13 @@ const MANUAL_HUB_IDS = new Set([
 	"manila",
 	"ho-chi-minh-city",
 	"phnom-penh",
+	"shanghai",
+	"guangzhou",
+	"osaka",
+	"seoul",
+	"delhi",
+	"dhaka",
+	"colombo",
 	// Russia / Central Asia
 	"moscow",
 	"vladivostok",
@@ -2193,6 +2200,9 @@ function main() {
 		abidjan: { name: "Abidjan", countryCode: "CI", lat: 5.36, lng: -4.0083 },
 		dakar: { name: "Dakar", countryCode: "SN", lat: 14.7167, lng: -17.4677 },
 		barcelona: { name: "Barcelona", countryCode: "ES", lat: 41.3874, lng: 2.1686 },
+		seoul: { name: "Seoul", countryCode: "KR", lat: 37.5665, lng: 126.978 },
+		taipei: { name: "Taipei", countryCode: "TW", lat: 25.033, lng: 121.5654 },
+		colombo: { name: "Colombo", countryCode: "LK", lat: 6.9271, lng: 79.8612 },
 		lisbon: { name: "Lisbon", countryCode: "PT", lat: 38.7223, lng: -9.1393 },
 	};
 
