@@ -265,25 +265,25 @@ export function GlobeView() {
 
 	return (
 		<>
-			{/* Recenter button — hidden on mobile when cable card is showing */}
+			{/* Recenter button — repositions above card on mobile when one is showing */}
 			<button
 				type="button"
 				onClick={resetView}
 				className={`
 					absolute z-30
-					w-12 h-12 rounded-2xl
+					w-10 h-10 rounded-xl
 					bg-surface/80 backdrop-blur-sm border border-border/50
 					flex items-center justify-center
 					text-text-secondary hover:text-text-primary
-					active:bg-border/50 transition-colors
+					active:bg-border/50 transition-all duration-300
 					shadow-lg shadow-black/20
-					md:bottom-4 md:left-4 max-md:left-4
-					${selectedCableId || selectedMetroId || selectedTerrestrialId ? "max-md:hidden" : ""}
+					md:bottom-4 md:left-4 max-md:left-3
+					${mobileSheetHeight > 55 ? "max-md:opacity-0 max-md:pointer-events-none" : ""}
 				`}
 				style={{
 					bottom:
 						typeof window !== "undefined" && window.innerWidth < 768
-							? `calc(${mobileSheetHeight}dvh + 8px)`
+							? `calc(${mobileSheetHeight}dvh + ${selectedCableId || selectedMetroId || selectedTerrestrialId ? "88" : "8"}px)`
 							: undefined,
 				}}
 				title="Reset map view"
