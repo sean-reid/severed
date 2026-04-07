@@ -40,7 +40,7 @@ console.log("\x1b[2m  Starting preview server...\x1b[0m");
 const server: ChildProcess = spawn(
 	"npx",
 	["vite", "preview", "--port", String(PORT), "--strictPort"],
-	{ cwd: ROOT, stdio: "pipe" },
+	{ cwd: ROOT, stdio: "pipe", detached: false },
 );
 
 await new Promise<void>((resolve, reject) => {
@@ -127,7 +127,15 @@ for (const file of testFiles) {
 
 // ── Step 5: Cleanup and report ──
 
-server.kill();
+// Kill the server and all child processes
+server.kill("SIGKILL");
+if (server.pid) {
+	try {
+		process.kill(-server.pid, "SIGKILL");
+	} catch {
+		// Process group kill may fail if already dead
+	}
+}
 
 const passed = results.filter((r) => r.passed).length;
 const failed = results.filter((r) => !r.passed).length;
@@ -145,3 +153,5 @@ if (failed > 0) {
 	}
 	process.exit(1);
 }
+
+process.exit(0);
