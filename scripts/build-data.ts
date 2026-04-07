@@ -4018,7 +4018,6 @@ function main() {
 						"asia-africa-europe-1-aae-1",
 						"europe-india-gateway-eig",
 						"seacomtata-tgn-eurasia",
-						"tata-tgn-gulf",
 					],
 				},
 			],
@@ -4152,7 +4151,7 @@ function main() {
 			id: "japan-tohoku-2011",
 			name: "Japan Tohoku Earthquake (2011)",
 			description:
-				"M9.0 earthquake and tsunami on March 11, 2011 severed 7 of 12 trans-Pacific cables (58%). China Telecom lost 22% of trans-Pacific capacity. Landing stations at Kita Ibaraki and Ajigaura isolated.",
+				"M9.0 earthquake and tsunami on March 11, 2011 severed 7+ cables. Simulates 4 still in dataset (APCN-2, EAC-C2C, FNAL, FEA); APCN, China-US CN, SMW-3 are retired.",
 			cutLocations: [
 				{
 					type: "cable",
