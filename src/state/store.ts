@@ -99,7 +99,7 @@ export const useStore = create<StoreState>((set) => ({
 	// UI
 	panelOpen: true,
 	sidebarOpen: typeof window !== "undefined" && window.innerWidth >= 768,
-	mobileSheetHeight: 45,
+	mobileSheetHeight: 15,
 	mobileSheetDragging: false,
 	mobileCardHeight: 0,
 

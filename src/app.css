@@ -55,9 +55,9 @@ body {
 /* Mobile: draggable sheet height via CSS var. */
 @media (max-width: 767px) {
 	.impact-sheet {
-		height: var(--sheet-h, 45dvh);
+		height: var(--sheet-h, 15dvh);
 	}
 	.above-sheet {
-		bottom: calc(var(--sheet-h, 45dvh) + 12px);
+		bottom: calc(var(--sheet-h, 15dvh) + 12px);
 	}
 }

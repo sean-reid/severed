@@ -34,7 +34,7 @@ export function ImpactPanel() {
 		[cablesById, addCut],
 	);
 	const SNAPS = useMemo(() => [15, 30, 45, 65, 85], []);
-	const [sheetHeight, setSheetHeightLocal] = useState(SNAPS[2]);
+	const [sheetHeight, setSheetHeightLocal] = useState(SNAPS[0]);
 	const setMobileSheetHeight = useStore((s) => s.setMobileSheetHeight);
 	const setMobileSheetDragging = useStore((s) => s.setMobileSheetDragging);
 	const [dragging, setDraggingLocal] = useState(false);
