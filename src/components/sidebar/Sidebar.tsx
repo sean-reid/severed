@@ -228,8 +228,10 @@ export function Sidebar() {
 					metroId={selectedMetroId}
 					metrosById={metrosById}
 					cables={cables}
+					terrestrial={terrestrial}
 					selectMetro={selectMetro}
 					selectCable={selectCable}
+					selectTerrestrial={selectTerrestrial}
 				/>
 
 				{/* Scenarios */}
@@ -291,8 +293,10 @@ function SelectedMetroInfo({
 	metroId,
 	metrosById,
 	cables,
+	terrestrial,
 	selectMetro,
 	selectCable,
+	selectTerrestrial,
 }: {
 	metroId: string | null;
 	metrosById: Map<
@@ -305,8 +309,10 @@ function SelectedMetroInfo({
 		designCapacityTbps: number;
 		segments: { from: string; to: string }[];
 	}[];
+	terrestrial: TerrestrialEdge[];
 	selectMetro: (id: string | null) => void;
 	selectCable: (id: string | null) => void;
+	selectTerrestrial: (id: string | null) => void;
 }) {
 	const metro = metroId ? metrosById.get(metroId) : null;
 
@@ -314,6 +320,11 @@ function SelectedMetroInfo({
 		if (!metroId) return [];
 		return cables.filter((c) => c.segments.some((s) => s.from === metroId || s.to === metroId));
 	}, [metroId, cables]);
+
+	const connectedTerrestrial = useMemo(() => {
+		if (!metroId) return [];
+		return terrestrial.filter((t) => t.from === metroId || t.to === metroId);
+	}, [metroId, terrestrial]);
 
 	if (!metro) return null;
 
@@ -342,13 +353,15 @@ function SelectedMetroInfo({
 			</div>
 
 			<div className="mt-2 text-xs text-text-secondary">
-				{metro.landingStationCount} landing station{metro.landingStationCount !== 1 ? "s" : ""}{" "}
-				&middot; {connectedCables.length} cable{connectedCables.length !== 1 ? "s" : ""}
+				{connectedCables.length} cable{connectedCables.length !== 1 ? "s" : ""}
+				{connectedTerrestrial.length > 0 && (
+					<> &middot; {connectedTerrestrial.length} terrestrial</>
+				)}
 			</div>
 
 			{connectedCables.length > 0 && (
-				<div className="mt-2 pt-2 border-t border-border/50 max-h-40 overflow-y-auto">
-					<div className="text-[9px] text-text-secondary/50 uppercase mb-1">Connected cables</div>
+				<div className="mt-2 pt-2 border-t border-border/50 max-h-32 overflow-y-auto">
+					<div className="text-[9px] text-text-secondary/50 uppercase mb-1">Submarine cables</div>
 					{connectedCables.map((c) => (
 						<button
 							key={c.id}
@@ -362,6 +375,31 @@ function SelectedMetroInfo({
 							</span>
 						</button>
 					))}
+				</div>
+			)}
+
+			{connectedTerrestrial.length > 0 && (
+				<div className="mt-2 pt-2 border-t border-border/50 max-h-32 overflow-y-auto">
+					<div className="text-[9px] text-text-secondary/50 uppercase mb-1">Terrestrial links</div>
+					{connectedTerrestrial.map((t) => {
+						const otherId = t.from === metroId ? t.to : t.from;
+						const otherName = metrosById.get(otherId)?.name ?? otherId;
+						return (
+							<button
+								key={t.id}
+								type="button"
+								onClick={() => selectTerrestrial(t.id)}
+								className="w-full flex justify-between text-xs py-1 px-1 -mx-1 rounded hover:bg-border/30 text-left transition-colors"
+							>
+								<span className="text-terrestrial truncate">{otherName}</span>
+								<span className="font-data text-text-secondary/60 ml-2 flex-none">
+									{t.capacityTbps < 1
+										? `${(t.capacityTbps * 1000).toFixed(0)} Gbps`
+										: `${t.capacityTbps.toFixed(0)} Tbps`}
+								</span>
+							</button>
+						);
+					})}
 				</div>
 			)}
 		</div>

@@ -2218,8 +2218,7 @@ function main() {
 			to: "paris",
 			capacityTbps: 80,
 			confidence: "estimated",
-			source:
-				"Colt Channel Tunnel (25-yr Getlink concession, 2023), EXA UK-France fiber, Crosslake CrossChannel 96-pair subsea (2021), euNetworks, Zayo",
+			source: "Colt Channel Tunnel (25-yr Getlink concession, 2023), EXA UK-France fiber, Crosslake CrossChannel 96-pair subsea (2021), euNetworks, Zayo [5 ops × ~16 Tbps = 80 Tbps]",
 			sourceUrl:
 				"https://www.colt.net/resources/colt-successfully-completes-the-deployment-of-fibre-network-infrastructure-along-the-channel-tunnel-seamlessly-connecting-london-and-paris/",
 			operators: ["Colt", "EXA", "Crosslake", "euNetworks", "Zayo"],
@@ -2229,8 +2228,7 @@ function main() {
 			to: "amsterdam",
 			capacityTbps: 80,
 			confidence: "estimated",
-			source:
-				"euNetworks Scylla 96-pair subsea (Lowestoft-IJmuiden, 2021), EXA Q&E North (Margate-Ostend), Zayo Zeus/Circe North, GTT, Cogent, Telia/Arelion",
+			source: "euNetworks Scylla 96-pair subsea (Lowestoft-IJmuiden, 2021), EXA Q&E North (Margate-Ostend), Zayo Zeus/Circe North, GTT, Cogent, Telia/Arelion [6 ops × ~13 Tbps = 80 Tbps]",
 			sourceUrl:
 				"https://eunetworks.com/network/super-highways/super-highway-london-to-amsterdam-including-subsea-cable-scylla/",
 			operators: ["euNetworks", "EXA", "Zayo", "GTT", "Cogent", "Telia"],
@@ -2240,7 +2238,8 @@ function main() {
 			to: "brussels",
 			capacityTbps: 40,
 			confidence: "estimated",
-			source: "EXA Q&E North (Margate-Ostend + terrestrial extension), Colt Channel Tunnel, Cogent",
+			source:
+				"EXA Q&E North (Margate-Ostend + terrestrial extension), Colt Channel Tunnel, Cogent [3 ops × ~13 Tbps = 40 Tbps]",
 			sourceUrl:
 				"https://exainfra.net/media-centre/press-releases/exa-infrastructure-deploys-new-high-capacity-fibre-route-from-london-to-frankfurt-amsterdam-and-brussels/",
 			operators: ["EXA", "Colt", "Cogent"],
@@ -2250,8 +2249,7 @@ function main() {
 			to: "amsterdam",
 			capacityTbps: 100,
 			confidence: "estimated",
-			source:
-				"euNetworks Super Highway (27 Tbps/pair C-band, G657A1, optimized ILA spacing), EXA, Cogent, Telia/Arelion, GTT, Zayo. Densest terrestrial corridor in Europe",
+			source: "euNetworks Super Highway (27 Tbps/pair C-band, G657A1, optimized ILA spacing), EXA, Cogent, Telia/Arelion, GTT, Zayo. Densest terrestrial corridor in Europe [6 ops × ~17 Tbps = 100 Tbps]",
 			sourceUrl:
 				"https://eunetworks.com/news/eunetworks-delivers-new-critical-infrastructure-in-europe-a-shorter-long-haul-fibre-route-from-amsterdam-to-frankfurt/",
 			operators: ["euNetworks", "EXA", "Cogent", "Telia", "GTT", "Zayo"],
@@ -2261,8 +2259,7 @@ function main() {
 			to: "paris",
 			capacityTbps: 100,
 			confidence: "estimated",
-			source:
-				"euNetworks Super Highway (27 Tbps/pair C-band), EXA, Zayo, Cogent, GTT, Telia/Arelion",
+			source: "euNetworks Super Highway (27 Tbps/pair C-band), EXA, Zayo, Cogent, GTT, Telia/Arelion [6 ops × ~17 Tbps = 100 Tbps]",
 			sourceUrl: "https://eunetworks.com/network/super-highways/frankfurt-to-paris/",
 			operators: ["euNetworks", "EXA", "Zayo", "Cogent", "GTT", "Telia"],
 		},
@@ -2271,8 +2268,7 @@ function main() {
 			to: "london",
 			capacityTbps: 80,
 			confidence: "estimated",
-			source:
-				"EXA, euNetworks Super Highway, Cogent, Telia/Arelion, Zayo, GTT. Via Amsterdam or Channel Tunnel transit",
+			source: "EXA, euNetworks Super Highway, Cogent, Telia/Arelion, Zayo, GTT. Via Amsterdam or Channel Tunnel transit [6 ops × ~13 Tbps = 80 Tbps]",
 			sourceUrl: "https://eunetworks.com/network/super-highways/",
 			operators: ["EXA", "euNetworks", "Cogent", "Telia", "Zayo", "GTT"],
 		},
@@ -2281,8 +2277,8 @@ function main() {
 			to: "marseille",
 			capacityTbps: 60,
 			confidence: "estimated",
-			source:
-				"EXA Paris-Marseille corridor, euNetworks Frankfurt-Marseille Super Highway, Cogent, Zayo. Key backhaul for Mediterranean submarine cable landings.",
+			source: "EXA Paris-Marseille corridor, euNetworks Frankfurt-Marseille Super Highway, Cogent, Zayo. Key backhaul for Mediterranean submarine cable landings. [4 ops × ~15 Tbps = 60 Tbps]",
+			sourceUrl: "https://exainfra.net/services/resources/exa-infrastructure-network-map/",
 			operators: ["EXA", "euNetworks", "Cogent", "Zayo"],
 		},
 		{
@@ -2290,7 +2286,8 @@ function main() {
 			to: "milan",
 			capacityTbps: 40,
 			confidence: "estimated",
-			source: "euNetworks Frankfurt-Milan via Zurich, Zayo, Sparkle",
+			source: "euNetworks Frankfurt-Milan via Zurich, Zayo, Sparkle [3 ops × ~13 Tbps = 40 Tbps]",
+			sourceUrl: "https://eunetworks.com/network/super-highways/",
 			operators: ["euNetworks", "Zayo", "Sparkle"],
 		},
 		{
@@ -2298,7 +2295,8 @@ function main() {
 			to: "zurich",
 			capacityTbps: 40,
 			confidence: "estimated",
-			source: "euNetworks Super Highway, EXA, Swisscom",
+			source: "euNetworks Super Highway, EXA, Swisscom [3 ops × ~13 Tbps = 40 Tbps]",
+			sourceUrl: "https://eunetworks.com/network/super-highways/",
 			operators: ["euNetworks", "EXA", "Swisscom"],
 		},
 		{
@@ -2306,7 +2304,8 @@ function main() {
 			to: "milan",
 			capacityTbps: 40,
 			confidence: "estimated",
-			source: "euNetworks via Zurich, Sparkle, EXA, Zayo",
+			source: "euNetworks via Zurich, Sparkle, EXA, Zayo [4 ops × ~10 Tbps = 40 Tbps]",
+			sourceUrl: "https://eunetworks.com/network/super-highways/",
 			operators: ["euNetworks", "Sparkle", "EXA", "Zayo"],
 		},
 		{
@@ -2314,8 +2313,7 @@ function main() {
 			to: "warsaw",
 			capacityTbps: 20,
 			confidence: "estimated",
-			source:
-				"EXA Project Visegrad (216-fiber Corning Ultra G.652D, largest CE backbone in 25 yrs)",
+			source: "EXA Project Visegrad (216-fiber Corning Ultra G.652D, largest CE backbone in 25 yrs) [1 ops × ~20 Tbps = 20 Tbps]",
 			sourceUrl:
 				"https://exainfra.net/media-centre/press-releases/exa-infrastructure-launches-project-visegrad-largest-cross-border-fibre-backbone-deployment-in-central-europe-in-25-years/",
 			operators: ["EXA"],
@@ -2326,7 +2324,7 @@ function main() {
 			to: "bratislava",
 			capacityTbps: 15,
 			confidence: "estimated",
-			source: "EXA Project Visegrad",
+			source: "EXA Project Visegrad [1 ops × ~15 Tbps = 15 Tbps]",
 			sourceUrl:
 				"https://exainfra.net/media-centre/press-releases/exa-infrastructure-launches-project-visegrad-largest-cross-border-fibre-backbone-deployment-in-central-europe-in-25-years/",
 			operators: ["EXA"],
@@ -2337,7 +2335,7 @@ function main() {
 			to: "berlin",
 			capacityTbps: 20,
 			confidence: "estimated",
-			source: "EXA Project Visegrad + existing operators",
+			source: "EXA Project Visegrad + existing operators [1 ops × ~20 Tbps = 20 Tbps]",
 			sourceUrl:
 				"https://exainfra.net/media-centre/press-releases/exa-infrastructure-launches-project-visegrad-largest-cross-border-fibre-backbone-deployment-in-central-europe-in-25-years/",
 			operators: ["EXA"],
@@ -2358,7 +2356,8 @@ function main() {
 			to: "istanbul",
 			capacityTbps: 15,
 			confidence: "estimated",
-			source: "TAE branch + Grid Telecom",
+			source: "TAE branch + Grid Telecom [2 ops × ~8 Tbps = 15 Tbps]",
+			sourceUrl: "https://exainfra.net/services/resources/exa-infrastructure-network-map/",
 			operators: ["EXA", "Grid Telecom"],
 		},
 		{
@@ -2366,7 +2365,8 @@ function main() {
 			to: "istanbul",
 			capacityTbps: 10,
 			confidence: "estimated",
-			source: "TAE branch + SOCAR Fiber",
+			source: "TAE branch + SOCAR Fiber [2 ops × ~5 Tbps = 10 Tbps]",
+			sourceUrl: "https://exainfra.net/services/resources/exa-infrastructure-network-map/",
 			operators: ["EXA", "SOCAR"],
 		},
 		{
@@ -2374,7 +2374,8 @@ function main() {
 			to: "budapest",
 			capacityTbps: 15,
 			confidence: "estimated",
-			source: "EXA Project Visegrad extension",
+			source: "EXA Project Visegrad extension [1 ops × ~15 Tbps = 15 Tbps]",
+			sourceUrl: "https://exainfra.net/services/resources/exa-infrastructure-network-map/",
 			operators: ["EXA"],
 		},
 		{
@@ -2382,7 +2383,8 @@ function main() {
 			to: "vienna",
 			capacityTbps: 30,
 			confidence: "estimated",
-			source: "EXA, euNetworks, Deutsche Telekom, A1",
+			source: "EXA, euNetworks, Deutsche Telekom, A1 [4 ops × ~8 Tbps = 30 Tbps]",
+			sourceUrl: "https://exainfra.net/services/resources/exa-infrastructure-network-map/",
 			operators: ["EXA", "euNetworks", "Deutsche Telekom", "A1"],
 		},
 		{
@@ -2390,7 +2392,8 @@ function main() {
 			to: "marseille",
 			capacityTbps: 20,
 			confidence: "estimated",
-			source: "EXA, Cogent, Telefonica",
+			source: "EXA, Cogent, Telefonica [3 ops × ~7 Tbps = 20 Tbps]",
+			sourceUrl: "https://exainfra.net/services/resources/exa-infrastructure-network-map/",
 			operators: ["EXA", "Cogent", "Telefonica"],
 		},
 		{
@@ -2398,8 +2401,7 @@ function main() {
 			to: "helsinki",
 			capacityTbps: 15,
 			confidence: "estimated",
-			source:
-				"Telia/Arelion Baltic submarine cables, GlobalConnect new 150km subsea via Aland (completion 2026). Note: C-Lion1 connects Helsinki-Rostock, not Stockholm",
+			source: "Telia/Arelion Baltic submarine cables, GlobalConnect new 150km subsea via Aland (completion 2026). Note: C-Lion1 connects Helsinki-Rostock, not Stockholm [2 ops × ~8 Tbps = 15 Tbps]",
 			sourceUrl:
 				"https://www.prnewswire.com/news-releases/telia-carrier-builds-new-unique-route-from-stockholm-to-st-petersburg-and-upgrades-submarine-cables-in-the-baltic-sea-300391057.html",
 			operators: ["Telia", "GlobalConnect"],
@@ -2411,7 +2413,9 @@ function main() {
 			to: "berlin",
 			capacityTbps: 80,
 			confidence: "estimated",
-			source: "Deutsche Telekom, Versatel, GlobalConnect core backbone",
+			source:
+				"Deutsche Telekom, Versatel, GlobalConnect core backbone [3 ops × ~27 Tbps = 80 Tbps]",
+			sourceUrl: "https://globalcarrier.telekom.com/network",
 			operators: ["Deutsche Telekom", "Versatel", "GlobalConnect"],
 		},
 		{
@@ -2419,7 +2423,8 @@ function main() {
 			to: "hamburg",
 			capacityTbps: 60,
 			confidence: "estimated",
-			source: "Deutsche Telekom backbone, Versatel, euNetworks",
+			source: "Deutsche Telekom backbone, Versatel, euNetworks [3 ops × ~20 Tbps = 60 Tbps]",
+			sourceUrl: "https://globalcarrier.telekom.com/network",
 			operators: ["Deutsche Telekom", "Versatel", "euNetworks"],
 		},
 		{
@@ -2427,7 +2432,8 @@ function main() {
 			to: "berlin",
 			capacityTbps: 40,
 			confidence: "estimated",
-			source: "Deutsche Telekom, regional carriers",
+			source: "Deutsche Telekom, regional carriers [1 ops × ~40 Tbps = 40 Tbps]",
+			sourceUrl: "https://globalcarrier.telekom.com/network",
 			operators: ["Deutsche Telekom"],
 		},
 		{
@@ -2435,7 +2441,9 @@ function main() {
 			to: "rostock",
 			capacityTbps: 20,
 			confidence: "estimated",
-			source: "Deutsche Telekom, regional carriers (Baltic coast backhaul)",
+			source:
+				"Deutsche Telekom, regional carriers (Baltic coast backhaul) [1 ops × ~20 Tbps = 20 Tbps]",
+			sourceUrl: "https://globalcarrier.telekom.com/network",
 			operators: ["Deutsche Telekom"],
 		},
 		{
@@ -2443,7 +2451,8 @@ function main() {
 			to: "rostock",
 			capacityTbps: 15,
 			confidence: "estimated",
-			source: "Deutsche Telekom northern backbone",
+			source: "Deutsche Telekom northern backbone [1 ops × ~15 Tbps = 15 Tbps]",
+			sourceUrl: "https://globalcarrier.telekom.com/network",
 			operators: ["Deutsche Telekom"],
 		},
 		{
@@ -2451,7 +2460,8 @@ function main() {
 			to: "munich",
 			capacityTbps: 60,
 			confidence: "estimated",
-			source: "Deutsche Telekom, Versatel core backbone",
+			source: "Deutsche Telekom, Versatel core backbone [2 ops × ~30 Tbps = 60 Tbps]",
+			sourceUrl: "https://globalcarrier.telekom.com/network",
 			operators: ["Deutsche Telekom", "Versatel"],
 		},
 
@@ -2461,7 +2471,8 @@ function main() {
 			to: "copenhagen",
 			capacityTbps: 30,
 			confidence: "estimated",
-			source: "Telia, GlobalConnect Oresund crossing",
+			source: "Telia, GlobalConnect Oresund crossing [2 ops × ~15 Tbps = 30 Tbps]",
+			sourceUrl: "https://en.wikipedia.org/wiki/Arelion",
 			operators: ["Telia", "GlobalConnect"],
 		},
 		{
@@ -2469,7 +2480,8 @@ function main() {
 			to: "hamburg",
 			capacityTbps: 25,
 			confidence: "estimated",
-			source: "GlobalConnect, Telia Denmark-Germany backbone",
+			source: "GlobalConnect, Telia Denmark-Germany backbone [2 ops × ~13 Tbps = 25 Tbps]",
+			sourceUrl: "https://globalconnectgroup.com/our-network/",
 			operators: ["GlobalConnect", "Telia"],
 		},
 
@@ -2479,7 +2491,8 @@ function main() {
 			to: "manchester-gb",
 			capacityTbps: 60,
 			confidence: "estimated",
-			source: "BT, Virgin Media, CityFibre core backbone",
+			source: "BT, Virgin Media, CityFibre core backbone [3 ops × ~20 Tbps = 60 Tbps]",
+			sourceUrl: "https://en.wikipedia.org/wiki/BT_21CN",
 			operators: ["BT", "Virgin Media", "CityFibre"],
 		},
 		{
@@ -2487,7 +2500,8 @@ function main() {
 			to: "cornwall",
 			capacityTbps: 20,
 			confidence: "estimated",
-			source: "BT backbone to Bude cable landing station",
+			source: "BT backbone to Bude cable landing station [1 ops × ~20 Tbps = 20 Tbps]",
+			sourceUrl: "https://en.wikipedia.org/wiki/BT_21CN",
 			operators: ["BT"],
 		},
 
@@ -2497,7 +2511,8 @@ function main() {
 			to: "osaka",
 			capacityTbps: 100,
 			confidence: "estimated",
-			source: "NTT, KDDI, SoftBank Tokaido backbone",
+			source: "NTT, KDDI, SoftBank Tokaido backbone [3 ops × ~33 Tbps = 100 Tbps]",
+			sourceUrl: "https://www.us.ntt.com/en/about-us/we-are-global/",
 			operators: ["NTT", "KDDI", "SoftBank"],
 		},
 
@@ -2507,7 +2522,8 @@ function main() {
 			to: "rome",
 			capacityTbps: 40,
 			confidence: "estimated",
-			source: "Telecom Italia, Sparkle domestic backbone",
+			source: "Telecom Italia, Sparkle domestic backbone [2 ops × ~20 Tbps = 40 Tbps]",
+			sourceUrl: "https://www.tisparkle.com/our-assets/global-backbone",
 			operators: ["Telecom Italia", "Sparkle"],
 		},
 		{
@@ -2515,7 +2531,8 @@ function main() {
 			to: "sicily",
 			capacityTbps: 20,
 			confidence: "estimated",
-			source: "Telecom Italia southern backbone",
+			source: "Telecom Italia southern backbone [1 ops × ~20 Tbps = 20 Tbps]",
+			sourceUrl: "https://www.tisparkle.com/our-assets/global-backbone",
 			operators: ["Telecom Italia"],
 		},
 
@@ -2525,7 +2542,9 @@ function main() {
 			to: "chennai",
 			capacityTbps: 40,
 			confidence: "estimated",
-			source: "Reliance Jio, Airtel, BSNL national backbone",
+			source: "Reliance Jio, Airtel, BSNL national backbone [3 ops × ~13 Tbps = 40 Tbps]",
+			sourceUrl:
+				"https://www.cisco.com/site/us/en/about/case-studies-customer-stories/reliance-jio.html",
 			operators: ["Reliance Jio", "Airtel", "BSNL"],
 		},
 		{
@@ -2533,7 +2552,10 @@ function main() {
 			to: "delhi",
 			capacityTbps: 60,
 			confidence: "estimated",
-			source: "Reliance Jio, Airtel, BSNL — highest-capacity Indian corridor",
+			source:
+				"Reliance Jio, Airtel, BSNL — highest-capacity Indian corridor [3 ops × ~20 Tbps = 60 Tbps]",
+			sourceUrl:
+				"https://www.cisco.com/site/us/en/about/case-studies-customer-stories/reliance-jio.html",
 			operators: ["Reliance Jio", "Airtel", "BSNL"],
 		},
 		{
@@ -2541,7 +2563,9 @@ function main() {
 			to: "bangalore",
 			capacityTbps: 30,
 			confidence: "estimated",
-			source: "Reliance Jio, Airtel southern backbone",
+			source: "Reliance Jio, Airtel southern backbone [2 ops × ~15 Tbps = 30 Tbps]",
+			sourceUrl:
+				"https://www.cisco.com/site/us/en/about/case-studies-customer-stories/reliance-jio.html",
 			operators: ["Reliance Jio", "Airtel"],
 		},
 
@@ -2551,7 +2575,8 @@ function main() {
 			to: "surabaya",
 			capacityTbps: 20,
 			confidence: "estimated",
-			source: "Telkom Indonesia Java backbone",
+			source: "Telkom Indonesia Java backbone [1 ops × ~20 Tbps = 20 Tbps]",
+			sourceUrl: "https://infraco.telkom.co.id/",
 			operators: ["Telkom Indonesia"],
 		},
 		{
@@ -2559,7 +2584,8 @@ function main() {
 			to: "batam",
 			capacityTbps: 30,
 			confidence: "estimated",
-			source: "Cross-strait fiber links (multiple operators)",
+			source: "Cross-strait fiber links (multiple operators) [2 ops × ~15 Tbps = 30 Tbps]",
+			sourceUrl: "https://www.singtel.com/business/products-services/connectivity/global",
 			operators: ["Singtel", "Telkom Indonesia"],
 		},
 
@@ -2569,7 +2595,8 @@ function main() {
 			to: "mersing",
 			capacityTbps: 15,
 			confidence: "estimated",
-			source: "Malaysian terrestrial to SG cable landing stations",
+			source: "Malaysian terrestrial to SG cable landing stations [2 ops × ~8 Tbps = 15 Tbps]",
+			sourceUrl: "https://www.singtel.com/business/products-services/connectivity/global",
 			operators: ["TM", "Singtel"],
 		},
 
@@ -2579,7 +2606,9 @@ function main() {
 			to: "fortaleza",
 			capacityTbps: 30,
 			confidence: "estimated",
-			source: "Oi, Vivo, Embratel NE backbone (key for transatlantic cables)",
+			source:
+				"Oi, Vivo, Embratel NE backbone (key for transatlantic cables) [3 ops × ~10 Tbps = 30 Tbps]",
+			sourceUrl: "https://en.wikipedia.org/wiki/Internet_in_Brazil",
 			operators: ["Oi", "Vivo", "Embratel"],
 		},
 		{
@@ -2587,7 +2616,8 @@ function main() {
 			to: "salvador",
 			capacityTbps: 20,
 			confidence: "estimated",
-			source: "Oi, Vivo coastal backbone",
+			source: "Oi, Vivo coastal backbone [2 ops × ~10 Tbps = 20 Tbps]",
+			sourceUrl: "https://en.wikipedia.org/wiki/Internet_in_Brazil",
 			operators: ["Oi", "Vivo"],
 		},
 
@@ -2597,7 +2627,8 @@ function main() {
 			to: "guangzhou",
 			capacityTbps: 60,
 			confidence: "estimated",
-			source: "China Telecom, China Unicom cross-border + domestic",
+			source: "China Telecom, China Unicom cross-border + domestic [2 ops × ~30 Tbps = 60 Tbps]",
+			sourceUrl: "https://www.ctamericas.com/company/global-network/",
 			operators: ["China Telecom", "China Unicom"],
 		},
 		{
@@ -2605,7 +2636,8 @@ function main() {
 			to: "shanghai",
 			capacityTbps: 80,
 			confidence: "estimated",
-			source: "China Telecom core backbone",
+			source: "China Telecom core backbone [3 ops × ~27 Tbps = 80 Tbps]",
+			sourceUrl: "https://www.ctamericas.com/company/global-network/",
 			operators: ["China Telecom", "China Unicom", "China Mobile"],
 		},
 		{
@@ -2613,7 +2645,8 @@ function main() {
 			to: "tokyo",
 			capacityTbps: 20,
 			confidence: "estimated",
-			source: "Multiple submarine + transit paths",
+			source: "Multiple submarine + transit paths [2 ops × ~10 Tbps = 20 Tbps]",
+			sourceUrl: "https://www.ctamericas.com/company/global-network/",
 			operators: ["China Telecom", "NTT"],
 		},
 
@@ -2623,7 +2656,8 @@ function main() {
 			to: "melbourne",
 			capacityTbps: 40,
 			confidence: "estimated",
-			source: "Telstra, Optus, Vocus domestic backbone",
+			source: "Telstra, Optus, Vocus domestic backbone [3 ops × ~13 Tbps = 40 Tbps]",
+			sourceUrl: "https://infraco.telstra.com.au/solutions/intercity-dark-fibre-network",
 			operators: ["Telstra", "Optus", "Vocus"],
 		},
 		{
@@ -2631,7 +2665,8 @@ function main() {
 			to: "perth",
 			capacityTbps: 15,
 			confidence: "estimated",
-			source: "Telstra transcontinental + Vocus Pipe Networks",
+			source: "Telstra transcontinental + Vocus Pipe Networks [2 ops × ~8 Tbps = 15 Tbps]",
+			sourceUrl: "https://infraco.telstra.com.au/solutions/intercity-dark-fibre-network",
 			operators: ["Telstra", "Vocus"],
 		},
 
@@ -2641,8 +2676,7 @@ function main() {
 			to: "moscow",
 			capacityTbps: 50,
 			confidence: "estimated",
-			source:
-				"Rostelecom TEA NEXT (96 dark fiber pairs, Ultra Low Loss fiber, RTD Moscow-Vlad <=85ms), MegaFon, Beeline",
+			source: "Rostelecom TEA NEXT (96 dark fiber pairs, Ultra Low Loss fiber, RTD Moscow-Vlad <=85ms), MegaFon, Beeline [3 ops × ~17 Tbps = 50 Tbps]",
 			sourceUrl:
 				"https://www.submarinenetworks.com/en/systems/eurasia-terrestrial/tea-next/rt-launches-tea-next",
 			operators: ["Rostelecom", "MegaFon", "Beeline"],
@@ -2652,7 +2686,8 @@ function main() {
 			to: "yekaterinburg",
 			capacityTbps: 20,
 			confidence: "estimated",
-			source: "Rostelecom TEA NEXT backbone",
+			source: "Rostelecom TEA NEXT backbone [1 ops × ~20 Tbps = 20 Tbps]",
+			sourceUrl: "https://www.company.rt.ru/en/about/net/magistr/",
 			operators: ["Rostelecom"],
 		},
 		{
@@ -2660,7 +2695,8 @@ function main() {
 			to: "novosibirsk",
 			capacityTbps: 15,
 			confidence: "estimated",
-			source: "Rostelecom TEA NEXT backbone",
+			source: "Rostelecom TEA NEXT backbone [1 ops × ~15 Tbps = 15 Tbps]",
+			sourceUrl: "https://www.company.rt.ru/en/about/net/magistr/",
 			operators: ["Rostelecom"],
 		},
 		{
@@ -2668,7 +2704,8 @@ function main() {
 			to: "vladivostok",
 			capacityTbps: 10,
 			confidence: "estimated",
-			source: "Rostelecom TEA NEXT",
+			source: "Rostelecom TEA NEXT [1 ops × ~10 Tbps = 10 Tbps]",
+			sourceUrl: "https://www.company.rt.ru/en/about/net/magistr/",
 			operators: ["Rostelecom"],
 		},
 		{
@@ -2676,7 +2713,8 @@ function main() {
 			to: "manzhouli",
 			capacityTbps: 5,
 			confidence: "estimated",
-			source: "TEA, TEA-2, TEA-3 cross-border",
+			source: "TEA, TEA-2, TEA-3 cross-border [2 ops × ~3 Tbps = 5 Tbps]",
+			sourceUrl: "https://www.company.rt.ru/en/about/net/magistr/",
 			operators: ["Rostelecom", "China Telecom"],
 		},
 		{
@@ -2684,7 +2722,8 @@ function main() {
 			to: "st-petersburg",
 			capacityTbps: 10,
 			confidence: "estimated",
-			source: "Telia Carrier, Russia-Finland border",
+			source: "Telia Carrier, Russia-Finland border [1 ops × ~10 Tbps = 10 Tbps]",
+			sourceUrl: "https://en.wikipedia.org/wiki/Arelion",
 			operators: ["Telia"],
 		},
 		{
@@ -2692,7 +2731,8 @@ function main() {
 			to: "st-petersburg",
 			capacityTbps: 5,
 			confidence: "estimated",
-			source: "Telia mesh network",
+			source: "Telia mesh network [1 ops × ~5 Tbps = 5 Tbps]",
+			sourceUrl: "https://en.wikipedia.org/wiki/Arelion",
 			operators: ["Telia"],
 		},
 		{
@@ -2700,8 +2740,7 @@ function main() {
 			to: "almaty",
 			capacityTbps: 8,
 			confidence: "estimated",
-			source:
-				"DREAM (8,700 km Frankfurt-Kazakhstan-China, MegaFon+Kazakhtelecom, 2013) + TRANSKZ (15,000 km Frankfurt-Hong Kong via Kazakhstan, 8 Tbps total, RETN, 2016)",
+			source: "DREAM (8,700 km Frankfurt-Kazakhstan-China, MegaFon+Kazakhtelecom, 2013) + TRANSKZ (15,000 km Frankfurt-Hong Kong via Kazakhstan, 8 Tbps total, RETN, 2016) [4 ops × ~2 Tbps = 8 Tbps]",
 			sourceUrl: "https://retn.net/solutions/transkz",
 			operators: ["MegaFon", "Kazakhtelecom", "Colt", "RETN"],
 		},
@@ -2722,7 +2761,8 @@ function main() {
 			to: "urumqi",
 			capacityTbps: 15,
 			confidence: "estimated",
-			source: "Khorgos/Alashankou crossings, DREAM + TRANSKZ",
+			source: "Khorgos/Alashankou crossings, DREAM + TRANSKZ [3 ops × ~5 Tbps = 15 Tbps]",
+			sourceUrl: "https://www.ctamericas.com/company/global-network/",
 			operators: ["China Telecom", "China Unicom", "Kazakhtelecom"],
 		},
 		{
@@ -2730,7 +2770,8 @@ function main() {
 			to: "ulaanbaatar",
 			capacityTbps: 3,
 			confidence: "estimated",
-			source: "TEA-4, TMP Transit-Mongolia",
+			source: "TEA-4, TMP Transit-Mongolia [1 ops × ~3 Tbps = 3 Tbps]",
+			sourceUrl: "https://www.company.rt.ru/en/about/net/magistr/",
 			operators: ["Rostelecom"],
 		},
 
@@ -2760,7 +2801,8 @@ function main() {
 			to: "tehran",
 			capacityTbps: 2,
 			confidence: "estimated",
-			source: "TIC Astara border crossing",
+			source: "TIC Astara border crossing [1 ops × ~2 Tbps = 2 Tbps]",
+			sourceUrl: "https://en.wikipedia.org/wiki/Telecommunication_Infrastructure_Company_of_Iran",
 			operators: ["TIC"],
 		},
 		{
@@ -2787,8 +2829,7 @@ function main() {
 			to: "tbilisi",
 			capacityTbps: 10,
 			confidence: "estimated",
-			source:
-				"EXA + SOCAR Fiber: 1,850 km along TANAP gas pipeline across Turkey, Greece-to-Georgia route",
+			source: "EXA + SOCAR Fiber: 1,850 km along TANAP gas pipeline across Turkey, Greece-to-Georgia route [2 ops × ~5 Tbps = 10 Tbps]",
 			sourceUrl:
 				"https://exainfra.net/media-centre/press-releases/exa-infrastructure-and-socar-fiber-collaborate-for-red-sea-route-diversity/",
 			operators: ["EXA", "SOCAR"],
@@ -2798,8 +2839,7 @@ function main() {
 			to: "addis-ababa",
 			capacityTbps: 5,
 			confidence: "estimated",
-			source:
-				"Horizon Fiber Initiative (Feb 2026): Ethio Telecom + Djibouti Telecom + Sudatel, 144 fiber pairs, multi-terabit capacity",
+			source: "Horizon Fiber Initiative (Feb 2026): Ethio Telecom + Djibouti Telecom + Sudatel, 144 fiber pairs, multi-terabit capacity [3 ops × ~2 Tbps = 5 Tbps]",
 			sourceUrl:
 				"https://www.telecomtv.com/content/access-evolution/telco-trio-launches-african-cross-border-fibre-project-54799/",
 			operators: ["Ethio Telecom", "Djibouti Telecom", "Sudatel"],
@@ -2822,8 +2862,7 @@ function main() {
 			to: "chicago",
 			capacityTbps: 200,
 			confidence: "estimated",
-			source:
-				"Lumen (450+ Tbps global IP capacity), Zayo (1 Pbps network-wide active waves, 2024), Cogent (19k+ route-miles ex-Sprint wireline), AT&T, Verizon",
+			source: "Lumen (450+ Tbps global IP capacity), Zayo (1 Pbps network-wide active waves, 2024), Cogent (19k+ route-miles ex-Sprint wireline), AT&T, Verizon [5 ops × ~40 Tbps = 200 Tbps]",
 			sourceUrl:
 				"https://www.zayo.com/newsroom/zayo-announces-construction-of-5000-new-fiber-route-miles-as-ai-demand-is-forecasted-to-grow-2-6x-by-2030/",
 			operators: ["Lumen", "Zayo", "Cogent", "AT&T", "Verizon"],
@@ -2833,7 +2872,8 @@ function main() {
 			to: "los-angeles",
 			capacityTbps: 150,
 			confidence: "estimated",
-			source: "Lumen, Zayo western expansion, Cogent, AT&T",
+			source: "Lumen, Zayo western expansion, Cogent, AT&T [4 ops × ~38 Tbps = 150 Tbps]",
+			sourceUrl: "https://www.lumen.com/en-us/resources/network-maps.html",
 			operators: ["Lumen", "Zayo", "Cogent", "AT&T"],
 		},
 		{
@@ -2841,8 +2881,7 @@ function main() {
 			to: "washington-dc",
 			capacityTbps: 200,
 			confidence: "estimated",
-			source:
-				"Highest-density US corridor (NE I-95 + Ashburn nexus). Lumen, Zayo, AT&T, Verizon, Cogent",
+			source: "Highest-density US corridor (NE I-95 + Ashburn nexus). Lumen, Zayo, AT&T, Verizon, Cogent [5 ops × ~40 Tbps = 200 Tbps]",
 			sourceUrl:
 				"https://www.zayo.com/newsroom/zayo-announces-construction-of-5000-new-fiber-route-miles-as-ai-demand-is-forecasted-to-grow-2-6x-by-2030/",
 			operators: ["Lumen", "Zayo", "AT&T", "Verizon", "Cogent"],
@@ -2852,7 +2891,8 @@ function main() {
 			to: "dallas",
 			capacityTbps: 100,
 			confidence: "estimated",
-			source: "Lumen, Zayo, AT&T",
+			source: "Lumen, Zayo, AT&T [3 ops × ~33 Tbps = 100 Tbps]",
+			sourceUrl: "https://www.lumen.com/en-us/resources/network-maps.html",
 			operators: ["Lumen", "Zayo", "AT&T"],
 		},
 		{
@@ -2860,7 +2900,8 @@ function main() {
 			to: "los-angeles",
 			capacityTbps: 100,
 			confidence: "estimated",
-			source: "Lumen, Zayo, AT&T",
+			source: "Lumen, Zayo, AT&T [3 ops × ~33 Tbps = 100 Tbps]",
+			sourceUrl: "https://www.lumen.com/en-us/resources/network-maps.html",
 			operators: ["Lumen", "Zayo", "AT&T"],
 		},
 		{
@@ -2868,7 +2909,8 @@ function main() {
 			to: "dallas",
 			capacityTbps: 80,
 			confidence: "estimated",
-			source: "Lumen, Zayo, AT&T",
+			source: "Lumen, Zayo, AT&T [3 ops × ~27 Tbps = 80 Tbps]",
+			sourceUrl: "https://www.lumen.com/en-us/resources/network-maps.html",
 			operators: ["Lumen", "Zayo", "AT&T"],
 		},
 		{
@@ -2876,7 +2918,8 @@ function main() {
 			to: "miami",
 			capacityTbps: 80,
 			confidence: "estimated",
-			source: "Lumen, AT&T, Zayo",
+			source: "Lumen, AT&T, Zayo [3 ops × ~27 Tbps = 80 Tbps]",
+			sourceUrl: "https://www.lumen.com/en-us/resources/network-maps.html",
 			operators: ["Lumen", "AT&T", "Zayo"],
 		},
 		{
@@ -2884,7 +2927,8 @@ function main() {
 			to: "houston",
 			capacityTbps: 60,
 			confidence: "estimated",
-			source: "Regional trunk",
+			source: "Regional trunk [2 ops × ~30 Tbps = 60 Tbps]",
+			sourceUrl: "https://www.lumen.com/en-us/resources/network-maps.html",
 			operators: ["Lumen", "AT&T"],
 		},
 		{
@@ -2892,7 +2936,8 @@ function main() {
 			to: "los-angeles",
 			capacityTbps: 60,
 			confidence: "estimated",
-			source: "West Coast backbone, Zayo western expansion",
+			source: "West Coast backbone, Zayo western expansion [2 ops × ~30 Tbps = 60 Tbps]",
+			sourceUrl: "https://www.zayo.com/network/",
 			operators: ["Zayo", "Lumen"],
 		},
 		{
@@ -2900,8 +2945,7 @@ function main() {
 			to: "dallas",
 			capacityTbps: 40,
 			confidence: "estimated",
-			source:
-				"Lumen + Ciena record 1.2 Tbps wavelength over 3,050 km on this route (Mar 2025, WaveLogic 6e)",
+			source: "Lumen + Ciena record 1.2 Tbps wavelength over 3,050 km on this route (Mar 2025, WaveLogic 6e) [2 ops × ~20 Tbps = 40 Tbps]",
 			sourceUrl:
 				"https://www.ciena.com/about/newsroom/press-releases/lumen-and-ciena-transmit-record-breaking-1.2-tbps-wavelength-service-across-3,050-kilometers",
 			operators: ["Lumen", "Zayo"],
@@ -2911,7 +2955,8 @@ function main() {
 			to: "chicago",
 			capacityTbps: 40,
 			confidence: "estimated",
-			source: "Lumen, Zayo",
+			source: "Lumen, Zayo [2 ops × ~20 Tbps = 40 Tbps]",
+			sourceUrl: "https://www.lumen.com/en-us/resources/network-maps.html",
 			operators: ["Lumen", "Zayo"],
 		},
 		{
@@ -2919,7 +2964,8 @@ function main() {
 			to: "miami",
 			capacityTbps: 40,
 			confidence: "estimated",
-			source: "SE US trunk",
+			source: "SE US trunk [2 ops × ~20 Tbps = 40 Tbps]",
+			sourceUrl: "https://www.lumen.com/en-us/resources/network-maps.html",
 			operators: ["Lumen", "AT&T"],
 		},
 
@@ -2929,7 +2975,8 @@ function main() {
 			to: "tijuana",
 			capacityTbps: 25,
 			confidence: "estimated",
-			source: "MDC Data Centers International Fiber Crossings (San Ysidro + Otay Mesa routes)",
+			source:
+				"MDC Data Centers International Fiber Crossings (San Ysidro + Otay Mesa routes) [1 ops × ~25 Tbps = 25 Tbps]",
 			sourceUrl:
 				"https://www.mdcdatacenters.com/company/blog/san-diegos-international-fiber-crossing-market-growth/",
 			operators: ["MDC"],
@@ -2939,7 +2986,8 @@ function main() {
 			to: "monterrey",
 			capacityTbps: 30,
 			confidence: "estimated",
-			source: "MDC IFC Laredo-Nuevo Laredo (3 conduits, 144 strands G652D, Q2 2025)",
+			source:
+				"MDC IFC Laredo-Nuevo Laredo (3 conduits, 144 strands G652D, Q2 2025) [1 ops × ~30 Tbps = 30 Tbps]",
 			sourceUrl:
 				"https://www.mdcdatacenters.com/company/blog/mdc-expands-fiber-cross-border-routes-laredo-el-paso/",
 			operators: ["MDC"],
@@ -2949,8 +2997,7 @@ function main() {
 			to: "ciudad-juarez",
 			capacityTbps: 20,
 			confidence: "estimated",
-			source:
-				"MDC sub-river crossing (Q4 2025) + Zayo-Fermaca partnership (El Paso to Monterrey/Queretaro, newest US-MX route in 20 yrs)",
+			source: "MDC sub-river crossing (Q4 2025) + Zayo-Fermaca partnership (El Paso to Monterrey/Queretaro, newest US-MX route in 20 yrs) [3 ops × ~7 Tbps = 20 Tbps]",
 			sourceUrl:
 				"https://www.zayo.com/newsroom/zayo-and-fermaca-partner-to-deliver-the-most-advanced-cross-border-connectivity-between-the-united-states-and-mexico/",
 			operators: ["MDC", "Zayo", "Fermaca"],
@@ -2960,7 +3007,7 @@ function main() {
 			to: "vancouver",
 			capacityTbps: 30,
 			confidence: "estimated",
-			source: "Zayo, multiple carriers",
+			source: "Zayo, multiple carriers [1 ops × ~30 Tbps = 30 Tbps]",
 			sourceUrl:
 				"https://www.zayo.com/newsroom/zayo-announces-construction-of-5000-new-fiber-route-miles-as-ai-demand-is-forecasted-to-grow-2-6x-by-2030/",
 			operators: ["Zayo"],
@@ -2970,7 +3017,8 @@ function main() {
 			to: "toronto",
 			capacityTbps: 40,
 			confidence: "estimated",
-			source: "Zayo, Cogent, multiple carriers",
+			source: "Zayo, Cogent, multiple carriers [2 ops × ~20 Tbps = 40 Tbps]",
+			sourceUrl: "https://www.zayo.com/network/",
 			operators: ["Zayo", "Cogent"],
 		},
 		{
@@ -2999,7 +3047,8 @@ function main() {
 			to: "kampala",
 			capacityTbps: 5,
 			confidence: "estimated",
-			source: "Liquid backbone, WIOCC",
+			source: "Liquid backbone, WIOCC [2 ops × ~3 Tbps = 5 Tbps]",
+			sourceUrl: "https://liquid.tech/about-us/our-network/",
 			operators: ["Liquid", "WIOCC"],
 		},
 		{
@@ -3007,7 +3056,8 @@ function main() {
 			to: "kigali",
 			capacityTbps: 2,
 			confidence: "estimated",
-			source: "Liquid backbone",
+			source: "Liquid backbone [1 ops × ~2 Tbps = 2 Tbps]",
+			sourceUrl: "https://liquid.tech/about-us/our-network/",
 			operators: ["Liquid"],
 		},
 		{
@@ -3026,7 +3076,8 @@ function main() {
 			to: "lilongwe",
 			capacityTbps: 1,
 			confidence: "estimated",
-			source: "Liquid Zambia-Malawi fiber route, 711 km. Capacity unverified (1 Tbps is estimate)",
+			source:
+				"Liquid Zambia-Malawi fiber route, 711 km. Capacity unverified (1 Tbps is estimate) [1 ops × ~1 Tbps = 1 Tbps]",
 			sourceUrl:
 				"https://www.connectingafrica.com/fiber-networking/liquid-launches-kenya-ethiopia-zambia-malawi-fiber-routes",
 			operators: ["Liquid"],
@@ -3036,7 +3087,8 @@ function main() {
 			to: "cape-town",
 			capacityTbps: 10,
 			confidence: "estimated",
-			source: "Telkom SA, WIOCC, Liquid",
+			source: "Telkom SA, WIOCC, Liquid [3 ops × ~3 Tbps = 10 Tbps]",
+			sourceUrl: "https://www.openserve.co.za/about-openserve",
 			operators: ["Telkom SA", "WIOCC", "Liquid"],
 		},
 		{
@@ -3044,7 +3096,8 @@ function main() {
 			to: "maputo",
 			capacityTbps: 3,
 			confidence: "estimated",
-			source: "Liquid, regional carriers",
+			source: "Liquid, regional carriers [1 ops × ~3 Tbps = 3 Tbps]",
+			sourceUrl: "https://liquid.tech/about-us/our-network/",
 			operators: ["Liquid"],
 		},
 		{
@@ -3052,7 +3105,8 @@ function main() {
 			to: "harare",
 			capacityTbps: 3,
 			confidence: "estimated",
-			source: "Liquid backbone",
+			source: "Liquid backbone [1 ops × ~3 Tbps = 3 Tbps]",
+			sourceUrl: "https://liquid.tech/about-us/our-network/",
 			operators: ["Liquid"],
 		},
 		{
@@ -3060,7 +3114,8 @@ function main() {
 			to: "johannesburg",
 			capacityTbps: 5,
 			confidence: "estimated",
-			source: "Liquid backbone",
+			source: "Liquid backbone [1 ops × ~5 Tbps = 5 Tbps]",
+			sourceUrl: "https://liquid.tech/about-us/our-network/",
 			operators: ["Liquid"],
 		},
 
@@ -3070,7 +3125,8 @@ function main() {
 			to: "nanning",
 			capacityTbps: 10,
 			confidence: "estimated",
-			source: "China-Vietnam Pingxiang/Dongxing crossings",
+			source: "China-Vietnam Pingxiang/Dongxing crossings [2 ops × ~5 Tbps = 10 Tbps]",
+			sourceUrl: "https://www.ctamericas.com/company/global-network/",
 			operators: ["China Telecom", "China Unicom"],
 		},
 		{
@@ -3089,7 +3145,8 @@ function main() {
 			to: "kunming",
 			capacityTbps: 2,
 			confidence: "estimated",
-			source: "China-Laos terrestrial",
+			source: "China-Laos terrestrial [1 ops × ~2 Tbps = 2 Tbps]",
+			sourceUrl: "https://www.ctamericas.com/company/global-network/",
 			operators: ["China Telecom"],
 		},
 		{
@@ -3097,7 +3154,8 @@ function main() {
 			to: "kolkata",
 			capacityTbps: 5,
 			confidence: "estimated",
-			source: "Three India-Bangladesh cross-border cables",
+			source: "Three India-Bangladesh cross-border cables [4 ops × ~1 Tbps = 5 Tbps]",
+			sourceUrl: "https://en.wikipedia.org/wiki/Internet_in_Bangladesh",
 			operators: ["BTCL", "BSNL", "Airtel", "Tata"],
 		},
 
@@ -3107,8 +3165,7 @@ function main() {
 			to: "buenos-aires",
 			capacityTbps: 50,
 			confidence: "estimated",
-			source:
-				"SAC terrestrial segments, Cirion (668 Tbps LATAM-wide, 2024), Internexa (32,000+ km fiber)",
+			source: "SAC terrestrial segments, Cirion (668 Tbps LATAM-wide, 2024), Internexa (32,000+ km fiber) [3 ops × ~17 Tbps = 50 Tbps]",
 			sourceUrl: "https://www.internexa.com/en/cobertura-red",
 			operators: ["SAC", "Cirion", "Internexa"],
 		},
@@ -3117,8 +3174,7 @@ function main() {
 			to: "santiago",
 			capacityTbps: 15,
 			confidence: "estimated",
-			source:
-				"Andes crossing via SAC terrestrial segment + Cirion LATAM backbone (668 Tbps network-wide, 2024) + Conecta Infra (US$350M, 6,000 km dark fiber, launched Mar 2026)",
+			source: "Andes crossing via SAC terrestrial segment + Cirion LATAM backbone (668 Tbps network-wide, 2024) + Conecta Infra (US$350M, 6,000 km dark fiber, launched Mar 2026) [3 ops × ~5 Tbps = 15 Tbps]",
 			sourceUrl:
 				"https://press.ciriontechnologies.com/en/2025/05/28/expands-network-infrastructure-capacity-access-metro-pops/",
 			operators: ["SAC", "Cirion", "Conecta Infra"],
@@ -3128,7 +3184,8 @@ function main() {
 			to: "rio-de-janeiro",
 			capacityTbps: 80,
 			confidence: "estimated",
-			source: "Domestic trunk, Cirion, multiple carriers",
+			source: "Domestic trunk, Cirion, multiple carriers [1 ops × ~80 Tbps = 80 Tbps]",
+			sourceUrl: "https://www.ciriontechnologies.com/en/connectivity/digital-infrastructure/",
 			operators: ["Cirion"],
 		},
 		{
@@ -3136,7 +3193,8 @@ function main() {
 			to: "santiago",
 			capacityTbps: 10,
 			confidence: "estimated",
-			source: "Internexa, SAC",
+			source: "Internexa, SAC [2 ops × ~5 Tbps = 10 Tbps]",
+			sourceUrl: "https://www.internexa.com/en/cobertura-red",
 			operators: ["Internexa", "SAC"],
 		},
 		{
@@ -3144,7 +3202,8 @@ function main() {
 			to: "lima",
 			capacityTbps: 8,
 			confidence: "estimated",
-			source: "Internexa backbone",
+			source: "Internexa backbone [1 ops × ~8 Tbps = 8 Tbps]",
+			sourceUrl: "https://www.internexa.com/en/cobertura-red",
 			operators: ["Internexa"],
 		},
 		{
@@ -3152,7 +3211,8 @@ function main() {
 			to: "cali",
 			capacityTbps: 15,
 			confidence: "estimated",
-			source: "Domestic trunk, Internexa",
+			source: "Domestic trunk, Internexa [1 ops × ~15 Tbps = 15 Tbps]",
+			sourceUrl: "https://www.internexa.com/en/cobertura-red",
 			operators: ["Internexa"],
 		},
 		{
@@ -3160,7 +3220,8 @@ function main() {
 			to: "bogota",
 			capacityTbps: 8,
 			confidence: "estimated",
-			source: "Internexa Colombia-Ecuador",
+			source: "Internexa Colombia-Ecuador [1 ops × ~8 Tbps = 8 Tbps]",
+			sourceUrl: "https://www.internexa.com/en/cobertura-red",
 			operators: ["Internexa"],
 		},
 		{
@@ -3168,7 +3229,7 @@ function main() {
 			to: "porto-alegre",
 			capacityTbps: 30,
 			confidence: "estimated",
-			source: "Domestic trunk, Conecta Infra",
+			source: "Domestic trunk, Conecta Infra [1 ops × ~30 Tbps = 30 Tbps]",
 			sourceUrl:
 				"https://www.prnewswire.com/news-releases/conecta-infra-launches-with-us350-million-investment-to-connect-south-americas-leading-data-center-hubs-302720079.html",
 			operators: ["Conecta Infra"],
@@ -3191,8 +3252,7 @@ function main() {
 			to: "abidjan",
 			capacityTbps: 1,
 			confidence: "estimated",
-			source:
-				"CSquared backbone + Orange Djoliba pan-West African fiber network (10,000 km terrestrial, up to 100 Gbps)",
+			source: "CSquared backbone + Orange Djoliba pan-West African fiber network (10,000 km terrestrial, up to 100 Gbps) [2 ops × ~1 Tbps = 1 Tbps]",
 			sourceUrl:
 				"https://www.lightwaveonline.com/network-design/high-speed-networks/article/14072161/orange-plans-fiber-backbone-network-in-west-africa",
 			operators: ["CSquared", "Orange"],
@@ -3202,8 +3262,7 @@ function main() {
 			to: "dakar",
 			capacityTbps: 0.5,
 			confidence: "estimated",
-			source:
-				"Orange Djoliba backbone via Mali/Burkina Faso/Senegal. Also Phase3 + Sonatel Lagos-Dakar terrestrial (launched May 2025, 32ms latency)",
+			source: "Orange Djoliba backbone via Mali/Burkina Faso/Senegal. Also Phase3 + Sonatel Lagos-Dakar terrestrial (launched May 2025, 32ms latency) [3 ops × ~167 Gbps = 500 Gbps]",
 			sourceUrl:
 				"https://www.businesswire.com/news/home/20250507073118/en/Phase3-and-Sonatel-Launch-Lagos-to-Dakar-Terrestrial-Fibre-Route-Unlocking-Resilience-Across-West-Africa",
 			operators: ["Orange", "Phase3", "Sonatel"],
@@ -3243,7 +3302,8 @@ function main() {
 			to: "budapest",
 			capacityTbps: 5,
 			confidence: "estimated",
-			source: "Telia Carrier (PoP in Zagreb since 2016), Hrvatski Telekom",
+			source:
+				"Telia Carrier (PoP in Zagreb since 2016), Hrvatski Telekom [2 ops × ~3 Tbps = 5 Tbps]",
 			sourceUrl:
 				"https://www.prnewswire.com/news-releases/telia-carrier-expands-global-backbone-to-zagreb-improves-connectivity-for-cee-and-the-balkans-300357941.html",
 			operators: ["Telia", "Hrvatski Telekom"],
@@ -3266,7 +3326,8 @@ function main() {
 			to: "muscat",
 			capacityTbps: 5,
 			confidence: "estimated",
-			source: "Omantel + du terrestrial cross-border links + OEG submarine cable (275 km)",
+			source:
+				"Omantel + du terrestrial cross-border links + OEG submarine cable (275 km) [2 ops × ~3 Tbps = 5 Tbps]",
 			sourceUrl: "https://en.wikipedia.org/wiki/Omantel",
 			operators: ["Omantel", "du"],
 		},
@@ -3277,8 +3338,7 @@ function main() {
 			to: "phnom-penh",
 			capacityTbps: 1,
 			confidence: "estimated",
-			source:
-				"Thailand-Cambodia-Vietnam Backbone (TCV), ~600 km. LXT Networks, CAT Telecom, Viettel Cambodia",
+			source: "Thailand-Cambodia-Vietnam Backbone (TCV), ~600 km. LXT Networks, CAT Telecom, Viettel Cambodia [3 ops × ~0 Tbps = 1 Tbps]",
 			sourceUrl:
 				"https://www.prnewswire.com/news-releases/metro-optical-and-lxt-networks-partner-to-deliver-internet-access-and-sdwan-services-throughout-the-emerging-markets-of-thailand-cambodia-myanmar-laos-and-vietnam-300736393.html",
 			operators: ["LXT Networks", "CAT Telecom", "Viettel"],
@@ -3288,8 +3348,7 @@ function main() {
 			to: "ho-chi-minh-city",
 			capacityTbps: 0.5,
 			confidence: "estimated",
-			source:
-				"Viettel Cambodia terrestrial to Vietnam (45 Gbps), CFOCN 2,000 km backbone in Cambodia",
+			source: "Viettel Cambodia terrestrial to Vietnam (45 Gbps), CFOCN 2,000 km backbone in Cambodia [2 ops × ~250 Gbps = 500 Gbps]",
 			sourceUrl:
 				"https://www.aiib.org/en/projects/details/2019/approved/Cambodia-Fiber-Optic-Communication-Network-Project.html",
 			operators: ["Viettel", "CFOCN"],
@@ -3299,8 +3358,8 @@ function main() {
 			to: "singapore",
 			capacityTbps: 30,
 			confidence: "estimated",
-			source:
-				"MSAR (neutral carrier since 2014), Telekom Malaysia (540,000 km fiber), Fiberail (5,500 km via rail/pipeline corridors), Singtel. Dual access via Johor Causeway + Tuas Second Link",
+			source: "MSAR (neutral carrier since 2014), Telekom Malaysia (540,000 km fiber), Fiberail (5,500 km via rail/pipeline corridors), Singtel. Dual access via Johor Causeway + Tuas Second Link [4 ops × ~8 Tbps = 30 Tbps]",
+			sourceUrl: "https://msar.tech",
 			operators: ["MSAR", "TM", "Fiberail", "Singtel"],
 		},
 	];

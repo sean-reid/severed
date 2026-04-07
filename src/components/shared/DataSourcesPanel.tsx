@@ -122,10 +122,7 @@ export function DataSourcesPanel() {
 											estimated
 										</span>
 										<span>
-											<strong className="text-text-primary">Cables:</strong> capacity from an
-											industry publication, not the operator directly.{" "}
-											<strong className="text-text-primary">Terrestrial:</strong> operator count x
-											typical per-operator capacity, discounted 30% for shared/unlit fiber.
+											Capacity from an industry publication or press release, with a linked source.
 										</span>
 									</div>
 									<div className="flex items-start gap-2">
@@ -134,8 +131,8 @@ export function DataSourcesPanel() {
 										</span>
 										<span>
 											<strong className="text-text-primary">Cables:</strong> RFS-year heuristic (see
-											table above). <strong className="text-text-primary">Terrestrial:</strong> no
-											operator data; inferred from corridor importance.
+											table above). <strong className="text-text-primary">Terrestrial:</strong>{" "}
+											derived from known operators on the corridor, no specific publication.
 										</span>
 									</div>
 								</div>
