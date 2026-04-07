@@ -11,6 +11,7 @@ export function MetroCard() {
 	const selectMetro = useStore((s) => s.selectMetro);
 	const selectCable = useStore((s) => s.selectCable);
 	const selectTerrestrial = useStore((s) => s.selectTerrestrial);
+	const flyToLocation = useStore((s) => s.flyToLocation);
 
 	const metro = selectedMetroId ? metrosById.get(selectedMetroId) : null;
 
@@ -54,7 +55,16 @@ export function MetroCard() {
 						<button
 							key={c.id}
 							type="button"
-							onClick={() => selectCable(c.id)}
+							onClick={() => {
+								selectCable(c.id);
+								const seg = c.segments[0];
+								if (seg) {
+									const from = metrosById.get(seg.from);
+									const to = metrosById.get(seg.to);
+									if (from && to)
+										flyToLocation((from.lng + to.lng) / 2, (from.lat + to.lat) / 2, 4);
+								}
+							}}
 							className="w-full flex justify-between text-xs py-1.5 rounded hover:bg-border/30 text-left transition-colors"
 						>
 							<span className="text-text-primary truncate">{c.name}</span>
@@ -83,7 +93,14 @@ export function MetroCard() {
 							<button
 								key={t.id}
 								type="button"
-								onClick={() => selectTerrestrial(t.id)}
+								onClick={() => {
+									selectTerrestrial(t.id);
+									selectMetro(null);
+									const from = metrosById.get(t.from);
+									const to = metrosById.get(t.to);
+									if (from && to)
+										flyToLocation((from.lng + to.lng) / 2, (from.lat + to.lat) / 2, 5);
+								}}
 								className="w-full flex justify-between text-xs py-1.5 rounded hover:bg-border/30 text-left transition-colors"
 							>
 								<span className="text-terrestrial truncate">{otherName}</span>
