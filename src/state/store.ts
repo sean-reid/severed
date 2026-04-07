@@ -51,6 +51,7 @@ interface StoreState {
 
 	// Camera
 	flyTo: { lng: number; lat: number; zoom: number } | null;
+	fitBounds: { minLng: number; minLat: number; maxLng: number; maxLat: number } | null;
 
 	// Actions
 	initData: (data: AppData) => void;
@@ -59,6 +60,7 @@ interface StoreState {
 	selectMetro: (id: string | null) => void;
 	selectTerrestrial: (id: string | null) => void;
 	flyToLocation: (lng: number, lat: number, zoom?: number) => void;
+	flyToBounds: (minLng: number, minLat: number, maxLng: number, maxLat: number) => void;
 	clearFlyTo: () => void;
 	addCut: (cut: CutLocation) => void;
 	applyScenario: (scenarioId: string) => void;
@@ -105,6 +107,7 @@ export const useStore = create<StoreState>((set) => ({
 
 	// Camera
 	flyTo: null,
+	fitBounds: null,
 
 	// Actions
 	initData: (data) =>
@@ -123,7 +126,9 @@ export const useStore = create<StoreState>((set) => ({
 	selectMetro: (id) => set({ selectedMetroId: id, selectedTerrestrialId: null }),
 	selectTerrestrial: (id) => set({ selectedTerrestrialId: id, selectedCableId: null }),
 	flyToLocation: (lng, lat, zoom = 5) => set({ flyTo: { lng, lat, zoom } }),
-	clearFlyTo: () => set({ flyTo: null }),
+	flyToBounds: (minLng, minLat, maxLng, maxLat) =>
+		set({ fitBounds: { minLng, minLat, maxLng, maxLat }, flyTo: null }),
+	clearFlyTo: () => set({ flyTo: null, fitBounds: null }),
 
 	addCut: (cut) =>
 		set((s) => ({

@@ -7,6 +7,7 @@ import type { MapRef } from "react-map-gl/maplibre";
 import type { Cable, Metro, TerrestrialEdge } from "../../data/types";
 import { useSimulation } from "../../engine/useSimulation";
 import { useStore } from "../../state/store";
+import { cableBounds } from "../../utils/cableBounds";
 import { CUT_COLOR, TERRESTRIAL_COLOR, cableColor, cableWidthScale } from "../../utils/colors";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -51,14 +52,28 @@ export function GlobeView() {
 	const selectTerrestrial = useStore((s) => s.selectTerrestrial);
 	const sheetDragging = useStore((s) => s.mobileSheetDragging);
 	const mobileCardHeight = useStore((s) => s.mobileCardHeight);
+	const metrosById = useStore((s) => s.metrosById);
+	const flyToBounds = useStore((s) => s.flyToBounds);
 	const mapRef = useRef<MapRef>(null);
 	const lastDeckClickTime = useRef(0);
 
 	useSimulation();
 
-	// Handle flyTo requests from the store
+	const fitBounds = useStore((s) => s.fitBounds);
+
+	// Handle flyTo / fitBounds requests from the store
 	useEffect(() => {
-		if (flyTo && mapRef.current) {
+		if (!mapRef.current) return;
+		if (fitBounds) {
+			mapRef.current.fitBounds(
+				[
+					[fitBounds.minLng, fitBounds.minLat],
+					[fitBounds.maxLng, fitBounds.maxLat],
+				],
+				{ padding: 60, duration: 1500 },
+			);
+			clearFlyTo();
+		} else if (flyTo) {
 			mapRef.current.flyTo({
 				center: [flyTo.lng, flyTo.lat],
 				zoom: flyTo.zoom,
@@ -66,7 +81,7 @@ export function GlobeView() {
 			});
 			clearFlyTo();
 		}
-	}, [flyTo, clearFlyTo]);
+	}, [flyTo, fitBounds, clearFlyTo]);
 
 	// Resolved affected cable IDs — from simulation engine + direct cable cuts
 	const cutCableIds = useMemo(() => {
@@ -118,8 +133,11 @@ export function GlobeView() {
 					onClick: (info: { object?: { properties: { cable: Cable } } }) => {
 						if (info.object) {
 							lastDeckClickTime.current = Date.now();
-							selectCable(info.object.properties.cable.id);
+							const cable = info.object.properties.cable;
+							selectCable(cable.id);
 							selectMetro(null);
+							const bounds = cableBounds(cable, metrosById);
+							if (bounds) flyToBounds(bounds.minLng, bounds.minLat, bounds.maxLng, bounds.maxLat);
 						}
 					},
 					onHover: (info: { object?: { properties: { cable: Cable } } }) => {
@@ -250,6 +268,8 @@ export function GlobeView() {
 		selectTerrestrial,
 		hoverCable,
 		simulation,
+		metrosById,
+		flyToBounds,
 	]);
 
 	const resetView = () => {

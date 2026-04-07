@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { type SearchResult, type SearchResultType, useSearch } from "../../hooks/useSearch";
 import { useStore } from "../../state/store";
+import { cableBounds } from "../../utils/cableBounds";
 
 const TYPE_COLORS: Record<SearchResultType, string> = {
 	cable: "#60a5fa",
@@ -28,6 +29,9 @@ export function SearchOverlay({ open, onClose }: Props) {
 	const selectTerrestrial = useStore((s) => s.selectTerrestrial);
 	const applyScenario = useStore((s) => s.applyScenario);
 	const flyToLocation = useStore((s) => s.flyToLocation);
+	const flyToBoundsStore = useStore((s) => s.flyToBounds);
+	const cablesById = useStore((s) => s.cablesById);
+	const metrosById = useStore((s) => s.metrosById);
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	// Auto-focus input when opened
@@ -51,25 +55,41 @@ export function SearchOverlay({ open, onClose }: Props) {
 	const handleSelect = useCallback(
 		(result: SearchResult) => {
 			switch (result.type) {
-				case "cable":
+				case "cable": {
 					selectCable(result.id);
+					const cable = cablesById.get(result.id);
+					if (cable) {
+						const bounds = cableBounds(cable, metrosById);
+						if (bounds)
+							flyToBoundsStore(bounds.minLng, bounds.minLat, bounds.maxLng, bounds.maxLat);
+					}
 					break;
+				}
 				case "metro":
 					selectMetro(result.id);
+					if (result.lat != null && result.lng != null) flyToLocation(result.lng, result.lat, 6);
 					break;
 				case "terrestrial":
 					selectTerrestrial(result.id);
+					if (result.lat != null && result.lng != null) flyToLocation(result.lng, result.lat, 5);
 					break;
 				case "scenario":
 					applyScenario(result.id);
 					break;
 			}
-			if (result.lat != null && result.lng != null) {
-				flyToLocation(result.lng, result.lat, result.type === "metro" ? 6 : 4);
-			}
 			onClose();
 		},
-		[selectCable, selectMetro, selectTerrestrial, applyScenario, flyToLocation, onClose],
+		[
+			selectCable,
+			selectMetro,
+			selectTerrestrial,
+			applyScenario,
+			flyToLocation,
+			flyToBoundsStore,
+			cablesById,
+			metrosById,
+			onClose,
+		],
 	);
 
 	if (!open) return null;

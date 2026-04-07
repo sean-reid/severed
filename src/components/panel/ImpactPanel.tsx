@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useStore } from "../../state/store";
+import { cableBounds } from "../../utils/cableBounds";
 
 export function ImpactPanel() {
 	const simulation = useStore((s) => s.simulation);
@@ -14,6 +15,7 @@ export function ImpactPanel() {
 	const addCut = useStore((s) => s.addCut);
 	const cablesById = useStore((s) => s.cablesById);
 	const selectCable = useStore((s) => s.selectCable);
+	const flyToBounds = useStore((s) => s.flyToBounds);
 	const selectTerrestrial = useStore((s) => s.selectTerrestrial);
 	const terrestrial = useStore((s) => s.terrestrial);
 	const scenarios = useStore((s) => s.scenarios);
@@ -21,6 +23,18 @@ export function ImpactPanel() {
 	const resetCuts = useStore((s) => s.resetCuts);
 
 	const activeScenario = activeScenarioId ? scenarios.find((s) => s.id === activeScenarioId) : null;
+
+	const selectCableAndFly = useCallback(
+		(cableId: string) => {
+			selectCable(cableId);
+			const cable = cablesById.get(cableId);
+			if (cable) {
+				const bounds = cableBounds(cable, metrosById);
+				if (bounds) flyToBounds(bounds.minLng, bounds.minLat, bounds.maxLng, bounds.maxLat);
+			}
+		},
+		[selectCable, cablesById, metrosById, flyToBounds],
+	);
 
 	const cutCableById = useCallback(
 		(cableId: string) => {
@@ -334,7 +348,7 @@ export function ImpactPanel() {
 										<button
 											key={c.id}
 											type="button"
-											onClick={() => selectCable(c.id)}
+											onClick={() => selectCableAndFly(c.id)}
 											className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-cable-cut/8 text-[10px] text-cable-cut/70 hover:bg-cable-cut/15 transition-colors"
 										>
 											<span className="w-1.5 h-1.5 rounded-full bg-cable-cut/50 flex-none" />
@@ -450,16 +464,7 @@ export function ImpactPanel() {
 																flyToLocation((from.lng + to.lng) / 2, (from.lat + to.lat) / 2, 5);
 														}
 													} else if (isSubCable && r.cableId) {
-														selectCable(r.cableId);
-														// Fly to cable midpoint via first segment
-														const cable = cablesById.get(r.cableId);
-														if (cable?.segments[0]) {
-															const seg = cable.segments[0];
-															const from = metrosById.get(seg.from);
-															const to = metrosById.get(seg.to);
-															if (from && to)
-																flyToLocation((from.lng + to.lng) / 2, (from.lat + to.lat) / 2, 4);
-														}
+														selectCableAndFly(r.cableId);
 													}
 													// On mobile, collapse the sheet so the selection is visible
 													if (window.innerWidth < 768) setSheetHeight(SNAPS[0]);
