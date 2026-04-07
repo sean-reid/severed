@@ -4008,7 +4008,7 @@ function main() {
 			id: "red-sea-crisis",
 			name: "Red Sea Crisis (2024)",
 			description:
-				"4 cables (Seacom, TGN-Gulf, AAE-1, EIG) cut in the Red Sea, February 2024. 25% of Asia-Europe data traffic disrupted.",
+				"3 cables (AAE-1, EIG, SEACOM/TGN-Eurasia) cut in the Red Sea, February 2024. 25% of Asia-Europe data traffic disrupted.",
 			cutLocations: [
 				{
 					type: "cable",
@@ -4083,7 +4083,7 @@ function main() {
 			id: "vietnam-2023",
 			name: "Vietnam Cable Failures (2023)",
 			description:
-				"All 5 international cables (AAE-1, IA, AAG, APG, SMW-3) connecting Vietnam were damaged or degraded. 75% of international capacity lost.",
+				"4 of 5 international cables (AAG, AAE-1, APG, TGN-IA; SMW-3 retired/not in dataset) connecting Vietnam were damaged or degraded. 75% of international capacity lost.",
 			cutLocations: [
 				{
 					type: "cable",

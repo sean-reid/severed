@@ -61,7 +61,7 @@ The simulation is tested against 10 documented real-world cable cut events:
 
 | Event | Year | Key result | Sources |
 |-------|------|------------|---------|
-| Red Sea (Houthi) | 2024 | 4 cables cut, 25% Asia-Europe traffic disrupted | [Al Jazeera](https://www.aljazeera.com/news/2024/3/6/why-are-people-blaming-the-houthis-for-cutting-the-red-sea-cables), [Cloudflare](https://blog.cloudflare.com/east-african-internet-connectivity-again-impacted-by-submarine-cable-cuts/) |
+| Red Sea (Houthi) | 2024 | 3 cables cut (AAE-1, EIG, SEACOM), 25% Asia-Europe traffic disrupted | [Al Jazeera](https://www.aljazeera.com/news/2024/3/6/why-are-people-blaming-the-houthis-for-cutting-the-red-sea-cables), [Cloudflare](https://blog.cloudflare.com/east-african-internet-connectivity-again-impacted-by-submarine-cable-cuts/) |
 | Baltic Sea sabotage | 2024 | BCS + C-Lion1 cut, high redundancy — near-zero impact | [Wikipedia](https://en.wikipedia.org/wiki/2024_Baltic_Sea_submarine_cable_disruptions) |
 | Mediterranean cuts | 2008 | SEA-ME-WE 4 + FLAG cut, Egypt -70%, India -60% | [Wikipedia](https://en.wikipedia.org/wiki/2008_submarine_cable_disruption) |
 | Taiwan earthquake | 2006 | 8-22 cable breaks in Luzon Strait, Asia-wide disruption | [Wikipedia](https://en.wikipedia.org/wiki/2006_Hengchun_earthquakes) |
