@@ -1615,48 +1615,6 @@ function main() {
 			});
 		}
 
-		// Fix cables with paths clipped at the antimeridian (±180).
-		// If a MultiLineString has only one part ending near ±180 but segments span
-		// both hemispheres, synthesize a second part from metro coordinates.
-		let fixedPath = path;
-		if (
-			path.geometry.type === "MultiLineString" &&
-			path.geometry.coordinates.length === 1 &&
-			segments.length > 0
-		) {
-			const part = path.geometry.coordinates[0];
-			const lastPt = part[part.length - 1];
-			if (Math.abs(lastPt[0]) > 179.5) {
-				// Path is clipped at the dateline. Build a continuation from metro coords.
-				const otherSideMetros = segments
-					.flatMap((s) => [s.from, s.to])
-					.filter((id, i, arr) => arr.indexOf(id) === i)
-					.map((id) => metroCoords.get(id))
-					.filter((m): m is { lat: number; lng: number } => m != null)
-					.filter((m) => {
-						// Include metros on the opposite side of the dateline
-						if (lastPt[0] < -179) return m.lng > 0;
-						return m.lng < 0;
-					});
-				if (otherSideMetros.length > 0) {
-					// Sort by longitude to create a reasonable path
-					otherSideMetros.sort((a, b) => b.lng - a.lng);
-					const mirrorLng = lastPt[0] < -179 ? 180 : -180;
-					const continuation: number[][] = [
-						[mirrorLng, lastPt[1]],
-						...otherSideMetros.map((m) => [m.lng, m.lat]),
-					];
-					fixedPath = {
-						...path,
-						geometry: {
-							type: "MultiLineString" as const,
-							coordinates: [...path.geometry.coordinates, continuation],
-						},
-					};
-				}
-			}
-		}
-
 		cables.push({
 			id: entry.id,
 			name: detail.name,
@@ -1669,7 +1627,7 @@ function main() {
 			...(override?.sourceUrl ? { sourceUrl: override.sourceUrl } : {}),
 			owners,
 			landingStationIds,
-			path: fixedPath,
+			path,
 			segments,
 		});
 	}

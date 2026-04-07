@@ -11,6 +11,30 @@ export function MobileScenarioBar() {
 		<div className="absolute top-0 left-0 right-0 z-30 safe-top">
 			<div className="relative">
 				<div className="flex gap-2 px-4 pt-3 pb-2 overflow-x-auto scrollbar-none">
+					<button
+						type="button"
+						onClick={() => window.dispatchEvent(new CustomEvent("open-search"))}
+						className="
+							flex-none w-11 h-11 rounded-full
+							bg-surface/90 backdrop-blur-sm border border-border/70
+							flex items-center justify-center
+							text-text-secondary active:bg-border/50 transition-colors
+						"
+					>
+						<svg
+							width="15"
+							height="15"
+							viewBox="0 0 16 16"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+						>
+							<title>Search</title>
+							<circle cx="6.5" cy="6.5" r="5" />
+							<line x1="10" y1="10" x2="15" y2="15" />
+						</svg>
+					</button>
 					{cuts.length > 0 && (
 						<button
 							type="button"

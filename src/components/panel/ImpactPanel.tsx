@@ -120,13 +120,12 @@ export function ImpactPanel() {
 					type="button"
 					onClick={togglePanel}
 					className="
-					absolute z-20
+					absolute z-20 hidden md:flex
 					w-12 h-12 rounded-2xl bg-surface border border-border
-					flex items-center justify-center
+					items-center justify-center
 					text-text-secondary hover:text-text-primary active:bg-border/60
 					transition-colors shadow-lg shadow-black/30
-					md:right-3 md:top-3
-					max-md:right-4 max-md:bottom-20 max-md:top-auto
+					right-3 top-3
 				"
 					title="Show impact panel"
 				>

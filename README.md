@@ -8,7 +8,7 @@ Interactive submarine cable failure simulator. Cut cables on a globe, watch traf
 
 Click a submarine cable or select a chokepoint scenario (Red Sea, Luzon Strait, Baltic Sea, etc.) to simulate a failure. The app computes which metros lose connectivity, how much bandwidth disappears, where traffic reroutes, and whether the network absorbs the cut.
 
-Built on real data: 594 operational cables from TeleGeography, 920+ metro nodes, 116 hand-researched terrestrial backbone edges (44 with verified source URLs), and a graph engine that runs in a Web Worker.
+Built on real data: 594 operational cables from TeleGeography (110 with verified/estimated capacity from primary sources), 920+ metro nodes, 116 hand-researched terrestrial backbone edges, and a graph engine that runs in a Web Worker. Search across everything with `/`.
 
 ## Quick start
 
