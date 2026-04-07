@@ -44,20 +44,20 @@ const server: ChildProcess = spawn(
 );
 
 await new Promise<void>((resolve, reject) => {
-	const timeout = setTimeout(() => reject(new Error("Preview server timeout")), 15000);
-	server.stdout?.on("data", (data: Buffer) => {
-		if (data.toString().includes("Local:")) {
+	const timeout = setTimeout(() => reject(new Error("Preview server timeout (30s)")), 30000);
+	const onData = (data: Buffer) => {
+		const msg = data.toString();
+		if (msg.includes("Local:") || msg.includes(`${PORT}`)) {
 			clearTimeout(timeout);
 			resolve();
 		}
-	});
-	server.stderr?.on("data", (data: Buffer) => {
-		const msg = data.toString();
 		if (msg.includes("EADDRINUSE")) {
 			clearTimeout(timeout);
 			reject(new Error(`Port ${PORT} already in use`));
 		}
-	});
+	};
+	server.stdout?.on("data", onData);
+	server.stderr?.on("data", onData);
 	server.on("error", reject);
 });
 

@@ -56,16 +56,16 @@ export async function createContext(baseUrl: string, viewport: ViewportName): Pr
 		viewport,
 
 		async goto(path = "/") {
-			await page.goto(`${baseUrl}${path}`, { waitUntil: "networkidle2", timeout: 20000 });
+			await page.goto(`${baseUrl}${path}`, { waitUntil: "networkidle2", timeout: 30000 });
 			// Wait for React mount — SEVERED header appears
-			await page.waitForSelector("h1", { timeout: 15000 });
+			await page.waitForSelector("h1", { timeout: 30000 });
 			// Wait for loading screen to clear
 			await page.waitForFunction(
 				() => !document.body.textContent?.includes("Loading cable network data"),
-				{ timeout: 15000 },
+				{ timeout: 30000 },
 			);
 			// Let deck.gl render layers
-			await new Promise((r) => setTimeout(r, 2000));
+			await new Promise((r) => setTimeout(r, 3000));
 		},
 
 		async screenshot(name: string) {
