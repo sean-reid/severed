@@ -118,7 +118,7 @@ export function ImpactPanel() {
 			dragRef.current.lastY = y;
 			setSheetHeight(newH);
 		},
-		[setSheetHeight],
+		[setSheetHeight, SNAPS],
 	);
 
 	const onTouchEnd = useCallback(() => {
@@ -151,7 +151,7 @@ export function ImpactPanel() {
 		setSheetHeight(target);
 		setDragging(false);
 		dragRef.current = null;
-	}, [sheetHeight, setSheetHeight, setDragging]);
+	}, [sheetHeight, setSheetHeight, setDragging, SNAPS]);
 
 	return (
 		<>
