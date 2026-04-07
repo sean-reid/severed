@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useStore } from "../../state/store";
+import { cableBounds } from "../../utils/cableBounds";
 import { BaseCard } from "./BaseCard";
 
 export function MetroCard() {
@@ -12,6 +13,7 @@ export function MetroCard() {
 	const selectCable = useStore((s) => s.selectCable);
 	const selectTerrestrial = useStore((s) => s.selectTerrestrial);
 	const flyToLocation = useStore((s) => s.flyToLocation);
+	const flyToBounds = useStore((s) => s.flyToBounds);
 
 	const metro = selectedMetroId ? metrosById.get(selectedMetroId) : null;
 
@@ -57,13 +59,8 @@ export function MetroCard() {
 							type="button"
 							onClick={() => {
 								selectCable(c.id);
-								const seg = c.segments[0];
-								if (seg) {
-									const from = metrosById.get(seg.from);
-									const to = metrosById.get(seg.to);
-									if (from && to)
-										flyToLocation((from.lng + to.lng) / 2, (from.lat + to.lat) / 2, 4);
-								}
+								const bounds = cableBounds(c, metrosById);
+								if (bounds) flyToBounds(bounds.minLng, bounds.minLat, bounds.maxLng, bounds.maxLat);
 							}}
 							className="w-full flex justify-between text-xs py-1.5 rounded hover:bg-border/30 text-left transition-colors"
 						>

@@ -169,15 +169,12 @@ export const useStore = create<StoreState>((set) => ({
 				}
 			}
 
-			// Fly to chokepoint immediately; fitBounds will update when simulation completes
-			const firstCut = newCuts[0];
-
+			// Don't fly now -- fitBounds will fire when simulation completes
 			return {
 				cuts: newCuts,
 				activeScenarioId: scenarioId,
 				simulation: null,
 				selectedCableId: null,
-				flyTo: firstCut ? { lng: firstCut.lng, lat: firstCut.lat, zoom: 4 } : null,
 			};
 		}),
 
@@ -198,6 +195,7 @@ export const useStore = create<StoreState>((set) => ({
 				let maxLng = -180;
 				let minLat = 90;
 				let maxLat = -90;
+				const allLngs: number[] = [];
 				const seenCables = new Set<string>();
 				for (const edgeId of sim.affectedEdgeIds) {
 					const cableId = edgeId.split(":")[0];
@@ -209,12 +207,14 @@ export const useStore = create<StoreState>((set) => ({
 						const from = s.metrosById.get(seg.from);
 						const to = s.metrosById.get(seg.to);
 						if (from) {
+							allLngs.push(from.lng);
 							minLng = Math.min(minLng, from.lng);
 							maxLng = Math.max(maxLng, from.lng);
 							minLat = Math.min(minLat, from.lat);
 							maxLat = Math.max(maxLat, from.lat);
 						}
 						if (to) {
+							allLngs.push(to.lng);
 							minLng = Math.min(minLng, to.lng);
 							maxLng = Math.max(maxLng, to.lng);
 							minLat = Math.min(minLat, to.lat);
@@ -222,8 +222,22 @@ export const useStore = create<StoreState>((set) => ({
 						}
 					}
 				}
-				if (maxLng > minLng && maxLng - minLng < 300) {
-					fitBounds = { minLng, minLat, maxLng, maxLat };
+				if (maxLng > minLng) {
+					const span = maxLng - minLng;
+					if (span > 180) {
+						// Dateline-crossing -- use shifted bounds for Pacific-centered view
+						const shifted = allLngs.map((lng) => (lng < 0 ? lng + 360 : lng));
+						const sMin = Math.min(...shifted);
+						const sMax = Math.max(...shifted);
+						fitBounds = {
+							minLng: sMin > 180 ? sMin - 360 : sMin,
+							minLat,
+							maxLng: sMax > 180 ? sMax - 360 : sMax,
+							maxLat,
+						};
+					} else {
+						fitBounds = { minLng, minLat, maxLng, maxLat };
+					}
 				}
 			}
 			return { simulation: sim, simulating: false, fitBounds };
