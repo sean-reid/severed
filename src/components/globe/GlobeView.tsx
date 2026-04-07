@@ -50,6 +50,7 @@ export function GlobeView() {
 	const selectedTerrestrialId = useStore((s) => s.selectedTerrestrialId);
 	const selectTerrestrial = useStore((s) => s.selectTerrestrial);
 	const sheetDragging = useStore((s) => s.mobileSheetDragging);
+	const mobileCardHeight = useStore((s) => s.mobileCardHeight);
 	const mapRef = useRef<MapRef>(null);
 	const lastDeckClickTime = useRef(0);
 
@@ -285,15 +286,7 @@ export function GlobeView() {
 				style={{
 					bottom:
 						typeof window !== "undefined" && window.innerWidth < 768
-							? selectedCableId || selectedMetroId || selectedTerrestrialId
-								? undefined // use CSS top positioning instead
-								: `calc(${mobileSheetHeight}dvh + 8px)`
-							: undefined,
-					top:
-						typeof window !== "undefined" &&
-						window.innerWidth < 768 &&
-						(selectedCableId || selectedMetroId || selectedTerrestrialId)
-							? "60px" // below scenario bar, always visible
+							? `min(calc(100dvh - 70px), calc(${mobileSheetHeight}dvh + ${mobileCardHeight > 0 ? mobileCardHeight + 20 : 8}px))`
 							: undefined,
 				}}
 				title="Reset map view"

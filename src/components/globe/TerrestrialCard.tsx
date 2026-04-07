@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useCardHeight } from "../../hooks/useCardHeight";
 import { useStore } from "../../state/store";
 import { confidenceColors } from "../../utils/colors";
 
@@ -9,6 +10,7 @@ export function TerrestrialCard() {
 	const selectTerrestrial = useStore((s) => s.selectTerrestrial);
 	const mobileSheetHeight = useStore((s) => s.mobileSheetHeight);
 	const sheetDragging = useStore((s) => s.mobileSheetDragging);
+	const cardRef = useCardHeight();
 	const [expanded, setExpanded] = useState(false);
 
 	const edge = selectedTerrestrialId
@@ -24,6 +26,7 @@ export function TerrestrialCard() {
 
 	return (
 		<div
+			ref={cardRef}
 			className={`absolute z-20 md:hidden left-3 right-3 ${sheetDragging ? "" : "transition-[bottom,opacity] duration-300 ease-out"} ${cardHidden ? "opacity-0 pointer-events-none" : "opacity-100"}`}
 			style={{ bottom: `calc(${mobileSheetHeight}dvh + 12px)` }}
 		>

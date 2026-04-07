@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useCardHeight } from "../../hooks/useCardHeight";
 import { useStore } from "../../state/store";
 
 export function MetroCard() {
@@ -12,6 +13,7 @@ export function MetroCard() {
 	const selectTerrestrial = useStore((s) => s.selectTerrestrial);
 	const mobileSheetHeight = useStore((s) => s.mobileSheetHeight);
 	const sheetDragging = useStore((s) => s.mobileSheetDragging);
+	const cardRef = useCardHeight();
 	const [expanded, setExpanded] = useState(false);
 
 	const metro = selectedMetroId ? metrosById.get(selectedMetroId) : null;
@@ -35,6 +37,7 @@ export function MetroCard() {
 
 	return (
 		<div
+			ref={cardRef}
 			className={`absolute z-20 md:hidden left-3 right-3 ${sheetDragging ? "" : "transition-[bottom,opacity] duration-300 ease-out"} ${cardHidden ? "opacity-0 pointer-events-none" : "opacity-100"}`}
 			style={{ bottom: `calc(${mobileSheetHeight}dvh + 12px)` }}
 		>

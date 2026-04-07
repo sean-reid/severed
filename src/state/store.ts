@@ -47,6 +47,7 @@ interface StoreState {
 	sidebarOpen: boolean;
 	mobileSheetHeight: number; // dvh units
 	mobileSheetDragging: boolean;
+	mobileCardHeight: number; // px, height of the currently visible floating card
 
 	// Camera
 	flyTo: { lng: number; lat: number; zoom: number } | null;
@@ -68,6 +69,7 @@ interface StoreState {
 	toggleSidebar: () => void;
 	setMobileSheetHeight: (h: number) => void;
 	setMobileSheetDragging: (v: boolean) => void;
+	setMobileCardHeight: (h: number) => void;
 }
 
 export const useStore = create<StoreState>((set) => ({
@@ -99,6 +101,7 @@ export const useStore = create<StoreState>((set) => ({
 	sidebarOpen: typeof window !== "undefined" && window.innerWidth >= 768,
 	mobileSheetHeight: 45,
 	mobileSheetDragging: false,
+	mobileCardHeight: 0,
 
 	// Camera
 	flyTo: null,
@@ -183,4 +186,5 @@ export const useStore = create<StoreState>((set) => ({
 	toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
 	setMobileSheetHeight: (h) => set({ mobileSheetHeight: h }),
 	setMobileSheetDragging: (v) => set({ mobileSheetDragging: v }),
+	setMobileCardHeight: (h) => set({ mobileCardHeight: h }),
 }));
