@@ -128,7 +128,7 @@ export default async function test(ctx: TestContext) {
 	await new Promise((r) => setTimeout(r, 300));
 
 	const hasHint = await ctx.page.evaluate(() => {
-		return document.body.textContent?.includes("Type at least 2 characters") ?? false;
+		return document.body.textContent?.includes("Start typing to search") ?? false;
 	});
 	ctx.assert(hasHint, "Empty search should show hint text");
 
