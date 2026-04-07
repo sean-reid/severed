@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { useSheetCap } from "../../hooks/useSheetCap";
 import { useStore } from "../../state/store";
 
 export function MetroCard() {
@@ -28,8 +27,6 @@ export function MetroCard() {
 		if (!selectedMetroId) return [];
 		return terrestrial.filter((t) => t.from === selectedMetroId || t.to === selectedMetroId);
 	}, [selectedMetroId, terrestrial]);
-
-	useSheetCap(metro !== null && !selectedCableId);
 
 	// Don't show if cable is selected (CutAction takes priority) or no metro
 	if (!metro || selectedCableId) return null;

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useStore } from "../../state/store";
 
 export function ImpactPanel() {
@@ -33,9 +33,13 @@ export function ImpactPanel() {
 		},
 		[cablesById, addCut],
 	);
-	// Mobile bottom sheet: three snap points as % of viewport height
-	// 5 snap points for smoother drag stops
-	const SNAPS = [15, 30, 45, 65, 85];
+	const selectedCableId = useStore((s) => s.selectedCableId);
+	const selectedTerrestrialId = useStore((s) => s.selectedTerrestrialId);
+	const hasCard = !!(selectedCableId || selectedMetroId || selectedTerrestrialId);
+	// When a floating card is showing, cap max height so card stays below scenario bar
+	const SNAPS_FULL = [15, 30, 45, 65, 85];
+	const SNAPS_CAPPED = [15, 30, 45, 60];
+	const SNAPS = hasCard ? SNAPS_CAPPED : SNAPS_FULL;
 	const [sheetHeight, setSheetHeightLocal] = useState(SNAPS[2]);
 	const setMobileSheetHeight = useStore((s) => s.setMobileSheetHeight);
 	const setMobileSheetDragging = useStore((s) => s.setMobileSheetDragging);
@@ -53,6 +57,16 @@ export function ImpactPanel() {
 		lastY: number;
 		lastTime: number;
 	} | null>(null);
+
+	// Clamp sheet height when card appears/disappears
+	const maxSnap = SNAPS[SNAPS.length - 1];
+	useEffect(() => {
+		if (typeof window === "undefined" || window.innerWidth >= 768) return;
+		if (sheetHeight > maxSnap) {
+			setSheetHeightLocal(maxSnap);
+			setMobileSheetHeight(maxSnap);
+		}
+	}, [maxSnap, sheetHeight, setMobileSheetHeight]);
 
 	const setSheetHeight = useCallback(
 		(h: number) => {
