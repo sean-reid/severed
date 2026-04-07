@@ -83,6 +83,7 @@ export interface Scenario {
 	cutLocations: ScenarioCut[];
 	historicalDate?: string;
 	repairTimeDays?: number;
+	sourceUrls?: string[];
 }
 
 // ── Simulation results ──

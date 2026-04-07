@@ -16,7 +16,11 @@ export function ImpactPanel() {
 	const selectCable = useStore((s) => s.selectCable);
 	const selectTerrestrial = useStore((s) => s.selectTerrestrial);
 	const terrestrial = useStore((s) => s.terrestrial);
+	const scenarios = useStore((s) => s.scenarios);
+	const activeScenarioId = useStore((s) => s.activeScenarioId);
 	const resetCuts = useStore((s) => s.resetCuts);
+
+	const activeScenario = activeScenarioId ? scenarios.find((s) => s.id === activeScenarioId) : null;
 
 	const cutCableById = useCallback(
 		(cableId: string) => {
@@ -258,6 +262,54 @@ export function ImpactPanel() {
 						</div>
 					)}
 				</div>
+
+				{/* ── Active scenario info ── */}
+				{activeScenario && (
+					<div className="px-4 py-2.5 border-b border-border/50 shrink-0">
+						<div className="text-[10px] text-text-secondary/60 leading-relaxed">
+							{activeScenario.description}
+						</div>
+						{activeScenario.sourceUrls && activeScenario.sourceUrls.length > 0 && (
+							<div className="flex flex-wrap gap-2 mt-1.5">
+								{activeScenario.sourceUrls.map((url) => {
+									const domain = (() => {
+										try {
+											return new URL(url).hostname.replace("www.", "").replace("blog.", "");
+										} catch {
+											return "source";
+										}
+									})();
+									return (
+										<a
+											key={url}
+											href={url}
+											target="_blank"
+											rel="noopener noreferrer"
+											className="inline-flex items-center gap-0.5 text-[9px] text-cable-high hover:text-text-primary transition-colors"
+										>
+											<svg
+												width="8"
+												height="8"
+												viewBox="0 0 16 16"
+												fill="none"
+												stroke="currentColor"
+												strokeWidth="2"
+												strokeLinecap="round"
+												strokeLinejoin="round"
+											>
+												<title>Source</title>
+												<path d="M12 8.5v5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 0 13.5v-9A1.5 1.5 0 0 1 1.5 3H7" />
+												<path d="M10 1h5v5" />
+												<path d="M7 9 15 1" />
+											</svg>
+											{domain}
+										</a>
+									);
+								})}
+							</div>
+						)}
+					</div>
+				)}
 
 				{/* ── Redundancy callout ── */}
 				{hasCuts && absorbed.length > 0 && affected.length === 0 && (

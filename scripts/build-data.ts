@@ -3577,6 +3577,27 @@ function main() {
 			description:
 				"Narrow strait between England and France. Critical junction for transatlantic cables connecting to Europe and UK-continent links.",
 		},
+		{
+			id: "west-africa-abidjan",
+			name: "West Africa (Abidjan)",
+			polygon: bboxPolygon(4.0, 6.5, -5.5, -3.0),
+			description:
+				"Waters off Abidjan, Cote d'Ivoire at the 'Le Trou Sans Fond' submarine canyon. Multiple West African cables transit this area.",
+		},
+		{
+			id: "alexandria",
+			name: "Alexandria",
+			polygon: bboxPolygon(30.5, 32.0, 28.5, 30.5),
+			description:
+				"Cable landing zone near Alexandria, Egypt. Critical junction for Europe-Asia cables transiting the Mediterranean to the Suez region.",
+		},
+		{
+			id: "south-china-sea-vietnam",
+			name: "South China Sea (Vietnam)",
+			polygon: bboxPolygon(8.0, 12.0, 107.0, 112.0),
+			description:
+				"Waters off southern Vietnam where multiple intra-Asia cables converge. Anchor drag from fishing and shipping is a recurring risk.",
+		},
 	];
 
 	console.log(`  ${chokepoints.length} chokepoints`);
@@ -3588,51 +3609,71 @@ function main() {
 	const scenarios: Scenario[] = [
 		{
 			id: "red-sea-crisis",
-			name: "Red Sea Crisis",
+			name: "Red Sea Crisis (2024)",
 			description:
-				"Simulates cable cuts in the Bab al-Mandab strait, similar to the February 2024 Houthi-related cable damage. ~15 cables carry the majority of Europe-Asia traffic through this chokepoint.",
+				"4 cables (Seacom, TGN-Gulf, AAE-1, EIG) cut in the Red Sea, February 2024. 25% of Asia-Europe data traffic disrupted.",
 			cutLocations: [{ type: "chokepoint", id: "bab-al-mandab" }],
 			historicalDate: "2024-02-24",
 			repairTimeDays: 56,
+			sourceUrls: [
+				"https://www.aljazeera.com/news/2024/3/6/why-are-people-blaming-the-houthis-for-cutting-the-red-sea-cables",
+				"https://blog.cloudflare.com/east-african-internet-connectivity-again-impacted-by-submarine-cable-cuts/",
+			],
 		},
 		{
-			id: "malacca-strait",
-			name: "Strait of Malacca Disruption",
+			id: "west-africa-2024",
+			name: "West Africa Cuts (2024)",
 			description:
-				"Cables through the Strait of Malacca are severed, disrupting the primary route between Southeast Asia, East Asia, and the Indian Ocean.",
-			cutLocations: [{ type: "chokepoint", id: "strait-of-malacca" }],
+				"4 cables (WACS, MainOne, SAT-3, ACE) severed off Abidjan at the Le Trou Sans Fond submarine canyon on March 14, 2024. 13 African countries impacted.",
+			cutLocations: [{ type: "chokepoint", id: "west-africa-abidjan" }],
+			historicalDate: "2024-03-14",
+			repairTimeDays: 28,
+			sourceUrls: [
+				"https://blog.cloudflare.com/undersea-cable-failures-cause-internet-disruptions-across-africa-march-14-2024/",
+			],
 		},
 		{
 			id: "baltic-sabotage",
-			name: "Baltic Sea Sabotage",
+			name: "Baltic Sea Sabotage (2024)",
 			description:
-				"Simulates cable cuts in the Baltic Sea, similar to the November 2024 incidents. Tests Northern European redundancy via terrestrial backup.",
+				"BCS East-West Interlink and C-Lion1 cables damaged November 17-18, 2024. Chinese vessel Yi Peng 3 suspected. High terrestrial redundancy limited impact.",
 			cutLocations: [{ type: "chokepoint", id: "baltic-sea" }],
 			historicalDate: "2024-11-17",
 			repairTimeDays: 10,
+			sourceUrls: ["https://en.wikipedia.org/wiki/2024_Baltic_Sea_submarine_cable_disruptions"],
 		},
 		{
 			id: "luzon-strait-earthquake",
-			name: "Luzon Strait Earthquake",
+			name: "Luzon Strait Earthquake (2006)",
 			description:
-				"Major earthquake triggers submarine landslide in the Luzon Strait, cutting multiple trans-Pacific cables. Similar to the 2006 Hengchun event.",
+				"M7.0 Hengchun earthquake on December 26, 2006 triggered submarine landslides severing 8-22 cables in the Luzon Strait. Internet disrupted across Asia for weeks.",
 			cutLocations: [{ type: "chokepoint", id: "luzon-strait" }],
 			historicalDate: "2006-12-26",
 			repairTimeDays: 35,
+			sourceUrls: ["https://en.wikipedia.org/wiki/2006_Hengchun_earthquakes"],
 		},
 		{
-			id: "guam-hub-failure",
-			name: "Guam Hub Failure",
+			id: "mediterranean-2008",
+			name: "Mediterranean Cuts (2008)",
 			description:
-				"All cables landing at Guam are severed. Tests the impact of losing a critical Pacific routing hub.",
-			cutLocations: [{ type: "chokepoint", id: "guam" }],
+				"SEA-ME-WE 4 and FLAG cables cut near Alexandria, Egypt on January 30, 2008. 70% disruption in Egypt, 60% in India, affecting 14 countries.",
+			cutLocations: [{ type: "chokepoint", id: "alexandria" }],
+			historicalDate: "2008-01-30",
+			repairTimeDays: 14,
+			sourceUrls: ["https://en.wikipedia.org/wiki/2008_submarine_cable_disruption"],
 		},
 		{
-			id: "english-channel-cut",
-			name: "English Channel Cut",
+			id: "vietnam-2023",
+			name: "Vietnam Cable Failures (2023)",
 			description:
-				"Cables through the English Channel are severed, testing UK connectivity resilience and transatlantic cable routing.",
-			cutLocations: [{ type: "chokepoint", id: "english-channel" }],
+				"All 5 international cables (AAE-1, IA, AAG, APG, SMW-3) connecting Vietnam were damaged or degraded. 75% of international capacity lost.",
+			cutLocations: [{ type: "chokepoint", id: "south-china-sea-vietnam" }],
+			historicalDate: "2023-02-01",
+			repairTimeDays: 60,
+			sourceUrls: [
+				"https://www.theregister.com/2023/02/23/vietnam_submarine_cable_outages/",
+				"https://www.theregister.com/2024/06/18/vietnam_internet_cables/",
+			],
 		},
 	];
 
