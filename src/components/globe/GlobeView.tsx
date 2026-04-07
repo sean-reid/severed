@@ -49,6 +49,7 @@ export function GlobeView() {
 	const selectedMetroId = useStore((s) => s.selectedMetroId);
 	const selectedTerrestrialId = useStore((s) => s.selectedTerrestrialId);
 	const selectTerrestrial = useStore((s) => s.selectTerrestrial);
+	const sheetDragging = useStore((s) => s.mobileSheetDragging);
 	const mapRef = useRef<MapRef>(null);
 	const lastDeckClickTime = useRef(0);
 
@@ -275,9 +276,10 @@ export function GlobeView() {
 					bg-surface/80 backdrop-blur-sm border border-border/50
 					flex items-center justify-center
 					text-text-secondary hover:text-text-primary
-					active:bg-border/50 transition-all duration-300
+					active:bg-border/50
 					shadow-lg shadow-black/20
 					md:bottom-4 md:left-4 max-md:left-3
+					${sheetDragging ? "" : "transition-all duration-300 ease-out"}
 					${mobileSheetHeight > 55 ? "max-md:opacity-0 max-md:pointer-events-none" : ""}
 				`}
 				style={{
