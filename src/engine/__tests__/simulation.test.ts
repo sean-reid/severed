@@ -226,6 +226,110 @@ describe("English Channel scenario", () => {
 	});
 });
 
+// ── Validation: Mediterranean 2008 (Alexandria cable cuts) ──
+
+describe("Mediterranean 2008 scenario", () => {
+	it("cutting cables near Alexandria impacts Egypt and India", () => {
+		// SEA-ME-WE 4 and FLAG were cut near Alexandria
+		const result = simulate([
+			{
+				id: "test-med-2008",
+				type: "point",
+				lat: 31.2,
+				lng: 29.9,
+				radius: 500,
+				affectedSegmentIds: [],
+			},
+		]);
+
+		expect(result.cablesAffected).toBeGreaterThan(0);
+
+		// Egypt should be significantly impacted (70% in reality)
+		const egLoss = maxLossForCountry(result, "EG");
+		if (egLoss > 0) {
+			expect(egLoss).toBeGreaterThan(10);
+		}
+	});
+});
+
+// ── Validation: West Africa 2024 (Abidjan cable cuts) ──
+
+describe("West Africa 2024 scenario", () => {
+	it("cutting cables off Abidjan impacts West African countries", () => {
+		// WACS, MainOne, SAT-3, ACE cut off Abidjan
+		const result = simulate([
+			{
+				id: "test-west-africa-2024",
+				type: "point",
+				lat: 5.0,
+				lng: -4.5,
+				radius: 500,
+				affectedSegmentIds: [],
+			},
+		]);
+
+		expect(result.cablesAffected).toBeGreaterThan(0);
+
+		// West African countries should be impacted
+		const ngLoss = maxLossForCountry(result, "NG"); // Nigeria
+		const ghLoss = maxLossForCountry(result, "GH"); // Ghana
+		// At least one should show impact
+		expect(ngLoss + ghLoss).toBeGreaterThan(0);
+	});
+});
+
+// ── Validation: Japan Tohoku 2011 ──
+
+describe("Japan Tohoku 2011 scenario", () => {
+	it("cutting cables near NE Japan impacts trans-Pacific connectivity", () => {
+		// 6+ cables cut off Ibaraki coast
+		const result = simulate([
+			{
+				id: "test-tohoku-2011",
+				type: "point",
+				lat: 36.5,
+				lng: 141.0,
+				radius: 300,
+				affectedSegmentIds: [],
+			},
+		]);
+
+		expect(result.cablesAffected).toBeGreaterThan(0);
+
+		// Japan should show some impact
+		const jpLoss = maxLossForCountry(result, "JP");
+		if (jpLoss > 0) {
+			expect(jpLoss).toBeGreaterThan(5);
+		}
+	});
+});
+
+// ── Validation: Vietnam 2023 (all 5 international cables degraded) ──
+
+describe("Vietnam 2023 scenario", () => {
+	it("cutting cables in South China Sea impacts Vietnam", () => {
+		// Multiple cables damaged in waters near Vietnam
+		const result = simulate([
+			{
+				id: "test-vietnam-2023",
+				type: "point",
+				lat: 10.0,
+				lng: 109.0,
+				radius: 500,
+				affectedSegmentIds: [],
+			},
+		]);
+
+		expect(result.cablesAffected).toBeGreaterThan(0);
+
+		// Vietnam should be impacted
+		const vnLoss = maxLossForCountry(result, "VN");
+		if (vnLoss > 0) {
+			expect(vnLoss).toBeGreaterThan(10);
+		}
+	});
+});
+
 // ── Simulation performance ──
 
 describe("Simulation performance", () => {

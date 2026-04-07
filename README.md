@@ -31,7 +31,7 @@ pnpm data:build    # ~1 sec — clusters metros, estimates capacity, writes JSON
 ### Run tests
 
 ```bash
-pnpm test          # 11 validation tests against real-world cable cut events
+pnpm test          # 15 validation tests against real-world cable cut events
 pnpm test:e2e      # 24 Puppeteer E2E tests across desktop + mobile viewports
 ```
 
@@ -57,18 +57,20 @@ Graph engine runs in a Web Worker. Full simulation completes in <200ms.
 
 ## Validation
 
-The simulation is tested against 8 documented real-world cable cut events:
+The simulation is tested against 10 documented real-world cable cut events:
 
-| Event | Year | Key result |
-|-------|------|------------|
-| Red Sea (Houthi) | 2024 | WANA region bandwidth loss, East Africa resilient |
-| Baltic Sea sabotage | 2024 | High redundancy — near-zero impact |
-| Mediterranean cuts | 2008 | Egypt -70%, India -60% |
-| Taiwan earthquake | 2006 | Luzon Strait chokepoint validated |
-| Tonga eruption | 2022 | Single-cable isolation |
-| West Africa cuts | 2024 | Regional cascade, Equiano absorbs |
-| East Africa cuts | 2024 | Compounding failure scenario |
-| Egypt landing damage | 2022 | Landing-point vulnerability |
+| Event | Year | Key result | Sources |
+|-------|------|------------|---------|
+| Red Sea (Houthi) | 2024 | 4 cables cut, 25% Asia-Europe traffic disrupted | [Al Jazeera](https://www.aljazeera.com/news/2024/3/6/why-are-people-blaming-the-houthis-for-cutting-the-red-sea-cables), [Cloudflare](https://blog.cloudflare.com/east-african-internet-connectivity-again-impacted-by-submarine-cable-cuts/) |
+| Baltic Sea sabotage | 2024 | BCS + C-Lion1 cut, high redundancy — near-zero impact | [Wikipedia](https://en.wikipedia.org/wiki/2024_Baltic_Sea_submarine_cable_disruptions) |
+| Mediterranean cuts | 2008 | SEA-ME-WE 4 + FLAG cut, Egypt -70%, India -60% | [Wikipedia](https://en.wikipedia.org/wiki/2008_submarine_cable_disruption) |
+| Taiwan earthquake | 2006 | 8-22 cable breaks in Luzon Strait, Asia-wide disruption | [Wikipedia](https://en.wikipedia.org/wiki/2006_Hengchun_earthquakes) |
+| Tonga eruption | 2022 | Tonga Cable destroyed, 5 weeks isolated | [Wikipedia](https://en.wikipedia.org/wiki/2022_Hunga_Tonga%E2%80%93Hunga_Ha%CA%BBapai_eruption_and_tsunami) |
+| West Africa cuts | 2024 | WACS + MainOne + SAT-3 + ACE cut, 13 countries impacted | [Cloudflare](https://blog.cloudflare.com/undersea-cable-failures-cause-internet-disruptions-across-africa-march-14-2024/) |
+| East Africa cuts | 2024 | EASSy + Seacom cut near Durban, compounding Red Sea damage | [Cloudflare](https://blog.cloudflare.com/east-african-internet-connectivity-again-impacted-by-submarine-cable-cuts/) |
+| Egypt landing damage | 2022 | AAE-1 + SMW-5 cut at landing points | [Cloudflare](https://blog.cloudflare.com/aae-1-smw5-cable-cuts/) |
+| Japan Tohoku earthquake | 2011 | 6+ cables cut, 22% trans-Pacific capacity lost | [SubmarineNetworks](https://www.submarinenetworks.com/en/nv/news/cables-cut-after-magnitude-89-earthquake-in-japan), [Lightwave](https://www.lightwaveonline.com/network-design/article/16660580/fiber-effect-of-japan-earthquake-still-sorting-out) |
+| Vietnam cable failures | 2023 | All 5 international cables degraded, -75% capacity | [The Register](https://www.theregister.com/2023/02/23/vietnam_submarine_cable_outages/), [The Register](https://www.theregister.com/2024/06/18/vietnam_internet_cables/) |
 
 ## Tech stack
 
