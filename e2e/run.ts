@@ -127,15 +127,17 @@ for (const file of testFiles) {
 
 // ── Step 5: Cleanup and report ──
 
-// Kill the server and all child processes
-server.kill("SIGKILL");
+// Kill the server tree
 if (server.pid) {
 	try {
-		process.kill(-server.pid, "SIGKILL");
+		execSync(`kill -9 ${server.pid} 2>/dev/null; pkill -9 -P ${server.pid} 2>/dev/null`, {
+			stdio: "ignore",
+		});
 	} catch {
-		// Process group kill may fail if already dead
+		// Best-effort cleanup
 	}
 }
+server.kill("SIGKILL");
 
 const passed = results.filter((r) => r.passed).length;
 const failed = results.filter((r) => !r.passed).length;
