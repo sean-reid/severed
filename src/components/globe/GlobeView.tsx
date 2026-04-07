@@ -283,7 +283,7 @@ export function GlobeView() {
 				style={{
 					bottom:
 						typeof window !== "undefined" && window.innerWidth < 768
-							? `calc(${mobileSheetHeight}dvh + ${selectedCableId || selectedMetroId || selectedTerrestrialId ? "88" : "8"}px)`
+							? `min(calc(100dvh - 70px), calc(${mobileSheetHeight}dvh + ${selectedCableId || selectedMetroId || selectedTerrestrialId ? "88" : "8"}px))`
 							: undefined,
 				}}
 				title="Reset map view"
