@@ -100,7 +100,7 @@ export function DataSourcesPanel() {
 							<section>
 								<h3 className="text-text-primary font-semibold mb-2">Terrestrial Backbone</h3>
 								<p>
-									116 overland fiber edges hand-curated from operator network maps, press releases,
+									151 overland fiber edges hand-curated from operator network maps, press releases,
 									and industry publications. Each edge lists named operators, a confidence level,
 									and where available a direct link to the supporting source.
 								</p>
@@ -144,8 +144,8 @@ export function DataSourcesPanel() {
 							<section>
 								<h3 className="text-text-primary font-semibold mb-2">Simulation</h3>
 								<p>
-									Graph model with 922 metro nodes, ~1,500 cable segments, 116 terrestrial edges,
-									and 81 hub metros. Cutting a cable removes only the segments at the cut location.
+									Graph model with 930 metro nodes, ~1,500 cable segments, 151 terrestrial edges,
+									and 92 hub metros. Cutting a cable removes only the segments at the cut location.
 									Impact is the change in aggregate bottleneck bandwidth from each metro to the hub
 									set.
 								</p>

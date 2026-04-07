@@ -6,9 +6,9 @@ Interactive submarine cable failure simulator. Cut cables on a globe, watch traf
 
 ## What it does
 
-Click a submarine cable or select a chokepoint scenario (Red Sea, Luzon Strait, Baltic Sea, etc.) to simulate a failure. The app computes which metros lose connectivity, how much bandwidth disappears, where traffic reroutes, and whether the network absorbs the cut.
+Click a submarine cable or select a historical scenario (Red Sea 2024, Baltic Sea 2024, Luzon Strait 2006, etc.) to simulate a failure. The app computes which metros lose connectivity, how much bandwidth disappears, where traffic reroutes, and whether the network absorbs the cut.
 
-Built on real data: 594 operational cables from TeleGeography (110 with verified/estimated capacity from primary sources), 922 metro nodes, 116 hand-researched terrestrial backbone edges (113 with source URLs), 81 hub metros, and a graph engine that runs in a Web Worker. Search across everything with `/`.
+Built on real data: 594 operational cables from TeleGeography (110 with verified/estimated capacity from primary sources), 930 metro nodes, 151 hand-researched terrestrial backbone edges, 92 hub metros, and a graph engine that runs in a Web Worker. Search across everything with `/`.
 
 ## Quick start
 
@@ -41,7 +41,7 @@ pnpm test:e2e      # 24 Puppeteer E2E tests across desktop + mobile viewports
 |------|--------|---------|
 | Cable routes & landing stations | [TeleGeography Submarine Cable Map](https://www.submarinecablemap.com/) | CC BY-SA |
 | Cable capacity | Estimated via RFS-year heuristic calibrated against real cables (see comments in `build-data.ts`) | — |
-| Terrestrial backbone edges | Hand-curated from industry publications (Lightwave, TelecomTV, Capacity Media, SubTel Forum), operator press releases, and network maps. 113 of 116 edges have source URLs. | — |
+| Terrestrial backbone edges | Hand-curated from industry publications (Lightwave, TelecomTV, Capacity Media, SubTel Forum), operator press releases, and network maps. 127 of 151 edges have source URLs. | — |
 | Chokepoint definitions | Hand-defined polygons from geographic research | — |
 
 Every capacity number has a confidence level (`verified`, `estimated`, `approximated`). Click "Sources" in the app for methodology, or click any cable or terrestrial link on the map to see its specific source and confidence.
@@ -49,7 +49,7 @@ Every capacity number has a confidence level (`verified`, `estimated`, `approxim
 ## How the simulation works
 
 1. Build a weighted graph: metros as nodes, cable segments + terrestrial links as edges weighted by capacity (Tbps)
-2. Compute baseline metrics: each metro's aggregate bandwidth to 63 global hub metros via bottleneck shortest paths
+2. Compute baseline metrics: each metro's aggregate bandwidth to 92 global hub metros via bottleneck shortest paths
 3. On cut: remove edges that cross the cut location, recompute metrics, diff against baseline
 4. Report per-metro: bandwidth loss %, latency change, path diversity, rerouting paths
 
