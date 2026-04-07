@@ -3886,29 +3886,31 @@ function main() {
 		},
 	];
 
-	const terrestrial: TerrestrialEdge[] = terrestrialDefs.map((def, i) => {
-		// Resolve aliases for from/to
-		const resolvedFrom = metroAliases.get(def.from) ?? def.from;
-		const resolvedTo = metroAliases.get(def.to) ?? def.to;
-		const fromCoord = metroCoords.get(resolvedFrom) ?? metroCoords.get(def.from);
-		const toCoord = metroCoords.get(resolvedTo) ?? metroCoords.get(def.to);
-		let distKm = 0;
-		if (fromCoord && toCoord) {
-			distKm = Math.round(haversineKm(fromCoord.lat, fromCoord.lng, toCoord.lat, toCoord.lng));
-		}
-		return {
-			id: `terr-${i + 1}-${resolvedFrom}-${resolvedTo}`,
-			from: resolvedFrom,
-			to: resolvedTo,
-			capacityTbps: def.capacityTbps,
-			distanceKm: distKm,
-			confidence: def.confidence,
-			source: def.source,
-			...(def.sourceUrl ? { sourceUrl: def.sourceUrl } : {}),
-			operators: def.operators,
-			...(def.notes ? { notes: def.notes } : {}),
-		};
-	});
+	const terrestrial: TerrestrialEdge[] = terrestrialDefs
+		.map((def, i) => {
+			// Resolve aliases for from/to
+			const resolvedFrom = metroAliases.get(def.from) ?? def.from;
+			const resolvedTo = metroAliases.get(def.to) ?? def.to;
+			const fromCoord = metroCoords.get(resolvedFrom) ?? metroCoords.get(def.from);
+			const toCoord = metroCoords.get(resolvedTo) ?? metroCoords.get(def.to);
+			let distKm = 0;
+			if (fromCoord && toCoord) {
+				distKm = Math.round(haversineKm(fromCoord.lat, fromCoord.lng, toCoord.lat, toCoord.lng));
+			}
+			return {
+				id: `terr-${i + 1}-${resolvedFrom}-${resolvedTo}`,
+				from: resolvedFrom,
+				to: resolvedTo,
+				capacityTbps: def.capacityTbps,
+				distanceKm: distKm,
+				confidence: def.confidence,
+				source: def.source,
+				...(def.sourceUrl ? { sourceUrl: def.sourceUrl } : {}),
+				operators: def.operators,
+				...(def.notes ? { notes: def.notes } : {}),
+			};
+		})
+		.filter((e) => e.from !== e.to && e.distanceKm > 0);
 
 	console.log(`  ${terrestrial.length} terrestrial edges`);
 
