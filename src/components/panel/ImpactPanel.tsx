@@ -484,12 +484,8 @@ export function ImpactPanel() {
 								}
 								const severedCables = [...severedCableIds]
 									.map((id) => cablesById.get(id))
-									.filter(
-										(c) =>
-											c &&
-											c.segments.some(
-												(s) => s.from === selectedMetroId || s.to === selectedMetroId,
-											),
+									.filter((c) =>
+										c?.segments.some((s) => s.from === selectedMetroId || s.to === selectedMetroId),
 									);
 								if (severedCables.length === 0) return null;
 								return (
