@@ -1628,39 +1628,40 @@ function main() {
 			// west above N Indonesia → branch south to Tanjung Pakis (Java) →
 			// main trunk continues west → Singapore
 			const asiaSide: number[][] = [
-				[180.0, 26.3], // dateline continuation
-				[177.0, 25.2],
-				[174.0, 24.0],
-				[171.0, 22.8],
-				[168.0, 21.5],
-				[165.0, 20.2],
-				[162.0, 19.0],
-				[159.0, 17.8],
-				[156.0, 16.7],
-				[153.0, 15.7],
-				[150.0, 14.8],
-				[147.5, 14.0],
+				// Dateline → Guam (great circle arc across N Pacific)
+				[180.0, 26.3],
+				[176.0, 24.5],
+				[172.0, 22.5],
+				[168.0, 20.5],
+				[164.0, 18.5],
+				[160.0, 17.0],
+				[156.0, 15.8],
+				[152.0, 14.8],
+				[148.0, 14.0],
 				[144.75, 13.48], // Guam (Piti)
-				[143.0, 12.5], // south through Philippine Sea
-				[141.0, 11.0],
-				[139.0, 9.5],
-				[137.0, 8.5],
+				// Guam → south through Philippine Sea → Palau
+				[142.0, 11.5],
+				[139.5, 9.5],
+				[137.0, 8.0],
 				[134.56, 7.53], // Palau (Ngeremlengui)
-				[131.0, 6.0], // west past Palau
-				[128.0, 4.5],
-				[125.0, 3.0], // north of Sulawesi
-				[122.0, 1.5],
-				[119.0, 0.0], // above N Indonesia / Kalimantan
-				[116.0, -1.5],
-				[113.5, -3.0], // branch point toward Java
-				[111.0, -5.0], // south toward Java
-				[108.5, -6.0],
-				[106.89, -6.1], // Tanjung Pakis / Jakarta area
-				[106.0, -5.5], // north from Java coast
-				[105.5, -4.0], // Java Sea
-				[105.0, -2.5], // north through Java Sea
-				[104.6, -1.0], // approaching Riau Islands
-				[104.2, 0.3], // Singapore Strait approach
+				// Palau → west-southwest through Celebes/Banda Sea
+				// Stays south of Philippines, north of main Indonesian islands
+				[131.0, 5.0],
+				[128.0, 2.5],
+				[125.0, 0.5], // Celebes Sea
+				[122.0, -1.0], // Banda Sea
+				[119.0, -2.5], // Flores Sea
+				[116.0, -4.0], // Java Sea
+				// Branch south to Tanjung Pakis
+				[113.0, -5.5],
+				[112.7, -6.7], // Tanjung Pakis
+				// West along Java north coast to Singapore
+				[110.0, -6.0],
+				[108.0, -5.5],
+				[106.5, -5.0], // north Java coast
+				[105.5, -3.5], // Java Sea narrows
+				[104.8, -2.0],
+				[104.3, -0.5], // Singapore Strait approach
 				[103.88, 1.33], // Singapore (Tuas)
 			];
 			fixedPath = {
