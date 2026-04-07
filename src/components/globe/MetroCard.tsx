@@ -94,8 +94,8 @@ export function MetroCard() {
 								key={t.id}
 								type="button"
 								onClick={() => {
-									selectTerrestrial(t.id);
 									selectMetro(null);
+									selectTerrestrial(t.id);
 									const from = metrosById.get(t.from);
 									const to = metrosById.get(t.to);
 									if (from && to)
