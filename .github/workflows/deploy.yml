@@ -31,6 +31,8 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+        env:
+          VITE_BASE_PATH: /severed/
 
       - uses: actions/upload-pages-artifact@v3
         with:

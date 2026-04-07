@@ -30,12 +30,7 @@ const skipBuild = process.argv.includes("--no-build");
 
 if (!skipBuild) {
 	console.log("\x1b[2m  Building app...\x1b[0m");
-	// Force base="/" for E2E regardless of GITHUB_ACTIONS env
-	execSync("pnpm build", {
-		stdio: "inherit",
-		cwd: ROOT,
-		env: { ...process.env, GITHUB_ACTIONS: "" },
-	});
+	execSync("pnpm build", { stdio: "inherit", cwd: ROOT });
 	console.log();
 }
 
