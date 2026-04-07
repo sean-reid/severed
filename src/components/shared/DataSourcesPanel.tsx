@@ -7,6 +7,7 @@ export function DataSourcesPanel() {
 	const selectedCableId = useStore((s) => s.selectedCableId);
 	const selectedMetroId = useStore((s) => s.selectedMetroId);
 	const selectedTerrestrialId = useStore((s) => s.selectedTerrestrialId);
+	const sheetDragging = useStore((s) => s.mobileSheetDragging);
 	const hasSelection = selectedCableId || selectedMetroId || selectedTerrestrialId;
 
 	return (
@@ -22,7 +23,9 @@ export function DataSourcesPanel() {
 					uppercase tracking-wider transition-colors
 					md:bottom-3 md:left-1/2 md:-translate-x-1/2
 					max-md:right-4 max-md:left-auto
+					${sheetDragging ? "" : "max-md:transition-all max-md:duration-300 max-md:ease-out"}
 					${hasSelection ? "max-md:hidden" : ""}
+					${mobileSheetHeight > 55 ? "max-md:opacity-0 max-md:pointer-events-none" : ""}
 				`}
 				style={{
 					bottom:
