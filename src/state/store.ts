@@ -169,16 +169,15 @@ export const useStore = create<StoreState>((set) => ({
 				}
 			}
 
-			// Fly to the center of the first cut location
+			// Fly to chokepoint immediately; fitBounds will update when simulation completes
 			const firstCut = newCuts[0];
-			const flyTo = firstCut ? { lng: firstCut.lng, lat: firstCut.lat, zoom: 4 } : null;
 
 			return {
 				cuts: newCuts,
 				activeScenarioId: scenarioId,
 				simulation: null,
 				selectedCableId: null,
-				flyTo,
+				flyTo: firstCut ? { lng: firstCut.lng, lat: firstCut.lat, zoom: 4 } : null,
 			};
 		}),
 
@@ -190,7 +189,30 @@ export const useStore = create<StoreState>((set) => ({
 			selectedCableId: null,
 		}),
 
-	setSimulation: (sim) => set({ simulation: sim, simulating: false }),
+	setSimulation: (sim) =>
+		set((s) => {
+			// After scenario simulation completes, fit map to show all affected metros
+			let fitBounds = null;
+			if (s.activeScenarioId && sim.metrosAffected > 0) {
+				let minLng = 180;
+				let maxLng = -180;
+				let minLat = 90;
+				let maxLat = -90;
+				for (const impact of sim.impacts) {
+					if (impact.bandwidthLossPct <= 0.1) continue;
+					const metro = s.metrosById.get(impact.metroId);
+					if (!metro) continue;
+					minLng = Math.min(minLng, metro.lng);
+					maxLng = Math.max(maxLng, metro.lng);
+					minLat = Math.min(minLat, metro.lat);
+					maxLat = Math.max(maxLat, metro.lat);
+				}
+				if (maxLng > minLng) {
+					fitBounds = { minLng, minLat, maxLng, maxLat };
+				}
+			}
+			return { simulation: sim, simulating: false, fitBounds };
+		}),
 	setSimulating: (v) => set({ simulating: v }),
 	togglePanel: () => set((s) => ({ panelOpen: !s.panelOpen })),
 	toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
