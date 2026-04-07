@@ -44,7 +44,13 @@ export interface TestContext {
 export async function createContext(baseUrl: string, viewport: ViewportName): Promise<TestContext> {
 	const browser = await puppeteer.launch({
 		headless: true,
-		args: ["--no-sandbox", "--disable-setuid-sandbox"],
+		args: [
+			"--no-sandbox",
+			"--disable-setuid-sandbox",
+			"--disable-gpu",
+			"--disable-dev-shm-usage",
+			"--disable-software-rasterizer",
+		],
 	});
 	const page = await browser.newPage();
 	await page.setViewport(VIEWPORTS[viewport]);
@@ -56,16 +62,16 @@ export async function createContext(baseUrl: string, viewport: ViewportName): Pr
 		viewport,
 
 		async goto(path = "/") {
-			await page.goto(`${baseUrl}${path}`, { waitUntil: "networkidle2", timeout: 30000 });
+			await page.goto(`${baseUrl}${path}`, { waitUntil: "networkidle2", timeout: 15000 });
 			// Wait for React mount — SEVERED header appears
-			await page.waitForSelector("h1", { timeout: 30000 });
+			await page.waitForSelector("h1", { timeout: 15000 });
 			// Wait for loading screen to clear
 			await page.waitForFunction(
 				() => !document.body.textContent?.includes("Loading cable network data"),
-				{ timeout: 30000 },
+				{ timeout: 15000 },
 			);
-			// Let deck.gl render layers
-			await new Promise((r) => setTimeout(r, 3000));
+			// Let deck.gl render layers (shorter wait — tests don't need full render)
+			await new Promise((r) => setTimeout(r, 1500));
 		},
 
 		async screenshot(name: string) {

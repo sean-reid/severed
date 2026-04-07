@@ -101,7 +101,29 @@ export function Sidebar() {
 			>
 				{/* Header */}
 				<div className="px-4 py-4 border-b border-border">
-					<h1 className="font-data text-lg font-bold tracking-widest text-cable-high">SEVERED</h1>
+					<div className="flex items-center justify-between">
+						<h1 className="font-data text-lg font-bold tracking-widest text-cable-high">SEVERED</h1>
+						<button
+							type="button"
+							onClick={() => window.dispatchEvent(new CustomEvent("open-search"))}
+							className="text-text-secondary/50 hover:text-text-primary transition-colors p-1 -mr-1"
+							title="Search (press /)"
+						>
+							<svg
+								width="14"
+								height="14"
+								viewBox="0 0 16 16"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+							>
+								<title>Search</title>
+								<circle cx="6.5" cy="6.5" r="5" />
+								<line x1="10" y1="10" x2="15" y2="15" />
+							</svg>
+						</button>
+					</div>
 					<p className="text-[10px] text-text-secondary mt-1 uppercase tracking-wider">
 						Submarine Cable Failure Simulator
 					</p>

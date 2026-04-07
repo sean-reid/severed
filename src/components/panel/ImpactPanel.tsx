@@ -15,6 +15,7 @@ export function ImpactPanel() {
 	const cablesById = useStore((s) => s.cablesById);
 	const selectCable = useStore((s) => s.selectCable);
 	const selectTerrestrial = useStore((s) => s.selectTerrestrial);
+	const terrestrial = useStore((s) => s.terrestrial);
 	const resetCuts = useStore((s) => s.resetCuts);
 
 	const cutCableById = useCallback(
@@ -171,9 +172,9 @@ export function ImpactPanel() {
 					onTouchMove={onTouchMove}
 					onTouchEnd={onTouchEnd}
 				>
-					{/* Drag handle (mobile only) */}
-					<div className="flex justify-center items-center h-8 w-full md:hidden">
-						<div className="w-12 h-1.5 rounded-full bg-text-secondary/30" />
+					{/* Drag handle (mobile only) — large touch target */}
+					<div className="flex justify-center items-center h-10 w-full md:hidden">
+						<div className="w-14 h-1.5 rounded-full bg-text-secondary/40" />
 					</div>
 
 					{/* Header */}
@@ -254,7 +255,7 @@ export function ImpactPanel() {
 
 				{/* ── Selected metro detail ── */}
 				{selectedImpact && selectedMetroId && (
-					<div className="px-4 py-3 border-b border-border bg-border/10 shrink-0">
+					<div className="px-4 py-3 border-b border-border bg-border/10 shrink-0 max-md:max-h-[40vh] max-md:overflow-y-auto">
 						<div className="flex items-center justify-between mb-3">
 							<div>
 								<div className="text-base font-semibold text-text-primary">
@@ -314,8 +315,30 @@ export function ImpactPanel() {
 											<button
 												type="button"
 												onClick={() => {
-													if (isTerrestrial && r.terrestrialId) selectTerrestrial(r.terrestrialId);
-													else if (isSubCable && r.cableId) selectCable(r.cableId);
+													if (isTerrestrial && r.terrestrialId) {
+														selectTerrestrial(r.terrestrialId);
+														// Fly to terrestrial edge midpoint
+														const edge = terrestrial.find((t) => t.id === r.terrestrialId);
+														if (edge) {
+															const from = metrosById.get(edge.from);
+															const to = metrosById.get(edge.to);
+															if (from && to)
+																flyToLocation((from.lng + to.lng) / 2, (from.lat + to.lat) / 2, 5);
+														}
+													} else if (isSubCable && r.cableId) {
+														selectCable(r.cableId);
+														// Fly to cable midpoint via first segment
+														const cable = cablesById.get(r.cableId);
+														if (cable?.segments[0]) {
+															const seg = cable.segments[0];
+															const from = metrosById.get(seg.from);
+															const to = metrosById.get(seg.to);
+															if (from && to)
+																flyToLocation((from.lng + to.lng) / 2, (from.lat + to.lat) / 2, 4);
+														}
+													}
+													// On mobile, collapse the sheet so the selection is visible
+													if (window.innerWidth < 768) setMobileSheetHeight(25);
 												}}
 												className="flex items-center gap-2 min-w-0 text-left hover:opacity-80 transition-opacity"
 											>
