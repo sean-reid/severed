@@ -201,9 +201,9 @@ export function SearchOverlay({ open, onClose }: Props) {
 				)}
 
 				{/* Hint */}
-				{query.length < 2 && (
+				{query.length < 1 && (
 					<div className="mt-3 text-center text-[11px] text-text-secondary/30">
-						Type at least 2 characters to search
+						Start typing to search
 					</div>
 				)}
 			</div>

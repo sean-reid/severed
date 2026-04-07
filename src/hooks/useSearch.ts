@@ -136,7 +136,7 @@ export function useSearch() {
 
 	const results = useMemo(() => {
 		const q = query.trim();
-		if (q.length < 2) return [];
+		if (q.length < 1) return [];
 
 		return index
 			.map((r) => ({ result: r, score: scoreMatch(q, r) }))
