@@ -57,4 +57,7 @@ body {
 	.impact-sheet {
 		height: var(--sheet-h, 45dvh);
 	}
+	.above-sheet {
+		bottom: calc(var(--sheet-h, 45dvh) + 12px);
+	}
 }

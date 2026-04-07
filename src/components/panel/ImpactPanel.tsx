@@ -108,7 +108,7 @@ export function ImpactPanel() {
 		const totalTime = Date.now() - dragRef.current.lastTime;
 		// Velocity: px per ms over total drag. Fast flick = >0.4 px/ms
 		const velocity = totalTime > 0 ? dragDist / totalTime : 0;
-		const isFastFlick = velocity > 0.4 && dragDist > 30;
+		const isFastFlick = velocity > 0.8 && dragDist > 50;
 		const minDrag = 15;
 
 		let target: number;

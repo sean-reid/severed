@@ -22,7 +22,7 @@ export function TerrestrialCard() {
 
 	return (
 		<div
-			className="absolute z-20 md:hidden left-3 right-3"
+			className="absolute z-20 md:hidden left-3 right-3 "
 			style={{ bottom: `calc(${mobileSheetHeight}dvh + 12px)` }}
 		>
 			<div className="bg-surface border border-border rounded-2xl shadow-xl shadow-black/40 overflow-hidden">
