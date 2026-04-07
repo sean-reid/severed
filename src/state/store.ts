@@ -191,23 +191,38 @@ export const useStore = create<StoreState>((set) => ({
 
 	setSimulation: (sim) =>
 		set((s) => {
-			// After scenario simulation completes, fit map to show all affected metros
+			// After scenario simulation completes, fit map to show all affected cables
 			let fitBounds = null;
-			if (s.activeScenarioId && sim.metrosAffected > 0) {
+			if (s.activeScenarioId && sim.affectedEdgeIds.length > 0) {
 				let minLng = 180;
 				let maxLng = -180;
 				let minLat = 90;
 				let maxLat = -90;
-				for (const impact of sim.impacts) {
-					if (impact.bandwidthLossPct <= 0.1) continue;
-					const metro = s.metrosById.get(impact.metroId);
-					if (!metro) continue;
-					minLng = Math.min(minLng, metro.lng);
-					maxLng = Math.max(maxLng, metro.lng);
-					minLat = Math.min(minLat, metro.lat);
-					maxLat = Math.max(maxLat, metro.lat);
+				const seenCables = new Set<string>();
+				for (const edgeId of sim.affectedEdgeIds) {
+					const cableId = edgeId.split(":")[0];
+					if (cableId === "terr" || seenCables.has(cableId)) continue;
+					seenCables.add(cableId);
+					const cable = s.cablesById.get(cableId);
+					if (!cable) continue;
+					for (const seg of cable.segments) {
+						const from = s.metrosById.get(seg.from);
+						const to = s.metrosById.get(seg.to);
+						if (from) {
+							minLng = Math.min(minLng, from.lng);
+							maxLng = Math.max(maxLng, from.lng);
+							minLat = Math.min(minLat, from.lat);
+							maxLat = Math.max(maxLat, from.lat);
+						}
+						if (to) {
+							minLng = Math.min(minLng, to.lng);
+							maxLng = Math.max(maxLng, to.lng);
+							minLat = Math.min(minLat, to.lat);
+							maxLat = Math.max(maxLat, to.lat);
+						}
+					}
 				}
-				if (maxLng > minLng) {
+				if (maxLng > minLng && maxLng - minLng < 300) {
 					fitBounds = { minLng, minLat, maxLng, maxLat };
 				}
 			}
