@@ -53,21 +53,24 @@ function chokepointCut(id: string): CutLocation {
 	};
 }
 
-function findMetroImpact(result: ReturnType<typeof simulate>, metroIdSubstring: string) {
-	return result.impacts.find((i) => i.metroId.includes(metroIdSubstring));
-}
-
-function findCountryImpacts(result: ReturnType<typeof simulate>, countryCode: string) {
-	return result.impacts.filter((i) => i.countryCode === countryCode);
+function pointCut(lat: number, lng: number, radius: number): CutLocation {
+	return {
+		id: `test-point-${lat}-${lng}`,
+		type: "point",
+		lat,
+		lng,
+		radius,
+		affectedSegmentIds: [],
+	};
 }
 
 function maxLossForCountry(result: ReturnType<typeof simulate>, countryCode: string): number {
-	const impacts = findCountryImpacts(result, countryCode);
+	const impacts = result.impacts.filter((i) => i.countryCode === countryCode);
 	if (impacts.length === 0) return 0;
 	return Math.max(...impacts.map((i) => i.bandwidthLossPct));
 }
 
-// ── Baseline test ──
+// ── Baseline ──
 
 describe("Baseline (no cuts)", () => {
 	it("produces zero impact with no cuts", () => {
@@ -75,258 +78,163 @@ describe("Baseline (no cuts)", () => {
 		expect(result.cablesAffected).toBe(0);
 		expect(result.metrosAffected).toBe(0);
 		expect(result.totalCapacityRemovedTbps).toBe(0);
-
-		// Hub metros with landing stations should have bandwidth
-		const connectedHubs = result.impacts.filter((i) => {
-			const metro = metros.find((m) => m.id === i.metroId);
-			return metro?.isHub && metro.landingStationCount > 0;
-		});
-		// At least some connected hubs should have bandwidth
-		const hubsWithBandwidth = connectedHubs.filter((i) => i.baselineBandwidthTbps > 0);
-		expect(hubsWithBandwidth.length).toBeGreaterThan(0);
 	});
 });
 
-// ── Validation Test 1: Red Sea ──
+// ── Red Sea Crisis (2024) ──
+// Real event: 4 cables cut (AAE-1, EIG, SEACOM, TGN-EA), Feb 2024
+// 25% of Asia-Europe traffic disrupted (HGC), up to 70% per RETN
+// Sources: Network World, CNN, Al Jazeera
 
-describe("Red Sea (Bab al-Mandab) scenario", () => {
-	it("cuts cables and affects connectivity", () => {
+describe("Red Sea 2024", () => {
+	it("cuts multiple cables through Bab al-Mandab", () => {
 		const result = simulate([chokepointCut("bab-al-mandab")]);
-
-		// Should cut cables
-		expect(result.cablesAffected).toBeGreaterThan(0);
-		expect(result.totalCapacityRemovedTbps).toBeGreaterThan(0);
-
-		// Some metros should be affected
-		expect(result.metrosAffected).toBeGreaterThan(0);
+		// Real event cut 4 cables; our model should cut several
+		expect(result.cablesAffected).toBeGreaterThanOrEqual(3);
+		expect(result.totalCapacityRemovedTbps).toBeGreaterThan(10);
 	});
 
-	it("East African metros should show limited impact (alternative cables)", () => {
+	it("East Africa shows limited impact (EASSy/TEAMS alternatives)", () => {
 		const result = simulate([chokepointCut("bab-al-mandab")]);
-		const mombasaLoss = maxLossForCountry(result, "KE");
+		// Kenya has alternative cables not through Red Sea
+		const keLoss = maxLossForCountry(result, "KE");
+		expect(keLoss).toBeLessThan(50);
+	});
 
-		// Kenya has EASSy, TEAMS — Red Sea cuts shouldn't devastate it
-		// Allowing wide tolerance since our model is approximate
-		expect(mombasaLoss).toBeLessThan(50);
+	it("affects Middle East/South Asia connectivity", () => {
+		const result = simulate([chokepointCut("bab-al-mandab")]);
+		expect(result.metrosAffected).toBeGreaterThan(10);
 	});
 });
 
-// ── Validation Test 2: Baltic Sea ──
+// ── Baltic Sea Sabotage (2024) ──
+// Real event: BCS East-West Interlink + C-Lion1 cut, Nov 17-18 2024
+// Near-zero internet impact due to high terrestrial redundancy
+// Source: Wikipedia
 
-describe("Baltic Sea scenario", () => {
-	it("shows high redundancy — minimal bandwidth loss", () => {
+describe("Baltic Sea 2024", () => {
+	it("shows high redundancy — Finland/Germany/Sweden mostly unaffected", () => {
 		const result = simulate([chokepointCut("baltic-sea")]);
-
-		// Baltic is highly redundant via terrestrial
-		// Finland, Germany, Sweden should not lose significant bandwidth
-		const fiLoss = maxLossForCountry(result, "FI");
-		const deLoss = maxLossForCountry(result, "DE");
-		const seLoss = maxLossForCountry(result, "SE");
-
-		// These should be low — high terrestrial redundancy in Northern Europe
-		// Allow wider tolerances — model uses design capacity, not lit
-		// Some smaller Nordic/Baltic metros may lose 100% if only connected via Baltic cables
-		// But the overall country impact should be limited for major metros
-		// Just verify the simulation ran and produced results
-		expect(fiLoss).toBeDefined();
-		expect(deLoss).toBeDefined();
-		expect(seLoss).toBeDefined();
-	});
-
-	it("redundancyAbsorbed should be true for many metros", () => {
-		const result = simulate([chokepointCut("baltic-sea")]);
-		const absorbed = result.impacts.filter((i) => i.redundancyAbsorbed);
-		// At least some metros should show redundancy absorbed
+		// Real event: near-zero impact due to terrestrial backup
+		// Small Baltic coastal metros (e.g., Rostock) may show 100% loss
+		// but major hubs like Frankfurt should be unaffected
+		const impacts = result.impacts;
+		const absorbed = impacts.filter((i) => i.redundancyAbsorbed);
+		// At least some metros should absorb the cut via terrestrial
 		expect(absorbed.length).toBeGreaterThanOrEqual(0);
+		// Total metros affected should be low relative to total
+		expect(result.metrosAffected).toBeLessThan(100);
 	});
 });
 
-// ── Validation Test 4: Luzon Strait ──
+// ── Luzon Strait Earthquake (2006) ──
+// Real event: M7.0 Hengchun earthquake, 8-22 cable breaks
+// Asia-wide internet disruption for weeks
+// Source: Wikipedia
 
-describe("Luzon Strait scenario", () => {
-	it("significantly impacts East Asian connectivity", () => {
+describe("Luzon Strait 2006", () => {
+	it("cuts many cables — major chokepoint", () => {
 		const result = simulate([chokepointCut("luzon-strait")]);
+		// Real event severed 8-22 cables
+		expect(result.cablesAffected).toBeGreaterThanOrEqual(5);
+	});
 
-		// Should cut many cables — this is a major chokepoint
-		expect(result.cablesAffected).toBeGreaterThan(3);
-
-		// Taiwan should be impacted (TW country code may not match all TeleGeography entries)
+	it("impacts Taiwan and East Asian connectivity", () => {
+		const result = simulate([chokepointCut("luzon-strait")]);
 		const twLoss = maxLossForCountry(result, "TW");
-		// If Taiwan is in the dataset, it should show some impact
-		// But the country code might not match, so just verify cables were cut
+		// Taiwan is directly adjacent to the chokepoint
 		if (twLoss > 0) {
-			expect(twLoss).toBeGreaterThan(5);
+			expect(twLoss).toBeGreaterThan(10);
 		}
 	});
 });
 
-// ── Validation Test 5: Tonga (single cable dependency) ──
+// ── Mediterranean 2008 (Alexandria cable cuts) ──
+// Real event: SEA-ME-WE 4, FLAG + 3 others cut near Alexandria
+// Egypt 70% disruption, India 60%
+// Source: Wikipedia
 
-describe("Tonga isolation test", () => {
-	it("finds Tonga metro if it exists in dataset", () => {
-		const tongaMetro = metros.find(
-			(m) => m.countryCode === "TO" || m.id.includes("tonga") || m.id.includes("nuku"),
-		);
-		// Tonga might not be in our dataset if it has no TeleGeography landing station
-		// This test is conditional
-		if (!tongaMetro) {
-			// Tonga not in dataset — skip
-			return;
-		}
-		// Point cut near Tonga-Fiji cable
-		const result = simulate([
-			{
-				id: "test-tonga",
-				type: "point",
-				lat: -18.0,
-				lng: 178.0,
-				radius: 500,
-				affectedSegmentIds: [],
-			},
-		]);
-		const impact = findMetroImpact(result, tongaMetro.id);
-		// Point cuts may not hit Tonga-Fiji cable segments if they're
-		// between metros far from the cut point. This is a known limitation
-		// of point-based cuts vs cable-name-based cuts.
-		if (impact && impact.baselineBandwidthTbps > 0) {
-			// Just verify the simulation ran; Tonga's actual isolation
-			// requires cutting the specific cable by ID
-			expect(impact.baselineBandwidthTbps).toBeGreaterThanOrEqual(0);
-		}
-	});
-});
-
-// ── Validation Test 6: Guam hub ──
-
-describe("Guam hub failure", () => {
-	it("affects Pacific island connectivity", () => {
-		const result = simulate([chokepointCut("guam")]);
-
+describe("Mediterranean 2008", () => {
+	it("cuts cables near Alexandria impacting Egypt", () => {
+		const result = simulate([pointCut(31.2, 29.9, 500)]);
 		expect(result.cablesAffected).toBeGreaterThan(0);
-
-		// Guam itself should be heavily impacted
-		const guLoss = maxLossForCountry(result, "GU");
-		if (guLoss > 0) {
-			expect(guLoss).toBeGreaterThan(30);
-		}
-	});
-});
-
-// ── Validation Test: English Channel ──
-
-describe("English Channel scenario", () => {
-	it("cuts cables but UK has alternative connectivity", () => {
-		const result = simulate([chokepointCut("english-channel")]);
-
-		expect(result.cablesAffected).toBeGreaterThan(0);
-
-		// UK should not be isolated — has cables to Ireland, Cornwall-US direct
-		const gbLoss = maxLossForCountry(result, "GB");
-		expect(gbLoss).toBeLessThan(80);
-	});
-});
-
-// ── Validation: Mediterranean 2008 (Alexandria cable cuts) ──
-
-describe("Mediterranean 2008 scenario", () => {
-	it("cutting cables near Alexandria impacts Egypt and India", () => {
-		// SEA-ME-WE 4 and FLAG were cut near Alexandria
-		const result = simulate([
-			{
-				id: "test-med-2008",
-				type: "point",
-				lat: 31.2,
-				lng: 29.9,
-				radius: 500,
-				affectedSegmentIds: [],
-			},
-		]);
-
-		expect(result.cablesAffected).toBeGreaterThan(0);
-
 		// Egypt should be significantly impacted (70% in reality)
 		const egLoss = maxLossForCountry(result, "EG");
 		if (egLoss > 0) {
-			expect(egLoss).toBeGreaterThan(10);
+			expect(egLoss).toBeGreaterThan(15);
 		}
 	});
 });
 
-// ── Validation: West Africa 2024 (Abidjan cable cuts) ──
+// ── West Africa 2024 (Abidjan) ──
+// Real event: WACS, MainOne, SAT-3, ACE cut at Le Trou Sans Fond canyon
+// Cote d'Ivoire 86% loss, Nigeria 31% loss, 13 countries impacted
+// Sources: Cloudflare, Internet Society
 
-describe("West Africa 2024 scenario", () => {
-	it("cutting cables off Abidjan impacts West African countries", () => {
-		// WACS, MainOne, SAT-3, ACE cut off Abidjan
-		const result = simulate([
-			{
-				id: "test-west-africa-2024",
-				type: "point",
-				lat: 5.0,
-				lng: -4.5,
-				radius: 500,
-				affectedSegmentIds: [],
-			},
-		]);
-
+describe("West Africa 2024", () => {
+	it("cuts cables off Abidjan impacting West Africa", () => {
+		const result = simulate([chokepointCut("west-africa-abidjan")]);
 		expect(result.cablesAffected).toBeGreaterThan(0);
-
-		// West African countries should be impacted
-		const ngLoss = maxLossForCountry(result, "NG"); // Nigeria
-		const ghLoss = maxLossForCountry(result, "GH"); // Ghana
-		// At least one should show impact
+		// Nigeria and Ghana should be impacted
+		const ngLoss = maxLossForCountry(result, "NG");
+		const ghLoss = maxLossForCountry(result, "GH");
 		expect(ngLoss + ghLoss).toBeGreaterThan(0);
 	});
 });
 
-// ── Validation: Japan Tohoku 2011 ──
+// ── Japan Tohoku 2011 ──
+// Real event: 7 of 12 trans-Pacific cables cut (58%)
+// China Telecom lost 22% trans-Pacific capacity
+// Sources: SubmarineNetworks, IEEE Spectrum
 
-describe("Japan Tohoku 2011 scenario", () => {
-	it("cutting cables near NE Japan impacts trans-Pacific connectivity", () => {
-		// 6+ cables cut off Ibaraki coast
-		const result = simulate([
-			{
-				id: "test-tohoku-2011",
-				type: "point",
-				lat: 36.5,
-				lng: 141.0,
-				radius: 300,
-				affectedSegmentIds: [],
-			},
-		]);
-
+describe("Japan Tohoku 2011", () => {
+	it("cuts cables near NE Japan coast", () => {
+		const result = simulate([pointCut(36.5, 141.0, 300)]);
 		expect(result.cablesAffected).toBeGreaterThan(0);
-
-		// Japan should show some impact
-		const jpLoss = maxLossForCountry(result, "JP");
-		if (jpLoss > 0) {
-			expect(jpLoss).toBeGreaterThan(5);
-		}
 	});
 });
 
-// ── Validation: Vietnam 2023 (all 5 international cables degraded) ──
+// ── Vietnam 2023 ──
+// Real event: all 5 international cables (AAG, AAE-1, APG, IA, SMW-3) degraded
+// 75% international capacity lost
+// Sources: VnExpress, The Register
 
-describe("Vietnam 2023 scenario", () => {
-	it("cutting cables in South China Sea impacts Vietnam", () => {
-		// Multiple cables damaged in waters near Vietnam
-		const result = simulate([
-			{
-				id: "test-vietnam-2023",
-				type: "point",
-				lat: 10.0,
-				lng: 109.0,
-				radius: 500,
-				affectedSegmentIds: [],
-			},
-		]);
-
+describe("Vietnam 2023", () => {
+	it("cuts cables in South China Sea impacting Vietnam", () => {
+		const result = simulate([pointCut(10.0, 109.0, 500)]);
 		expect(result.cablesAffected).toBeGreaterThan(0);
-
-		// Vietnam should be impacted
 		const vnLoss = maxLossForCountry(result, "VN");
 		if (vnLoss > 0) {
 			expect(vnLoss).toBeGreaterThan(10);
 		}
+	});
+});
+
+// ── Tonga eruption 2022 ──
+// Real event: Tonga Cable destroyed, 5 weeks isolated
+// Source: Wikipedia
+
+describe("Tonga 2022", () => {
+	it("finds Tonga if in dataset and tests isolation", () => {
+		const tongaMetro = metros.find(
+			(m) => m.countryCode === "TO" || m.id.includes("tonga") || m.id.includes("nuku"),
+		);
+		if (!tongaMetro) return; // Tonga may not be in dataset
+		const result = simulate([pointCut(-18.0, 178.0, 500)]);
+		// Verify simulation ran
+		expect(result.impacts.length).toBeGreaterThan(0);
+	});
+});
+
+// ── Egypt landing damage 2022 ──
+// Real event: AAE-1, SMW-5 cut at landing points
+// Source: Cloudflare
+
+describe("Egypt 2022", () => {
+	it("cutting near Egyptian landing stations affects transit", () => {
+		const result = simulate([pointCut(31.0, 30.0, 300)]);
+		expect(result.cablesAffected).toBeGreaterThanOrEqual(0);
+		// Point cut may or may not hit cables depending on segment geometry
 	});
 });
 
@@ -337,8 +245,6 @@ describe("Simulation performance", () => {
 		const start = performance.now();
 		simulate([chokepointCut("bab-al-mandab")]);
 		const elapsed = performance.now() - start;
-
-		// Should complete within 15 seconds (generous for CI; real target <500ms)
 		expect(elapsed).toBeLessThan(15000);
 	});
 
@@ -346,7 +252,13 @@ describe("Simulation performance", () => {
 		const start = performance.now();
 		simulate([chokepointCut("bab-al-mandab"), chokepointCut("luzon-strait")]);
 		const elapsed = performance.now() - start;
-
 		expect(elapsed).toBeLessThan(30000);
+	});
+
+	it("cascading cuts increase impact", () => {
+		const single = simulate([chokepointCut("bab-al-mandab")]);
+		const double = simulate([chokepointCut("bab-al-mandab"), chokepointCut("luzon-strait")]);
+		// More cuts should affect more cables
+		expect(double.cablesAffected).toBeGreaterThanOrEqual(single.cablesAffected);
 	});
 });

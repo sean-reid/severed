@@ -31,7 +31,7 @@ pnpm data:build    # ~1 sec — clusters metros, estimates capacity, writes JSON
 ### Run tests
 
 ```bash
-pnpm test          # 15 validation tests against real-world cable cut events
+pnpm test          # 16 validation tests against real-world cable cut events
 pnpm test:e2e      # 24 Puppeteer E2E tests across desktop + mobile viewports
 ```
 
