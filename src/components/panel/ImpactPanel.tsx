@@ -375,8 +375,8 @@ export function ImpactPanel() {
 								{selectedImpact.latencyDeltaMs > 0
 									? `+${selectedImpact.latencyDeltaMs.toFixed(1)} ms`
 									: selectedImpact.isolated
-										? "N/A"
-										: "none"}
+										? "isolated"
+										: "no change"}
 							</div>
 							<div className="text-text-secondary">Path diversity</div>
 							<div className="font-data text-right">
