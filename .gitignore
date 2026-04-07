@@ -25,3 +25,9 @@ dist-ssr
 
 # Raw data (fetched, not committed)
 scripts/raw/
+
+# E2E screenshots (generated, not committed)
+e2e/screenshots/
+
+# Architecture doc (point-in-time, not source of truth)
+ARCHITECTURE.md

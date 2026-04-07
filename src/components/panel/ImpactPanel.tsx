@@ -13,6 +13,8 @@ export function ImpactPanel() {
 	const flyToLocation = useStore((s) => s.flyToLocation);
 	const addCut = useStore((s) => s.addCut);
 	const cablesById = useStore((s) => s.cablesById);
+	const selectCable = useStore((s) => s.selectCable);
+	const selectTerrestrial = useStore((s) => s.selectTerrestrial);
 	const resetCuts = useStore((s) => s.resetCuts);
 
 	const cutCableById = useCallback(
@@ -284,12 +286,20 @@ export function ImpactPanel() {
 							</div>
 							{selectedImpact.reroutedVia.map((r, i) => {
 								const isSubCable = r.type === "submarine" && r.cableId;
+								const isTerrestrial = r.type === "terrestrial" && r.terrestrialId;
 								return (
 									<div
 										key={`detail-reroute-${i}`}
 										className="flex items-center justify-between text-sm py-1.5"
 									>
-										<div className="flex items-center gap-2 min-w-0">
+										<button
+											type="button"
+											onClick={() => {
+												if (isTerrestrial) selectTerrestrial(r.terrestrialId!);
+												else if (isSubCable) selectCable(r.cableId!);
+											}}
+											className="flex items-center gap-2 min-w-0 text-left hover:opacity-80 transition-opacity"
+										>
 											<span
 												className="w-2 h-2 rounded-full flex-none"
 												style={{
@@ -300,7 +310,7 @@ export function ImpactPanel() {
 											<span className="font-data text-text-secondary/70 text-xs flex-none">
 												{r.additionalLoadTbps.toFixed(0)} Tbps
 											</span>
-										</div>
+										</button>
 										{isSubCable && r.cableId && (
 											<button
 												type="button"

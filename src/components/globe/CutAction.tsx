@@ -129,6 +129,22 @@ export function CutAction() {
 								</div>
 							</div>
 						)}
+						{selectedCable.sourceUrl && (
+							<a
+								href={selectedCable.sourceUrl}
+								target="_blank"
+								rel="noopener noreferrer"
+								className="inline-flex items-center gap-1 mt-2 text-[10px] text-cable-high hover:text-text-primary transition-colors"
+								onClick={(e) => e.stopPropagation()}
+							>
+								<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+									<path d="M12 8.5v5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 0 13.5v-9A1.5 1.5 0 0 1 1.5 3H7" />
+									<path d="M10 1h5v5" />
+									<path d="M7 9 15 1" />
+								</svg>
+								Source
+							</a>
+						)}
 					</div>
 				)}
 			</div>

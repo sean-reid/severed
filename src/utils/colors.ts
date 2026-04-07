@@ -1,10 +1,4 @@
-import { scaleSequential, scaleLog } from "d3-scale";
-import { interpolateViridis } from "d3-scale-chromatic";
-
-/**
- * Viridis heatmap scale: 0% loss → dark purple, 100% loss → yellow.
- */
-export const impactColorScale = scaleSequential(interpolateViridis).domain([0, 100]);
+import { scaleLog } from "d3-scale";
 
 /**
  * Cable width scale: log of capacity → pixel width.

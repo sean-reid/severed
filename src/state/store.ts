@@ -32,6 +32,7 @@ interface StoreState {
 	selectedCableId: string | null;
 	hoveredCableId: string | null;
 	selectedMetroId: string | null;
+	selectedTerrestrialId: string | null;
 
 	// Cuts
 	cuts: CutLocation[];
@@ -54,10 +55,10 @@ interface StoreState {
 	selectCable: (id: string | null) => void;
 	hoverCable: (id: string | null) => void;
 	selectMetro: (id: string | null) => void;
+	selectTerrestrial: (id: string | null) => void;
 	flyToLocation: (lng: number, lat: number, zoom?: number) => void;
 	clearFlyTo: () => void;
 	addCut: (cut: CutLocation) => void;
-	removeCut: (cutId: string) => void;
 	applyScenario: (scenarioId: string) => void;
 	resetCuts: () => void;
 	setSimulation: (sim: SimulationState) => void;
@@ -81,6 +82,7 @@ export const useStore = create<StoreState>((set) => ({
 	selectedCableId: null,
 	hoveredCableId: null,
 	selectedMetroId: null,
+	selectedTerrestrialId: null,
 
 	// Cuts
 	cuts: [],
@@ -110,9 +112,10 @@ export const useStore = create<StoreState>((set) => ({
 			scenarios: data.scenarios,
 		}),
 
-	selectCable: (id) => set({ selectedCableId: id }),
+	selectCable: (id) => set({ selectedCableId: id, selectedTerrestrialId: null }),
 	hoverCable: (id) => set({ hoveredCableId: id }),
-	selectMetro: (id) => set({ selectedMetroId: id }),
+	selectMetro: (id) => set({ selectedMetroId: id, selectedTerrestrialId: null }),
+	selectTerrestrial: (id) => set({ selectedTerrestrialId: id, selectedCableId: null }),
 	flyToLocation: (lng, lat, zoom = 5) => set({ flyTo: { lng, lat, zoom } }),
 	clearFlyTo: () => set({ flyTo: null }),
 
@@ -120,11 +123,6 @@ export const useStore = create<StoreState>((set) => ({
 		set((s) => ({
 			cuts: [...s.cuts, cut],
 			activeScenarioId: null,
-		})),
-
-	removeCut: (cutId) =>
-		set((s) => ({
-			cuts: s.cuts.filter((c) => c.id !== cutId),
 		})),
 
 	applyScenario: (scenarioId) =>

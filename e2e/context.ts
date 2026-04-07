@@ -1,0 +1,109 @@
+/**
+ * Shared browser context for E2E tests.
+ * Manages Puppeteer lifecycle, viewport presets, and navigation helpers.
+ */
+
+import puppeteer, { type Browser, type Page } from "puppeteer";
+import { mkdirSync } from "node:fs";
+import { resolve } from "node:path";
+
+const SCREENSHOT_DIR = resolve(import.meta.dirname, "screenshots");
+mkdirSync(SCREENSHOT_DIR, { recursive: true });
+
+// ── Viewport presets ──
+
+export const VIEWPORTS = {
+  desktop: { width: 1440, height: 900, deviceScaleFactor: 1 },
+  tablet: { width: 768, height: 1024, deviceScaleFactor: 2 },
+  mobile: { width: 390, height: 844, deviceScaleFactor: 3 },
+} as const;
+
+export type ViewportName = keyof typeof VIEWPORTS;
+
+// ── Test context ──
+
+export interface TestContext {
+  browser: Browser;
+  page: Page;
+  baseUrl: string;
+  viewport: ViewportName;
+  /** Navigate to app and wait for it to be interactive. */
+  goto(path?: string): Promise<void>;
+  /** Take a named screenshot (saved to e2e/screenshots/). */
+  screenshot(name: string): Promise<string>;
+  /** Assert a condition, throwing with a descriptive message on failure. */
+  assert(condition: boolean, message: string): void;
+  /** Query text content of the page body. */
+  bodyText(): Promise<string>;
+  /** Wait for text to appear in the page. */
+  waitForText(text: string, timeout?: number): Promise<void>;
+  /** Click a button by its visible text content. */
+  clickButton(text: string): Promise<void>;
+}
+
+export async function createContext(
+  baseUrl: string,
+  viewport: ViewportName,
+): Promise<TestContext> {
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
+  const page = await browser.newPage();
+  await page.setViewport(VIEWPORTS[viewport]);
+
+  const ctx: TestContext = {
+    browser,
+    page,
+    baseUrl,
+    viewport,
+
+    async goto(path = "/") {
+      await page.goto(`${baseUrl}${path}`, { waitUntil: "networkidle2", timeout: 20000 });
+      // Wait for React mount — SEVERED header appears
+      await page.waitForSelector("h1", { timeout: 15000 });
+      // Wait for loading screen to clear
+      await page.waitForFunction(
+        () => !document.body.textContent?.includes("Loading cable network data"),
+        { timeout: 15000 },
+      );
+      // Let deck.gl render layers
+      await new Promise((r) => setTimeout(r, 2000));
+    },
+
+    async screenshot(name: string) {
+      const filename = `${viewport}-${name}.png`;
+      const filepath = resolve(SCREENSHOT_DIR, filename);
+      await page.screenshot({ path: filepath, fullPage: false });
+      return filepath;
+    },
+
+    assert(condition: boolean, message: string) {
+      if (!condition) throw new Error(message);
+    },
+
+    async bodyText() {
+      return page.evaluate(() => document.body.textContent ?? "");
+    },
+
+    async waitForText(text: string, timeout = 5000) {
+      await page.waitForFunction(
+        (t: string) => document.body.textContent?.includes(t) ?? false,
+        { timeout },
+        text,
+      );
+    },
+
+    async clickButton(text: string) {
+      const clicked = await page.evaluate((t: string) => {
+        const btns = Array.from(document.querySelectorAll("button"));
+        const btn = btns.find((b) => b.textContent?.trim().includes(t));
+        if (btn) { btn.click(); return true; }
+        return false;
+      }, text);
+      if (!clicked) throw new Error(`Button "${text}" not found`);
+    },
+  };
+
+  return ctx;
+}

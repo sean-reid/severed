@@ -24,6 +24,7 @@ export interface Cable {
 	designCapacityTbps: number;
 	capacitySource: CapacitySource;
 	capacityConfidence: CapacityConfidence;
+	sourceUrl?: string;
 	owners: string[];
 	landingStationIds: string[];
 	path: Feature<LineString | MultiLineString>;
@@ -52,6 +53,7 @@ export interface TerrestrialEdge {
 	distanceKm: number;
 	confidence: CapacityConfidence;
 	source: string;
+	sourceUrl?: string;
 	operators: string[];
 	notes?: string;
 }
@@ -90,6 +92,7 @@ export interface RerouteExplanation {
 	additionalLoadTbps: number;
 	type: "submarine" | "terrestrial";
 	cableId?: string;
+	terrestrialId?: string;
 }
 
 export interface MetroImpact {

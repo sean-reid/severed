@@ -7,7 +7,7 @@ import type { Layer } from "@deck.gl/core";
 import { useStore } from "../../state/store";
 import { useSimulation } from "../../engine/useSimulation";
 import { cableColor, cableWidthScale, CUT_COLOR, TERRESTRIAL_COLOR } from "../../utils/colors";
-import type { Cable, Metro } from "../../data/types";
+import type { Cable, Metro, TerrestrialEdge } from "../../data/types";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 function DeckGLOverlay(props: { layers: Layer[] }) {
@@ -49,6 +49,8 @@ export function GlobeView() {
 	const flyTo = useStore((s) => s.flyTo);
 	const clearFlyTo = useStore((s) => s.clearFlyTo);
 	const selectedMetroId = useStore((s) => s.selectedMetroId);
+	const selectedTerrestrialId = useStore((s) => s.selectedTerrestrialId);
+	const selectTerrestrial = useStore((s) => s.selectTerrestrial);
 	const mapRef = useRef<MapRef>(null);
 	const lastDeckClickTime = useRef(0);
 
@@ -139,8 +141,8 @@ export function GlobeView() {
 					const to = metrosMap.get(t.to);
 					if (!from || !to) return null;
 					return {
-						from: [from.lng, from.lat] as [number, number],
-						to: [to.lng, to.lat] as [number, number],
+						path: [[from.lng, from.lat], [to.lng, to.lat]] as [number, number][],
+						edge: t,
 					};
 				})
 				.filter((d): d is NonNullable<typeof d> => d !== null);
@@ -149,10 +151,27 @@ export function GlobeView() {
 				new PathLayer({
 					id: "terrestrial",
 					data: terrData,
-					getPath: (d: { from: [number, number]; to: [number, number] }) => [d.from, d.to],
-					getColor: TERRESTRIAL_COLOR,
-					getWidth: 1,
+					getPath: (d: { path: [number, number][] }) => d.path,
+					getColor: (d: { edge: TerrestrialEdge }) =>
+						d.edge.id === selectedTerrestrialId
+							? [34, 211, 238, 220] as [number, number, number, number]
+							: TERRESTRIAL_COLOR,
+					getWidth: (d: { edge: TerrestrialEdge }) =>
+						d.edge.id === selectedTerrestrialId ? 3 : 1,
 					widthUnits: "pixels" as const,
+					pickable: true,
+					autoHighlight: true,
+					highlightColor: [34, 211, 238, 140],
+					onClick: (info: { object?: { edge: TerrestrialEdge } }) => {
+						if (info.object) {
+							lastDeckClickTime.current = Date.now();
+							selectTerrestrial(info.object.edge.id);
+						}
+					},
+					updateTriggers: {
+						getColor: [selectedTerrestrialId],
+						getWidth: [selectedTerrestrialId],
+					},
 				}),
 			);
 		}
@@ -224,8 +243,10 @@ export function GlobeView() {
 		hoveredCableId,
 		selectedCableId,
 		selectedMetroId,
+		selectedTerrestrialId,
 		selectCable,
 		selectMetro,
+		selectTerrestrial,
 		hoverCable,
 		simulation,
 	]);
@@ -306,6 +327,7 @@ export function GlobeView() {
 					if (Date.now() - lastDeckClickTime.current < 100) return;
 					selectCable(null);
 					selectMetro(null);
+					selectTerrestrial(null);
 				}}
 			>
 				<DeckGLOverlay layers={layers} />

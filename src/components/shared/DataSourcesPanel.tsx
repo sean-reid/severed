@@ -56,100 +56,86 @@ export function DataSourcesPanel() {
 
 						<div className="px-6 py-5 space-y-6 text-sm text-text-secondary leading-relaxed">
 							<section>
-								<h3 className="text-text-primary font-semibold mb-2">Submarine Cable Data</h3>
+								<h3 className="text-text-primary font-semibold mb-2">Submarine Cables</h3>
 								<p>
-									Cable routes, landing stations, and metadata are sourced from{" "}
-									<strong className="text-text-primary">TeleGeography's Submarine Cable Map</strong>{" "}
-									(submarinecablemap.com), a free CC BY-SA dataset covering ~692 cables worldwide.
+									Routes and landing stations from{" "}
+									<a href="https://www.submarinecablemap.com" target="_blank" rel="noopener noreferrer" className="text-cable-high hover:text-text-primary transition-colors">TeleGeography's Submarine Cable Map</a>{" "}
+									(CC BY-SA, ~692 cables). TeleGeography does not publish capacity. 34 major cables have
+									verified or estimated capacity from press releases and industry sources (with direct links).
+									The remaining ~560 use an RFS-year heuristic:
 								</p>
-								<p className="mt-2">
-									TeleGeography does not publish capacity data. We estimate capacity using a multi-source pipeline:
+								<div className="mt-2 font-data text-xs grid grid-cols-2 gap-x-4 gap-y-0.5 pl-2">
+									<span className="text-text-secondary/60">Before 2005</span><span>4 Tbps</span>
+									<span className="text-text-secondary/60">2005&ndash;2012</span><span>15 Tbps</span>
+									<span className="text-text-secondary/60">2012&ndash;2018</span><span>50 Tbps</span>
+									<span className="text-text-secondary/60">2018&ndash;2022</span><span>200 Tbps</span>
+									<span className="text-text-secondary/60">2022+</span><span>280 Tbps</span>
+								</div>
+								<p className="mt-2 text-xs text-text-secondary/60">
+									Click any cable to see its capacity source. Cables with verified data show a "Source" link.
 								</p>
-								<ol className="list-decimal list-inside mt-2 space-y-1 pl-2">
-									<li>FCC cable landing license filings (US-connected cables)</li>
-									<li>Press releases and Wikipedia (announced Tbps at RFS)</li>
-									<li>Fiber pair count × per-pair generation model</li>
-									<li>RFS-year generation heuristic (fallback)</li>
-								</ol>
 							</section>
 
 							<section>
-								<h3 className="text-text-primary font-semibold mb-2">Capacity Confidence Levels</h3>
+								<h3 className="text-text-primary font-semibold mb-2">Terrestrial Backbone</h3>
+								<p>
+									116 overland fiber edges hand-curated from operator network maps, press releases, and
+									industry publications. Each edge lists named operators, a confidence level, and where
+									available a direct link to the supporting source.
+								</p>
+								<p className="mt-2 text-xs text-text-secondary/60">
+									Click any cyan terrestrial link on the map to see operators, capacity, and source.
+								</p>
+							</section>
+
+							<section>
+								<h3 className="text-text-primary font-semibold mb-2">Confidence Levels</h3>
 								<div className="space-y-2">
 									<div className="flex items-start gap-2">
-										<span className="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[9px] font-medium bg-confidence-verified/20 text-confidence-verified">
+										<span className="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[9px] font-medium bg-confidence-verified/20 text-confidence-verified flex-none">
 											verified
 										</span>
-										<span>
-											An operator or credible industry source published a specific Tbps number for this exact cable or corridor.
-										</span>
+										<span>Operator or credible industry source published a specific capacity figure.</span>
 									</div>
 									<div className="flex items-start gap-2">
-										<span className="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[9px] font-medium bg-confidence-estimated/20 text-confidence-estimated">
+										<span className="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[9px] font-medium bg-confidence-estimated/20 text-confidence-estimated flex-none">
 											estimated
 										</span>
 										<span>
-											Derived from the number of known operators on a corridor × typical per-operator capacity, calibrated against published anchor points, with a 70% discount for shared infrastructure and unlit capacity.
+											<strong className="text-text-primary">Cables:</strong> capacity from an industry publication, not the operator directly.{" "}
+											<strong className="text-text-primary">Terrestrial:</strong> operator count x typical per-operator capacity, discounted 30% for shared/unlit fiber.
 										</span>
 									</div>
 									<div className="flex items-start gap-2">
-										<span className="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[9px] font-medium bg-confidence-approximated/20 text-confidence-approximated">
+										<span className="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[9px] font-medium bg-confidence-approximated/20 text-confidence-approximated flex-none">
 											approximated
 										</span>
 										<span>
-											No operator data available. Inferred from the corridor's economic importance and comparison to known corridors in the same region. Order-of-magnitude confidence only.
+											<strong className="text-text-primary">Cables:</strong> RFS-year heuristic (see table above).{" "}
+											<strong className="text-text-primary">Terrestrial:</strong> no operator data; inferred from corridor importance.
 										</span>
 									</div>
 								</div>
 							</section>
 
 							<section>
-								<h3 className="text-text-primary font-semibold mb-2">Terrestrial Edge Estimation</h3>
+								<h3 className="text-text-primary font-semibold mb-2">Simulation</h3>
 								<p>
-									Overland fiber capacity between cities is not publicly available in any dataset.
-									We hand-curate each edge using this process:
+									Graph model with ~920 metro nodes, ~1,500 cable segments, ~116 terrestrial edges,
+									and ~63 hub metros. Cutting a cable removes only the segments at the cut location.
+									Impact is the change in aggregate bottleneck bandwidth from each metro to the hub set.
 								</p>
-								<ol className="list-decimal list-inside mt-2 space-y-1 pl-2">
-									<li>
-										<strong className="text-text-primary">Identify operators</strong> — from published network maps (Lumen, Zayo, euNetworks, EXA, Telia, etc.)
-									</li>
-									<li>
-										<strong className="text-text-primary">Estimate per-operator capacity</strong> — Tier 1 on core route: 30–80 Tbps; major regional: 15–40 Tbps; developing-world: 1–12 Tbps
-									</li>
-									<li>
-										<strong className="text-text-primary">Sum and discount</strong> — raw sum × 70% to account for shared fiber, unlit capacity, incomplete operator list
-									</li>
-									<li>
-										<strong className="text-text-primary">Cross-check</strong> — against published regional bandwidth totals (TeleGeography) and operator-specific anchor points
-									</li>
-								</ol>
-								<p className="mt-2 text-text-secondary/70 text-xs">
-									This methodology and the full source list for every edge is documented in the project's{" "}
-									<span className="font-data">ARCHITECTURE.md</span> Appendix B.
+								<p className="mt-2 text-xs text-text-secondary/60">
+									This is not a BGP simulation. It does not model routing policy, peering, or traffic engineering.
 								</p>
 							</section>
 
 							<section>
-								<h3 className="text-text-primary font-semibold mb-2">Simulation Model</h3>
-								<p>
-									The simulation uses a graph-theoretic model, not full BGP routing simulation.
-									Nodes are metro areas (~900), edges are cable segments + terrestrial links weighted by capacity.
-								</p>
-								<p className="mt-2">
-									When a cable is cut at a location, only the segments crossing that location are removed —
-									segments on either side continue to function. Bandwidth impact is computed as aggregate
-									bottleneck capacity from each metro to a set of ~45 global hub metros.
-								</p>
-							</section>
-
-							<section>
-								<h3 className="text-text-primary font-semibold mb-2">Known Limitations</h3>
+								<h3 className="text-text-primary font-semibold mb-2">Limitations</h3>
 								<ul className="list-disc list-inside space-y-1 pl-2">
-									<li>Uses design capacity (fully equipped potential), not actual lit capacity</li>
-									<li>Cannot distinguish shared from independent fiber between operators</li>
+									<li>Uses design capacity, not actual lit capacity</li>
 									<li>Developing-world estimates have wider error bars</li>
-									<li>All estimates are point-in-time (April 2026); backbone capacity grows 25–40%/year</li>
-									<li>Does not model BGP routing policy, peering agreements, or traffic engineering</li>
+									<li>Point-in-time snapshot (April 2026); backbone capacity grows 25-40%/year</li>
 								</ul>
 							</section>
 
@@ -165,9 +151,6 @@ export function DataSourcesPanel() {
 									</svg>
 									View source on GitHub
 								</a>
-								<p className="text-[10px] text-text-secondary/50 mt-1">
-									Full methodology, edge-by-edge sources, and validation test cases in ARCHITECTURE.md
-								</p>
 							</section>
 						</div>
 					</div>

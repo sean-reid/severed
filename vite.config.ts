@@ -9,4 +9,7 @@ export default defineConfig({
   worker: {
     format: "es",
   },
+  test: {
+    exclude: ["e2e/**", "node_modules/**"],
+  },
 });

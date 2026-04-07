@@ -1,13 +1,15 @@
 import { useCallback, useMemo } from "react";
 import { useStore } from "../../state/store";
-import type { CutLocation } from "../../data/types";
+import type { CutLocation, TerrestrialEdge } from "../../data/types";
 
 export function Sidebar() {
 	const scenarios = useStore((s) => s.scenarios);
 	const activeScenarioId = useStore((s) => s.activeScenarioId);
 	const selectedCableId = useStore((s) => s.selectedCableId);
 	const selectedMetroId = useStore((s) => s.selectedMetroId);
+	const selectedTerrestrialId = useStore((s) => s.selectedTerrestrialId);
 	const cablesById = useStore((s) => s.cablesById);
+	const terrestrial = useStore((s) => s.terrestrial);
 	const cables = useStore((s) => s.cables);
 	const metrosById = useStore((s) => s.metrosById);
 	const addCut = useStore((s) => s.addCut);
@@ -19,6 +21,8 @@ export function Sidebar() {
 	const togglePanel = useStore((s) => s.togglePanel);
 
 	const selectedCable = selectedCableId ? cablesById.get(selectedCableId) : null;
+	const selectedTerrestrial = selectedTerrestrialId ? terrestrial.find((t) => t.id === selectedTerrestrialId) : null;
+	const selectTerrestrial = useStore((s) => s.selectTerrestrial);
 
 	const storeApplyScenario = useStore((s) => s.applyScenario);
 
@@ -121,16 +125,33 @@ export function Sidebar() {
 						<div className="text-[10px] text-text-secondary mt-1">
 							RFS {selectedCable.rfsYear} &middot; {selectedCable.owners.join(", ")}
 						</div>
-						<div className="text-[9px] text-text-secondary/60 mt-1 italic">
-							Capacity source: {selectedCable.capacitySource === "heuristic"
-								? "RFS-year generation heuristic"
-								: selectedCable.capacitySource === "fcc"
-									? "FCC cable landing license filing"
-									: selectedCable.capacitySource === "press"
-										? "Operator press release"
-										: selectedCable.capacitySource === "wikipedia"
-											? "Wikipedia / industry publication"
-											: "Derived from fiber pair count"}
+						<div className="flex items-center gap-2 mt-1">
+							<span className="text-[9px] text-text-secondary/60 italic">
+								{selectedCable.capacitySource === "heuristic"
+									? "RFS-year heuristic"
+									: selectedCable.capacitySource === "fcc"
+										? "FCC filing"
+										: selectedCable.capacitySource === "press"
+											? "Press release"
+											: selectedCable.capacitySource === "wikipedia"
+												? "Wikipedia"
+												: "Derived from fiber pairs"}
+							</span>
+							{selectedCable.sourceUrl && (
+								<a
+									href={selectedCable.sourceUrl}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="inline-flex items-center gap-0.5 text-[9px] text-cable-high hover:text-text-primary transition-colors"
+								>
+									<svg width="8" height="8" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+										<path d="M12 8.5v5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 0 13.5v-9A1.5 1.5 0 0 1 1.5 3H7" />
+										<path d="M10 1h5v5" />
+										<path d="M7 9 15 1" />
+									</svg>
+									Source
+								</a>
+							)}
 						</div>
 						<button
 							type="button"
@@ -145,6 +166,15 @@ export function Sidebar() {
 							Cut This Cable
 						</button>
 					</div>
+				)}
+
+				{/* Selected terrestrial edge info */}
+				{selectedTerrestrial && (
+					<SelectedTerrestrialInfo
+						edge={selectedTerrestrial}
+						metrosById={metrosById}
+						onClose={() => selectTerrestrial(null)}
+					/>
 				)}
 
 				{/* Selected metro info */}
@@ -284,6 +314,96 @@ function SelectedMetroInfo({
 						</button>
 					))}
 				</div>
+			)}
+		</div>
+	);
+}
+
+// ── Terrestrial edge info sub-component ──
+
+function SelectedTerrestrialInfo({
+	edge,
+	metrosById,
+	onClose,
+}: {
+	edge: TerrestrialEdge;
+	metrosById: Map<string, { id: string; name: string; countryCode: string }>;
+	onClose: () => void;
+}) {
+	const fromMetro = metrosById.get(edge.from);
+	const toMetro = metrosById.get(edge.to);
+	const confidenceColor =
+		edge.confidence === "verified" ? "#60a5fa"
+			: edge.confidence === "estimated" ? "#f59e0b"
+				: "#94a3b8";
+
+	return (
+		<div className="px-4 py-3 border-b border-border bg-border/20">
+			<div className="flex items-center justify-between">
+				<div className="text-xs text-text-secondary uppercase">Terrestrial Link</div>
+				<button
+					type="button"
+					onClick={onClose}
+					className="text-text-secondary/50 hover:text-text-primary text-xs"
+				>
+					Close
+				</button>
+			</div>
+			<div className="text-sm font-semibold text-text-primary mt-1">
+				{fromMetro?.name ?? edge.from} &mdash; {toMetro?.name ?? edge.to}
+			</div>
+			<div className="flex items-center gap-2 mt-1">
+				<span className="font-data text-xs text-text-secondary">
+					{edge.capacityTbps < 1
+						? `${(edge.capacityTbps * 1000).toFixed(0)} Gbps`
+						: `${edge.capacityTbps.toFixed(0)} Tbps`}
+				</span>
+				<span
+					className="text-[9px] px-1.5 py-0.5 rounded-full"
+					style={{
+						backgroundColor: `${confidenceColor}33`,
+						color: confidenceColor,
+					}}
+				>
+					{edge.confidence}
+				</span>
+				{edge.distanceKm > 0 && (
+					<span className="text-[10px] text-text-secondary">
+						{edge.distanceKm.toLocaleString()} km
+					</span>
+				)}
+			</div>
+
+			{edge.operators.length > 0 && (
+				<div className="text-[10px] text-text-secondary mt-1.5">
+					{edge.operators.join(", ")}
+				</div>
+			)}
+
+			<div className="text-[10px] text-text-secondary/60 mt-1.5 leading-relaxed">
+				{edge.source}
+			</div>
+
+			{edge.notes && (
+				<div className="text-[10px] text-cable-high/70 mt-1 italic">
+					{edge.notes}
+				</div>
+			)}
+
+			{edge.sourceUrl && (
+				<a
+					href={edge.sourceUrl}
+					target="_blank"
+					rel="noopener noreferrer"
+					className="inline-flex items-center gap-1 mt-2 text-[10px] text-cable-high hover:text-text-primary transition-colors"
+				>
+					<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+						<path d="M12 8.5v5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 0 13.5v-9A1.5 1.5 0 0 1 1.5 3H7" />
+						<path d="M10 1h5v5" />
+						<path d="M7 9 15 1" />
+					</svg>
+					Source
+				</a>
 			)}
 		</div>
 	);

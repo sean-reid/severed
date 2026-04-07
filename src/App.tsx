@@ -4,6 +4,7 @@ import { ImpactPanel } from "./components/panel/ImpactPanel";
 import { Sidebar } from "./components/sidebar/Sidebar";
 import { MobileScenarioBar } from "./components/sidebar/MobileScenarioBar";
 import { CutAction } from "./components/globe/CutAction";
+import { TerrestrialCard } from "./components/globe/TerrestrialCard";
 import { DataSourcesPanel } from "./components/shared/DataSourcesPanel";
 import { loadAppData } from "./data/loader";
 import { useStore } from "./state/store";
@@ -64,6 +65,9 @@ export function App() {
 
 			{/* Floating cut action — appears when cable selected */}
 			<CutAction />
+
+			{/* Floating terrestrial info — appears when terrestrial edge selected */}
+			<TerrestrialCard />
 
 			{/* Impact panel — responsive (right panel desktop, bottom sheet mobile) */}
 			<ImpactPanel />

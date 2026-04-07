@@ -180,6 +180,7 @@ function computeRerouting(
 				additionalLoadTbps: edge.capacityTbps,
 				type: edge.type,
 				cableId: edge.cableId,
+				...(edge.type === "terrestrial" ? { terrestrialId: edge.id.replace("terr:", "") } : {}),
 			});
 		}
 	}

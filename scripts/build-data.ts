@@ -59,13 +59,180 @@ function writeOut(name: string, data: unknown): void {
 
 // ── Capacity heuristic ──
 
+// Capacity heuristic by RFS (ready-for-service) year.
+// Sources and reasoning per band:
+//   <2005: TAT-14 1.9 Tbps (2001), FA-1 4.8 Tbps (2001), Apollo 6.4 Tbps (2003)
+//          → median ~4 Tbps. https://en.wikipedia.org/wiki/TAT-14
+//   2005-2012: SEA-ME-WE 4 12.8 Tbps (2005), most cables 10-15 Tbps
+//          → 15 Tbps. https://en.wikipedia.org/wiki/SEA-ME-WE_3
+//   2012-2018: Hibernia Express 53 Tbps (2015), FASTER 60 Tbps (2016), SEA-ME-WE 5 24-37 Tbps (2017)
+//          → median ~50 Tbps. https://en.wikipedia.org/wiki/SEA-ME-WE_5
+//   2018-2022: MAREA 200 Tbps (2018), Dunant 250 Tbps (2021), PEACE 192 Tbps (2022)
+//          → median ~200 Tbps. https://en.wikipedia.org/wiki/MAREA
+//   2022+: Grace Hopper 352 Tbps (2022), Amitie 400 Tbps (2023), 2Africa 180 Tbps (2025),
+//          SEA-ME-WE 6 ~130 Tbps (2025) → bimodal (hyperscaler 350-480, consortium 130-180)
+//          → median ~280 Tbps. https://en.wikipedia.org/wiki/Grace_Hopper_(submarine_communications_cable)
 function capacityFromRfsYear(year: number): number {
-  if (year < 2005) return 3;
-  if (year < 2012) return 20;
-  if (year < 2018) return 60;
-  if (year < 2022) return 150;
-  return 350;
+  if (year < 2005) return 4;
+  if (year < 2012) return 15;
+  if (year < 2018) return 50;
+  if (year < 2022) return 200;
+  return 280;
 }
+
+// ── Known cable capacities from verified sources ──
+// Each entry: [designCapacityTbps, fiberPairs | null, source, confidence]
+// Cable IDs must match TeleGeography's slug format.
+const CAPACITY_OVERRIDES: Record<
+  string,
+  {
+    tbps: number;
+    pairs: number | null;
+    source: "fcc" | "press" | "wikipedia" | "derived";
+    confidence: "verified" | "estimated";
+    sourceUrl: string;
+  }
+> = {
+  // Pre-2005
+  // tat-14: retired 2020, not in TeleGeography active set
+  "southern-cross-cable-network-sccn": { tbps: 1.28, pairs: 3, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/trans-pacific/southern-cross" },
+  "flag-atlantic-1-fa-1": { tbps: 4.8, pairs: 6, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/trans-atlantic/fa-1" },
+  "apollo": { tbps: 6.4, pairs: 4, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/trans-atlantic/apollo" },
+  // 2005-2012
+  "seamewe-4": { tbps: 12.8, pairs: 2, source: "wikipedia", confidence: "verified", sourceUrl: "https://en.wikipedia.org/wiki/SEA-ME-WE_4" },
+  // 2012-2018
+  // hibernia-express: not in TeleGeography index under this slug
+  // aeconnect-1: not in TeleGeography index under this slug
+  "faster": { tbps: 60, pairs: 6, source: "press", confidence: "verified", sourceUrl: "https://cloud.google.com/blog/products/gcp/new-undersea-cable-expands-capacity-for-google-apac-customers-and-users" },
+  "seamewe-5": { tbps: 24, pairs: 3, source: "wikipedia", confidence: "verified", sourceUrl: "https://en.wikipedia.org/wiki/SEA-ME-WE_5" },
+  // 2018-2022
+  "marea": { tbps: 224, pairs: 8, source: "wikipedia", confidence: "verified", sourceUrl: "https://en.wikipedia.org/wiki/MAREA" },
+  "dunant": { tbps: 250, pairs: 12, source: "press", confidence: "verified", sourceUrl: "https://cloud.google.com/blog/products/infrastructure/dunant-subsea-cable-is-now-ready-for-service" },
+  "grace-hopper": { tbps: 352, pairs: 16, source: "wikipedia", confidence: "verified", sourceUrl: "https://en.wikipedia.org/wiki/Grace_Hopper_(submarine_communications_cable)" },
+  "peace-cable": { tbps: 192, pairs: 12, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-europe-africa/peace" },
+  "equiano": { tbps: 144, pairs: 12, source: "wikipedia", confidence: "verified", sourceUrl: "https://en.wikipedia.org/wiki/Equiano_(submarine_communications_cable)" },
+  // 2022+
+  "amitie": { tbps: 400, pairs: 16, source: "press", confidence: "verified", sourceUrl: "https://newsroom.orange.com/orange-announces-the-launch-of-the-amitie-subsea-cable-offering-a-unique-and-robust-transatlantic-solution-with-ultra-low-latency/" },
+  "2africa": { tbps: 180, pairs: 16, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-europe-africa/2africa" },
+  // sea-me-we-6: may not be in TeleGeography yet (RFS 2025)
+  "c-lion1": { tbps: 144, pairs: 8, source: "wikipedia", confidence: "verified", sourceUrl: "https://en.wikipedia.org/wiki/C-Lion1" },
+  "asia-africa-europe-1-aae-1": { tbps: 40, pairs: 5, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-europe-africa/aae-1" },
+  "africa-coast-to-europe-ace": { tbps: 20, pairs: 2, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/euro-africa/ace" },
+  "eastern-africa-submarine-system-eassy": { tbps: 36, pairs: 2, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-europe-africa/eassy" },
+  "west-africa-cable-system-wacs": { tbps: 14.5, pairs: 4, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/euro-africa/wacs" },
+  "seacomtata-tgn-eurasia": { tbps: 1.5, pairs: 2, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-europe-africa/seacom" },
+  "asia-pacific-gateway-apg": { tbps: 30.72, pairs: 6, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/intra-asia/apg" },
+  "pacific-light-cable-network-plcn": { tbps: 144, pairs: 12, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/trans-pacific/plcn" },
+  "havfrueaec-2": { tbps: 108, pairs: 6, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/trans-atlantic/havfrue" },
+  "ellalink": { tbps: 100, pairs: 4, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/trans-atlantic/ellalink" },
+  // africa-1: slug ambiguous in TeleGeography index
+  "japan-guam-australia-south-jga-s": { tbps: 36, pairs: 4, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-australia/jga" },
+  "new-cross-pacific-ncp-cable-system": { tbps: 80, pairs: 8, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/trans-pacific/ncp" },
+  "curie": { tbps: 72, pairs: 4, source: "press", confidence: "verified", sourceUrl: "https://cloud.google.com/blog/products/infrastructure/introducing-curie-a-new-subsea-cable" },
+  "jupiter": { tbps: 60, pairs: 4, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/trans-pacific/jupiter" },
+  "monet": { tbps: 60, pairs: 4, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/brazil-us/cota" },
+  "seabras-1": { tbps: 72, pairs: 8, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/brazil-us/seabras-1" },
+  // india-europe-xpress: slug not confirmed in TeleGeography index
+  "bifrost": { tbps: 72, pairs: 12, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/trans-pacific/bifrost" },
+  "echo": { tbps: 260, pairs: 12, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/trans-pacific/echo" },
+  "firmina": { tbps: 240, pairs: 16, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/brazil-us/firmina" },
+  "brusa": { tbps: 108, pairs: 8, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/brazil-us/brusa" },
+  "topaz": { tbps: 240, pairs: 16, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/trans-pacific/topaz" },
+
+  // ── Batch 2: 39 additional cables from research ──
+
+  // Pre-2005
+  "fea": { tbps: 10, pairs: 2, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-europe-africa/flag" },
+  "safe": { tbps: 0.44, pairs: 2, source: "wikipedia", confidence: "verified", sourceUrl: "https://en.wikipedia.org/wiki/SAFE_(cable_system)" },
+  "sat-3wasc": { tbps: 0.8, pairs: 2, source: "wikipedia", confidence: "verified", sourceUrl: "https://en.wikipedia.org/wiki/SAT-3/WASC" },
+  "apcn-2": { tbps: 2.56, pairs: 4, source: "wikipedia", confidence: "verified", sourceUrl: "https://en.wikipedia.org/wiki/APCN_2" },
+  "south-america-1-sam-1": { tbps: 1.92, pairs: 4, source: "wikipedia", confidence: "verified", sourceUrl: "https://en.wikipedia.org/wiki/SAm-1" },
+  "south-american-crossing-sac": { tbps: 15, pairs: 4, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/brazil-us/sac" },
+  "pan-american-crossing-pac": { tbps: 3.2, pairs: 2, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/brazil-us/pac" },
+  "pacific-crossing-1-pc-1": { tbps: 21.6, pairs: 4, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/trans-pacific/pc-1" },
+  "i2i-cable-network-i2icn": { tbps: 8.4, pairs: 8, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/intra-asia/i2i" },
+
+  // 2005-2012
+  "falcon": { tbps: 2.56, pairs: 8, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-europe-africa/falcon" },
+  "tata-tgn-pacific": { tbps: 77, pairs: 8, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/trans-pacific/tgn-pacific" },
+  "tata-tgn-western-europe": { tbps: 3.84, pairs: 4, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/intra-europe/tgn-western-europe" },
+  "tata-tgn-intra-asia-tgn-ia": { tbps: 3.84, pairs: 4, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/intra-asia/tgn-ia" },
+  "tata-tgn-tata-indicom": { tbps: 5.12, pairs: 8, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/intra-asia/tic" },
+  "tata-tgn-atlantic-south": { tbps: 5.12, pairs: 4, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/trans-atlantic/tgn-atlantic" },
+  "trans-pacific-express-tpe-cable-system": { tbps: 5.12, pairs: 4, source: "wikipedia", confidence: "verified", sourceUrl: "https://en.wikipedia.org/wiki/TPE_(cable_system)" },
+  "asia-america-gateway-aag-cable-system": { tbps: 2.88, pairs: 3, source: "wikipedia", confidence: "verified", sourceUrl: "https://en.wikipedia.org/wiki/Asia-America_Gateway" },
+  "the-east-african-marine-system-teams": { tbps: 5.6, pairs: 2, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-europe-africa/teams" },
+  "greenland-connect": { tbps: 12.8, pairs: 2, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/trans-atlantic/greenland-connect" },
+  "glo-1": { tbps: 2.5, pairs: 2, source: "wikipedia", confidence: "verified", sourceUrl: "https://en.wikipedia.org/wiki/GLO-1" },
+  "mainone": { tbps: 10, pairs: 2, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/euro-africa/mainone" },
+  "unity": { tbps: 7.68, pairs: 5, source: "wikipedia", confidence: "verified", sourceUrl: "https://en.wikipedia.org/wiki/Unity_(cable_system)" },
+  "europe-india-gateway-eig": { tbps: 3.84, pairs: 3, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-europe-africa/eig" },
+  "imewe": { tbps: 3.84, pairs: 3, source: "wikipedia", confidence: "verified", sourceUrl: "https://en.wikipedia.org/wiki/I-ME-WE" },
+  "australia-japan-cable-ajc": { tbps: 10, pairs: 2, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-australia/ajc" },
+  "lower-indian-ocean-network-lion": { tbps: 1.28, pairs: 2, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-europe-africa/lion-2" },
+  "tata-tgn-gulf": { tbps: 3.84, pairs: 2, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/intra-asia/tgn-gulf" },
+
+  // 2012-2018
+  "southeast-asia-japan-cable-sjc": { tbps: 28, pairs: 6, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/intra-asia/sjc" },
+  "pipe-pacific-cable-1-ppc-1": { tbps: 12, pairs: 2, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-australia/ppc-1" },
+  "pacific-caribbean-cable-system-pccs": { tbps: 80, pairs: 8, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/brazil-us/pccs" },
+  "exa-express": { tbps: 53, pairs: 6, source: "wikipedia", confidence: "verified", sourceUrl: "https://en.wikipedia.org/wiki/Hibernia_Express" },
+  "bay-of-bengal-gateway-bbg": { tbps: 55, pairs: 3, source: "wikipedia", confidence: "verified", sourceUrl: "https://en.wikipedia.org/wiki/Bay_of_Bengal_Gateway" },
+  "aec-1": { tbps: 13, pairs: 4, source: "wikipedia", confidence: "verified", sourceUrl: "https://en.wikipedia.org/wiki/AEConnect" },
+
+  // 2018-2022
+  "south-atlantic-cable-system-sacs": { tbps: 40, pairs: 4, source: "press", confidence: "verified", sourceUrl: "https://www.nec.com/en/press/201810/global_20181001_02.html" },
+  "indigo-west": { tbps: 18, pairs: 2, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-australia/indigo" },
+  "indigo-central": { tbps: 18, pairs: 2, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-australia/indigo" },
+  "hawaiki": { tbps: 67, pairs: 4, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/australia-usa/hawaiki-cable" },
+  "djibouti-africa-regional-express-1-dare-1": { tbps: 36, pairs: 3, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-europe-africa/dare1" },
+  "coral-sea-cable-system-cs": { tbps: 40, pairs: 4, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-australia/coral-sea" },
+  "southern-cross-next": { tbps: 72, pairs: 4, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/trans-pacific/southern-cross-next" },
+
+  // 2022+
+  "southeast-asia-japan-cable-2-sjc2": { tbps: 126, pairs: 7, source: "press", confidence: "verified", sourceUrl: "https://www.nec.com/en/press/201803/global_20180315_01.html" },
+  "asia-direct-cable-adc": { tbps: 160, pairs: 8, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/intra-asia/adc" },
+  "apricot": { tbps: 290, pairs: 12, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/intra-asia/apricot" },
+  "seamewe-6": { tbps: 126, pairs: 10, source: "wikipedia", confidence: "verified", sourceUrl: "https://en.wikipedia.org/wiki/SEA-ME-WE_6" },
+  "mist": { tbps: 240, pairs: 12, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/intra-asia/mist" },
+
+  // ── Batch 3: from SubmarineNetworks.com deep dive ──
+  "blue": { tbps: 218, pairs: 16, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-europe-africa/blue-raman" },
+  "oman-australia-cable-oac": { tbps: 48, pairs: 3, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-australia/oac" },
+  "australia-singapore-cable-asc": { tbps: 60, pairs: 4, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-australia/asc" },
+  "darwin-jakarta-singapore-cable-djsc": { tbps: 40, pairs: 4, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-australia/djsc" },
+  "iris": { tbps: 132, pairs: 6, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/intra-europe/iris" },
+  "ionian": { tbps: 360, pairs: 24, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/intra-europe/ionian" },
+  "t3": { tbps: 54, pairs: 4, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-europe-africa/t3" },
+  "juno": { tbps: 360, pairs: 20, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/trans-pacific/juno" },
+  "polar-express": { tbps: 104, pairs: 6, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/trans-arctic/polar-express" },
+  "zeus": { tbps: 2650, pairs: 96, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/intra-europe/zeus" },
+  "unitirreno": { tbps: 624, pairs: 24, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/intra-europe/unitirreno" },
+  "saudi-vision": { tbps: 288, pairs: 16, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/intra-asia/svc" },
+  "senegal-horn-of-africa-regional-express-share-cable": { tbps: 16, pairs: null, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/euro-africa/share" },
+  "east-micronesia-cable-system-emcs": { tbps: 10, pairs: 1, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/trans-pacific/emcs" },
+  "patara-2": { tbps: 16, pairs: 2, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/intra-asia/patara-2" },
+  "timor-leste-south-submarine-cable-tlssc": { tbps: 27, pairs: null, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-australia/png-national/tlssc" },
+  "southern-cross-next": { tbps: 72, pairs: 4, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/trans-pacific/southern-cross-next" },
+
+  // ── Batch 4: web search deep dive ──
+  "america-movil-submarine-cable-system-1-amx-1": { tbps: 50, pairs: null, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/brazil-us/amx1/amx-1-cable-system-overview" },
+  "asia-submarine-cable-express-asecahaya-malaysia": { tbps: 15, pairs: 6, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/intra-asia/ase" },
+  "sea-us": { tbps: 20, pairs: 2, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/trans-pacific/sea-us" },
+  "gulf-bridge-international-cable-systemmiddle-east-north-africa-cable-system-gbicsmena": { tbps: 5, pairs: null, source: "wikipedia", confidence: "verified", sourceUrl: "https://en.wikipedia.org/wiki/Gulf_Bridge_International" },
+  "gulf2africa-g2a": { tbps: 20, pairs: 2, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-europe-africa/g2a" },
+  "lower-indian-ocean-network-2-lion2": { tbps: 1.28, pairs: 2, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-europe-africa/lion-2" },
+  "seychelles-to-east-africa-system-seas": { tbps: 3.2, pairs: null, source: "press", confidence: "estimated", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-europe-africa/seas" },
+  "ceiba-2": { tbps: 8, pairs: null, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/euro-africa/ceiba-2" },
+  "alba-1": { tbps: 5.12, pairs: null, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/brazil-us/alba-1" },
+  "far-east-submarine-cable-system": { tbps: 16, pairs: 2, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/news/huawei-marine-begins-manufacturing-of-far-east-submarine-cable-for-rostelecom" },
+  "malaysia-cambodia-thailand-mct-cable": { tbps: 30, pairs: 6, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/intra-asia/mct" },
+  "quintillion-subsea-cable-network": { tbps: 30, pairs: 3, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/asia-europe-africa/arctic-fiber/quintillion-activates-arctic-subsea-cable" },
+  "didon": { tbps: 8, pairs: null, source: "press", confidence: "estimated", sourceUrl: "https://subtelforum.com/75didon-cable-between-italy-and-tunisia-makes-landfall/" },
+  "india-asia-xpress-iax": { tbps: 100, pairs: null, source: "press", confidence: "verified", sourceUrl: "https://www.submarinenetworks.com/en/systems/intra-asia/iax/reliance-jio-to-build-iax-and-iex-submarine-cables" },
+  "thetis": { tbps: 180, pairs: null, source: "press", confidence: "verified", sourceUrl: "https://www.vodafone.com/news/newsroom/technology/thetis-subsea-cable-announcement" },
+  "north-west-cable-system": { tbps: 12, pairs: 2, source: "press", confidence: "verified", sourceUrl: "https://www.vocus.com.au/about-vocus/our-network/international/northwest-cable-system" },
+};
 
 // ── Types for raw TeleGeography data ──
 
@@ -112,8 +279,9 @@ interface Cable {
   lengthKm: number;
   fiberPairs: number | null;
   designCapacityTbps: number;
-  capacitySource: "heuristic";
-  capacityConfidence: "approximated";
+  capacitySource: "fcc" | "press" | "wikipedia" | "derived" | "heuristic";
+  capacityConfidence: "verified" | "estimated" | "approximated";
+  sourceUrl?: string;
   owners: string[];
   landingStationIds: string[];
   path: Feature<LineString | MultiLineString>;
@@ -185,16 +353,20 @@ const MANUAL_HUB_IDS = new Set([
   // Americas
   "new-york", "los-angeles", "miami", "chicago", "dallas", "washington-dc",
   "seattle", "toronto", "sao-paulo", "rio-de-janeiro", "buenos-aires",
-  "fortaleza", "bogota", "santiago",
+  "fortaleza", "bogota", "santiago", "houston", "atlanta", "denver", "lima",
   // Europe
   "london", "frankfurt", "marseille", "amsterdam", "paris", "madrid",
-  "milan", "istanbul", "stockholm", "athens", "lisbon",
+  "milan", "istanbul", "stockholm", "athens", "lisbon", "barcelona",
+  "bucharest", "warsaw", "copenhagen", "hamburg", "zurich",
+  "budapest", "belgrade", "sofia", "zagreb",
   // Middle East / Africa
   "cairo", "mumbai", "dubai", "fujairah", "muscat", "jeddah", "djibouti",
   "nairobi", "mombasa", "johannesburg", "cape-town", "lagos", "accra",
+  "addis-ababa", "riyadh", "abidjan", "dakar",
   // Asia-Pacific
   "singapore", "hong-kong", "tokyo", "taipei", "busan", "sydney",
-  "chennai", "karachi", "guam", "jakarta", "perth",
+  "chennai", "karachi", "guam", "jakarta", "perth", "bangkok",
+  "hanoi", "kuala-lumpur", "manila", "ho-chi-minh-city", "phnom-penh",
   // Russia / Central Asia
   "moscow", "vladivostok",
 ]);
@@ -662,8 +834,12 @@ function main() {
       geometry: geoFeature.geometry,
     };
 
-    // Capacity
-    const designCapacityTbps = capacityFromRfsYear(rfsYear);
+    // Capacity — check override table first, then fall back to heuristic
+    const override = CAPACITY_OVERRIDES[entry.id];
+    const designCapacityTbps = override?.tbps ?? capacityFromRfsYear(rfsYear);
+    const capacitySource = override?.source ?? "heuristic";
+    const capacityConfidence = override?.confidence ?? "approximated";
+    const fiberPairsResolved = override?.pairs ?? null;
 
     // Owners
     // owners can be a string or array of objects depending on the API version
@@ -710,18 +886,61 @@ function main() {
       });
     }
 
+    // Fix cables with paths clipped at the antimeridian (±180).
+    // If a MultiLineString has only one part ending near ±180 but segments span
+    // both hemispheres, synthesize a second part from metro coordinates.
+    let fixedPath = path;
+    if (
+      path.geometry.type === "MultiLineString" &&
+      path.geometry.coordinates.length === 1 &&
+      segments.length > 0
+    ) {
+      const part = path.geometry.coordinates[0];
+      const lastPt = part[part.length - 1];
+      if (Math.abs(lastPt[0]) > 179.5) {
+        // Path is clipped at the dateline. Build a continuation from metro coords.
+        const otherSideMetros = segments
+          .flatMap((s) => [s.from, s.to])
+          .filter((id, i, arr) => arr.indexOf(id) === i)
+          .map((id) => metroCoords.get(id))
+          .filter((m): m is { lat: number; lng: number } => m != null)
+          .filter((m) => {
+            // Include metros on the opposite side of the dateline
+            if (lastPt[0] < -179) return m.lng > 0;
+            return m.lng < 0;
+          });
+        if (otherSideMetros.length > 0) {
+          // Sort by longitude to create a reasonable path
+          otherSideMetros.sort((a, b) => b.lng - a.lng);
+          const mirrorLng = lastPt[0] < -179 ? 180 : -180;
+          const continuation: number[][] = [
+            [mirrorLng, lastPt[1]],
+            ...otherSideMetros.map((m) => [m.lng, m.lat]),
+          ];
+          fixedPath = {
+            ...path,
+            geometry: {
+              type: "MultiLineString" as const,
+              coordinates: [...path.geometry.coordinates, continuation],
+            },
+          };
+        }
+      }
+    }
+
     cables.push({
       id: entry.id,
       name: detail.name,
       rfsYear,
       lengthKm,
-      fiberPairs: null,
+      fiberPairs: fiberPairsResolved,
       designCapacityTbps,
-      capacitySource: "heuristic",
-      capacityConfidence: "approximated",
+      capacitySource,
+      capacityConfidence,
+      ...(override?.sourceUrl ? { sourceUrl: override.sourceUrl } : {}),
       owners,
       landingStationIds,
-      path,
+      path: fixedPath,
       segments,
     });
   }
@@ -781,7 +1000,7 @@ function main() {
     rostock: { name: "Rostock", countryCode: "DE", lat: 54.0887, lng: 12.1407 },
     munich: { name: "Munich", countryCode: "DE", lat: 48.1351, lng: 11.582 },
     copenhagen: { name: "Copenhagen", countryCode: "DK", lat: 55.6761, lng: 12.5683 },
-    manchester: { name: "Manchester", countryCode: "GB", lat: 53.4808, lng: -2.2426 },
+    "manchester-gb": { name: "Manchester", countryCode: "GB", lat: 53.4808, lng: -2.2426 },
     cornwall: { name: "Cornwall", countryCode: "GB", lat: 50.266, lng: -5.0527 },
     osaka: { name: "Osaka", countryCode: "JP", lat: 34.6937, lng: 135.5023 },
     rome: { name: "Rome", countryCode: "IT", lat: 41.9028, lng: 12.4964 },
@@ -1224,6 +1443,19 @@ function main() {
       lat: 24.8607,
       lng: 67.0011,
     },
+    // New synthetic metros for added terrestrial edges
+    bangkok: { name: "Bangkok", countryCode: "TH", lat: 13.7563, lng: 100.5018 },
+    "phnom-penh": { name: "Phnom Penh", countryCode: "KH", lat: 11.5564, lng: 104.9282 },
+    "ho-chi-minh-city": { name: "Ho Chi Minh City", countryCode: "VN", lat: 10.8231, lng: 106.6297 },
+    "kuala-lumpur": { name: "Kuala Lumpur", countryCode: "MY", lat: 3.139, lng: 101.6869 },
+    manila: { name: "Manila", countryCode: "PH", lat: 14.5995, lng: 120.9842 },
+    belgrade: { name: "Belgrade", countryCode: "RS", lat: 44.7866, lng: 20.4489 },
+    bucharest: { name: "Bucharest", countryCode: "RO", lat: 44.4268, lng: 26.1025 },
+    zagreb: { name: "Zagreb", countryCode: "HR", lat: 45.815, lng: 15.9819 },
+    abidjan: { name: "Abidjan", countryCode: "CI", lat: 5.3600, lng: -4.0083 },
+    dakar: { name: "Dakar", countryCode: "SN", lat: 14.7167, lng: -17.4677 },
+    barcelona: { name: "Barcelona", countryCode: "ES", lat: 41.3874, lng: 2.1686 },
+    lisbon: { name: "Lisbon", countryCode: "PT", lat: 38.7223, lng: -9.1393 },
   };
 
   // For each synthetic metro (defined for terrestrial edges / hubs),
@@ -1286,37 +1518,38 @@ function main() {
   console.log(`  ${metroAliases.size} synthetic metros merged into real metros`);
   console.log(`  Example merges: ${[...metroAliases.entries()].slice(0, 5).map(([a, c]) => `${a} -> ${c}`).join(", ")}`);
 
-  // Terrestrial edge definitions from ARCHITECTURE.md Appendix B
+  // Terrestrial edge definitions — hand-curated with verified sources
   const terrestrialDefs: Array<{
     from: string;
     to: string;
     capacityTbps: number;
     confidence: "verified" | "estimated" | "approximated";
     source: string;
+    sourceUrl?: string;
     operators: string[];
     notes?: string;
   }> = [
     // Europe
-    { from: "london", to: "paris", capacityTbps: 80, confidence: "estimated", source: "Colt Channel Tunnel, EXA, Crosslake CrossChannel, euNetworks, Zayo", operators: ["Colt", "EXA", "Crosslake", "euNetworks", "Zayo"] },
-    { from: "london", to: "amsterdam", capacityTbps: 80, confidence: "estimated", source: "euNetworks Super Highway (Scylla), EXA, Zayo, GTT, Cogent, Telia", operators: ["euNetworks", "EXA", "Zayo", "GTT", "Cogent", "Telia"] },
-    { from: "london", to: "brussels", capacityTbps: 40, confidence: "estimated", source: "EXA, Colt, Cogent", operators: ["EXA", "Colt", "Cogent"] },
-    { from: "frankfurt", to: "amsterdam", capacityTbps: 100, confidence: "estimated", source: "euNetworks Super Highway 54 Tbps/pair, EXA, Cogent, Telia, GTT, Zayo", operators: ["euNetworks", "EXA", "Cogent", "Telia", "GTT", "Zayo"] },
-    { from: "frankfurt", to: "paris", capacityTbps: 100, confidence: "estimated", source: "euNetworks Super Highway, EXA, Zayo, Cogent, GTT, Telia", operators: ["euNetworks", "EXA", "Zayo", "Cogent", "GTT", "Telia"] },
-    { from: "frankfurt", to: "london", capacityTbps: 80, confidence: "estimated", source: "EXA, euNetworks, Cogent, Telia, Zayo, GTT", operators: ["EXA", "euNetworks", "Cogent", "Telia", "Zayo", "GTT"] },
-    { from: "paris", to: "marseille", capacityTbps: 60, confidence: "estimated", source: "EXA Paris-Marseille corridor, euNetworks Frankfurt-Marseille-Milan, Cogent, Zayo", operators: ["EXA", "euNetworks", "Cogent", "Zayo"] },
+    { from: "london", to: "paris", capacityTbps: 80, confidence: "estimated", source: "Colt Channel Tunnel (25-yr Getlink concession, 2023), EXA UK-France fiber, Crosslake CrossChannel 96-pair subsea (2021), euNetworks, Zayo", sourceUrl: "https://www.colt.net/resources/colt-successfully-completes-the-deployment-of-fibre-network-infrastructure-along-the-channel-tunnel-seamlessly-connecting-london-and-paris/", operators: ["Colt", "EXA", "Crosslake", "euNetworks", "Zayo"] },
+    { from: "london", to: "amsterdam", capacityTbps: 80, confidence: "estimated", source: "euNetworks Scylla 96-pair subsea (Lowestoft-IJmuiden, 2021), EXA Q&E North (Margate-Ostend), Zayo Zeus/Circe North, GTT, Cogent, Telia/Arelion", sourceUrl: "https://eunetworks.com/network/super-highways/super-highway-london-to-amsterdam-including-subsea-cable-scylla/", operators: ["euNetworks", "EXA", "Zayo", "GTT", "Cogent", "Telia"] },
+    { from: "london", to: "brussels", capacityTbps: 40, confidence: "estimated", source: "EXA Q&E North (Margate-Ostend + terrestrial extension), Colt Channel Tunnel, Cogent", sourceUrl: "https://exainfra.net/media-centre/press-releases/exa-infrastructure-deploys-new-high-capacity-fibre-route-from-london-to-frankfurt-amsterdam-and-brussels/", operators: ["EXA", "Colt", "Cogent"] },
+    { from: "frankfurt", to: "amsterdam", capacityTbps: 100, confidence: "estimated", source: "euNetworks Super Highway (27 Tbps/pair C-band, G657A1, optimized ILA spacing), EXA, Cogent, Telia/Arelion, GTT, Zayo. Densest terrestrial corridor in Europe", sourceUrl: "https://eunetworks.com/news/eunetworks-delivers-new-critical-infrastructure-in-europe-a-shorter-long-haul-fibre-route-from-amsterdam-to-frankfurt/", operators: ["euNetworks", "EXA", "Cogent", "Telia", "GTT", "Zayo"] },
+    { from: "frankfurt", to: "paris", capacityTbps: 100, confidence: "estimated", source: "euNetworks Super Highway (27 Tbps/pair C-band), EXA, Zayo, Cogent, GTT, Telia/Arelion", sourceUrl: "https://eunetworks.com/network/super-highways/frankfurt-to-paris/", operators: ["euNetworks", "EXA", "Zayo", "Cogent", "GTT", "Telia"] },
+    { from: "frankfurt", to: "london", capacityTbps: 80, confidence: "estimated", source: "EXA, euNetworks Super Highway, Cogent, Telia/Arelion, Zayo, GTT. Via Amsterdam or Channel Tunnel transit", sourceUrl: "https://eunetworks.com/network/super-highways/", operators: ["EXA", "euNetworks", "Cogent", "Telia", "Zayo", "GTT"] },
+    { from: "paris", to: "marseille", capacityTbps: 60, confidence: "estimated", source: "EXA Paris-Marseille corridor, euNetworks Frankfurt-Marseille Super Highway, Cogent, Zayo. Key backhaul for Mediterranean submarine cable landings.", operators: ["EXA", "euNetworks", "Cogent", "Zayo"] },
     { from: "frankfurt", to: "milan", capacityTbps: 40, confidence: "estimated", source: "euNetworks Frankfurt-Milan via Zurich, Zayo, Sparkle", operators: ["euNetworks", "Zayo", "Sparkle"] },
     { from: "frankfurt", to: "zurich", capacityTbps: 40, confidence: "estimated", source: "euNetworks Super Highway, EXA, Swisscom", operators: ["euNetworks", "EXA", "Swisscom"] },
     { from: "marseille", to: "milan", capacityTbps: 40, confidence: "estimated", source: "euNetworks via Zurich, Sparkle, EXA, Zayo", operators: ["euNetworks", "Sparkle", "EXA", "Zayo"] },
-    { from: "berlin", to: "warsaw", capacityTbps: 20, confidence: "estimated", source: "EXA Project Visegrad", operators: ["EXA"] },
-    { from: "vienna", to: "bratislava", capacityTbps: 15, confidence: "estimated", source: "EXA Project Visegrad", operators: ["EXA"] },
-    { from: "prague", to: "berlin", capacityTbps: 20, confidence: "estimated", source: "EXA Project Visegrad + existing operators", operators: ["EXA"] },
-    { from: "marseille", to: "istanbul", capacityTbps: 25, confidence: "verified", source: "EXA TAE: 36 pairs G.652D, 25 Tbps/pair, Marseille-Italy-Greece-Turkey", operators: ["EXA"] },
+    { from: "berlin", to: "warsaw", capacityTbps: 20, confidence: "estimated", source: "EXA Project Visegrad (216-fiber Corning Ultra G.652D, largest CE backbone in 25 yrs)", sourceUrl: "https://exainfra.net/media-centre/press-releases/exa-infrastructure-launches-project-visegrad-largest-cross-border-fibre-backbone-deployment-in-central-europe-in-25-years/", operators: ["EXA"], notes: "First routes RFS mid-2026, full completion 2027" },
+    { from: "vienna", to: "bratislava", capacityTbps: 15, confidence: "estimated", source: "EXA Project Visegrad", sourceUrl: "https://exainfra.net/media-centre/press-releases/exa-infrastructure-launches-project-visegrad-largest-cross-border-fibre-backbone-deployment-in-central-europe-in-25-years/", operators: ["EXA"], notes: "First routes RFS mid-2026" },
+    { from: "prague", to: "berlin", capacityTbps: 20, confidence: "estimated", source: "EXA Project Visegrad + existing operators", sourceUrl: "https://exainfra.net/media-centre/press-releases/exa-infrastructure-launches-project-visegrad-largest-cross-border-fibre-backbone-deployment-in-central-europe-in-25-years/", operators: ["EXA"], notes: "First routes RFS mid-2026" },
+    { from: "marseille", to: "istanbul", capacityTbps: 25, confidence: "verified", source: "EXA Trans Adriatic Express (TAE): 36 pairs G.652D, 4,500+ km via Italy-Albania-Greece-Turkey. 25 Tbps total system capacity", sourceUrl: "https://exainfra.net/our-network/tae-trans-adriatic-express/", operators: ["EXA"] },
     { from: "athens", to: "istanbul", capacityTbps: 15, confidence: "estimated", source: "TAE branch + Grid Telecom", operators: ["EXA", "Grid Telecom"] },
     { from: "sofia", to: "istanbul", capacityTbps: 10, confidence: "estimated", source: "TAE branch + SOCAR Fiber", operators: ["EXA", "SOCAR"] },
     { from: "vienna", to: "budapest", capacityTbps: 15, confidence: "estimated", source: "EXA Project Visegrad extension", operators: ["EXA"] },
     { from: "frankfurt", to: "vienna", capacityTbps: 30, confidence: "estimated", source: "EXA, euNetworks, Deutsche Telekom, A1", operators: ["EXA", "euNetworks", "Deutsche Telekom", "A1"] },
     { from: "madrid", to: "marseille", capacityTbps: 20, confidence: "estimated", source: "EXA, Cogent, Telefonica", operators: ["EXA", "Cogent", "Telefonica"] },
-    { from: "stockholm", to: "helsinki", capacityTbps: 15, confidence: "estimated", source: "Telia, Cinia (C-Lion1 + terrestrial)", operators: ["Telia", "Cinia"] },
+    { from: "stockholm", to: "helsinki", capacityTbps: 15, confidence: "estimated", source: "Telia/Arelion Baltic submarine cables, GlobalConnect new 150km subsea via Aland (completion 2026). Note: C-Lion1 connects Helsinki-Rostock, not Stockholm", sourceUrl: "https://www.prnewswire.com/news-releases/telia-carrier-builds-new-unique-route-from-stockholm-to-st-petersburg-and-upgrades-submarine-cables-in-the-baltic-sea-300391057.html", operators: ["Telia", "GlobalConnect"] },
 
     // Germany internal backbone (Deutsche Telekom, 1&1 Versatel, GlobalConnect)
     { from: "frankfurt", to: "berlin", capacityTbps: 80, confidence: "estimated", source: "Deutsche Telekom, Versatel, GlobalConnect core backbone", operators: ["Deutsche Telekom", "Versatel", "GlobalConnect"] },
@@ -1331,7 +1564,7 @@ function main() {
     { from: "copenhagen", to: "hamburg", capacityTbps: 25, confidence: "estimated", source: "GlobalConnect, Telia Denmark-Germany backbone", operators: ["GlobalConnect", "Telia"] },
 
     // UK internal backbone (BT, Virgin Media, Colt)
-    { from: "london", to: "manchester", capacityTbps: 60, confidence: "estimated", source: "BT, Virgin Media, CityFibre core backbone", operators: ["BT", "Virgin Media", "CityFibre"] },
+    { from: "london", to: "manchester-gb", capacityTbps: 60, confidence: "estimated", source: "BT, Virgin Media, CityFibre core backbone", operators: ["BT", "Virgin Media", "CityFibre"] },
     { from: "london", to: "cornwall", capacityTbps: 20, confidence: "estimated", source: "BT backbone to Bude cable landing station", operators: ["BT"] },
 
     // Japan internal backbone (NTT, KDDI, SoftBank)
@@ -1367,56 +1600,56 @@ function main() {
     { from: "sydney", to: "perth", capacityTbps: 15, confidence: "estimated", source: "Telstra transcontinental + Vocus Pipe Networks", operators: ["Telstra", "Vocus"] },
 
     // Trans-Russia / Central Asia
-    { from: "st-petersburg", to: "moscow", capacityTbps: 50, confidence: "estimated", source: "Rostelecom TEA NEXT, MegaFon, Beeline", operators: ["Rostelecom", "MegaFon", "Beeline"] },
+    { from: "st-petersburg", to: "moscow", capacityTbps: 50, confidence: "estimated", source: "Rostelecom TEA NEXT (96 dark fiber pairs, Ultra Low Loss fiber, RTD Moscow-Vlad <=85ms), MegaFon, Beeline", sourceUrl: "https://www.submarinenetworks.com/en/systems/eurasia-terrestrial/tea-next/rt-launches-tea-next", operators: ["Rostelecom", "MegaFon", "Beeline"] },
     { from: "moscow", to: "yekaterinburg", capacityTbps: 20, confidence: "estimated", source: "Rostelecom TEA NEXT backbone", operators: ["Rostelecom"] },
     { from: "yekaterinburg", to: "novosibirsk", capacityTbps: 15, confidence: "estimated", source: "Rostelecom TEA NEXT backbone", operators: ["Rostelecom"] },
     { from: "novosibirsk", to: "vladivostok", capacityTbps: 10, confidence: "estimated", source: "Rostelecom TEA NEXT", operators: ["Rostelecom"] },
     { from: "moscow", to: "manzhouli", capacityTbps: 5, confidence: "estimated", source: "TEA, TEA-2, TEA-3 cross-border", operators: ["Rostelecom", "China Telecom"] },
     { from: "helsinki", to: "st-petersburg", capacityTbps: 10, confidence: "estimated", source: "Telia Carrier, Russia-Finland border", operators: ["Telia"] },
     { from: "tallinn", to: "st-petersburg", capacityTbps: 5, confidence: "estimated", source: "Telia mesh network", operators: ["Telia"] },
-    { from: "frankfurt", to: "almaty", capacityTbps: 8, confidence: "estimated", source: "DREAM + TRANSKZ systems", operators: ["MegaFon", "Kazakhtelecom", "Colt", "RETN"] },
-    { from: "baku", to: "aktau", capacityTbps: 20, confidence: "approximated", source: "Trans-Caspian Fiber Optic Cable (Digital Silk Way), 400 Tbps design", operators: ["AzerTelecom", "Kazakhtelecom"], notes: "Planned completion end 2026" },
+    { from: "frankfurt", to: "almaty", capacityTbps: 8, confidence: "estimated", source: "DREAM (8,700 km Frankfurt-Kazakhstan-China, MegaFon+Kazakhtelecom, 2013) + TRANSKZ (15,000 km Frankfurt-Hong Kong via Kazakhstan, 8 Tbps total, RETN, 2016)", sourceUrl: "https://retn.net/solutions/transkz", operators: ["MegaFon", "Kazakhtelecom", "Colt", "RETN"] },
+    { from: "baku", to: "aktau", capacityTbps: 20, confidence: "approximated", source: "Trans-Caspian Fiber Optic Cable (Digital Silk Way): 380 km submarine across Caspian, Sumgait-Aktau. 400 Tbps design capacity confirmed", sourceUrl: "https://www.businesswire.com/news/home/20250305799119/en/NEQSOL-Holding-Announces-Trans-Caspian-Fiber-Optic-Cable-Line-Connecting-Europe-and-Asia-in-Next-Phase-of-Digital-Silk-Way-Project", operators: ["AzerTelecom", "Kazakhtelecom"], notes: "Under construction, completion expected end 2026" },
     { from: "almaty", to: "urumqi", capacityTbps: 15, confidence: "estimated", source: "Khorgos/Alashankou crossings, DREAM + TRANSKZ", operators: ["China Telecom", "China Unicom", "Kazakhtelecom"] },
     { from: "moscow", to: "ulaanbaatar", capacityTbps: 3, confidence: "estimated", source: "TEA-4, TMP Transit-Mongolia", operators: ["Rostelecom"] },
 
     // Middle East
-    { from: "muscat", to: "riyadh", capacityTbps: 10, confidence: "approximated", source: "SONIC (STC + Ooredoo JV)", operators: ["STC", "Ooredoo"] },
+    { from: "muscat", to: "riyadh", capacityTbps: 10, confidence: "approximated", source: "SONIC: Saudi Omani Network Infrastructure Corridor, stc Group + Ooredoo Oman strategic collaboration ($1.78B). Two redundant terrestrial fiber paths", sourceUrl: "https://w.media/stc-group-and-ooredoo-launch-sonic-a-terrestrial-fiber-optic-network/", operators: ["STC", "Ooredoo"], notes: "Phase 1 within 12 months of Feb 2025 announcement" },
     { from: "riyadh", to: "amman", capacityTbps: 5, confidence: "estimated", source: "Existing Gulf-Levant links", operators: [] },
     { from: "baku", to: "tehran", capacityTbps: 2, confidence: "estimated", source: "TIC Astara border crossing", operators: ["TIC"] },
     { from: "tehran", to: "karachi", capacityTbps: 1, confidence: "approximated", source: "Iran-Pakistan terrestrial", operators: [] },
-    { from: "muscat", to: "cairo", capacityTbps: 10, confidence: "approximated", source: "Zain-Omantel corridor", operators: ["Zain", "Omantel"] },
-    { from: "istanbul", to: "tbilisi", capacityTbps: 10, confidence: "estimated", source: "EXA + SOCAR Fiber 1850km Turkey-Georgia", operators: ["EXA", "SOCAR"] },
-    { from: "djibouti", to: "addis-ababa", capacityTbps: 5, confidence: "estimated", source: "Horizon Initiative + Ethio Telecom", operators: ["Ethio Telecom", "Djibouti Telecom"] },
-    { from: "addis-ababa", to: "khartoum", capacityTbps: 5, confidence: "estimated", source: "Horizon Initiative extension", operators: ["Sudatel"] },
+    { from: "muscat", to: "cairo", capacityTbps: 10, confidence: "approximated", source: "Zain Omantel International (ZOI) + Telecom Egypt corridor: Oman-Saudi Arabia-Egypt (mixed terrestrial/subsea). Extends to Kuwait, Bahrain, Iraq, Jordan", sourceUrl: "https://www.zawya.com/en/press-release/companies-news/zain-omantel-international-and-telecom-egypt-forge-new-digital-corridor-ag9jrbif", operators: ["Zain", "Omantel", "Telecom Egypt"] },
+    { from: "istanbul", to: "tbilisi", capacityTbps: 10, confidence: "estimated", source: "EXA + SOCAR Fiber: 1,850 km along TANAP gas pipeline across Turkey, Greece-to-Georgia route", sourceUrl: "https://exainfra.net/media-centre/press-releases/exa-infrastructure-and-socar-fiber-collaborate-for-red-sea-route-diversity/", operators: ["EXA", "SOCAR"] },
+    { from: "djibouti", to: "addis-ababa", capacityTbps: 5, confidence: "estimated", source: "Horizon Fiber Initiative (Feb 2026): Ethio Telecom + Djibouti Telecom + Sudatel, 144 fiber pairs, multi-terabit capacity", sourceUrl: "https://www.telecomtv.com/content/access-evolution/telco-trio-launches-african-cross-border-fibre-project-54799/", operators: ["Ethio Telecom", "Djibouti Telecom", "Sudatel"] },
+    { from: "addis-ababa", to: "khartoum", capacityTbps: 5, confidence: "approximated", source: "Horizon Fiber Initiative extension to Port Sudan (same project as Djibouti-Addis Ababa). Endpoint is Port Sudan, not Khartoum directly", sourceUrl: "https://www.telecomtv.com/content/access-evolution/telco-trio-launches-african-cross-border-fibre-project-54799/", operators: ["Ethio Telecom", "Sudatel"] },
 
     // US Backbone
-    { from: "new-york", to: "chicago", capacityTbps: 200, confidence: "estimated", source: "Lumen 350 Tbps backbone, Zayo 1 Pbps active, Cogent, AT&T, Verizon", operators: ["Lumen", "Zayo", "Cogent", "AT&T", "Verizon"] },
+    { from: "new-york", to: "chicago", capacityTbps: 200, confidence: "estimated", source: "Lumen (450+ Tbps global IP capacity), Zayo (1 Pbps network-wide active waves, 2024), Cogent (19k+ route-miles ex-Sprint wireline), AT&T, Verizon", sourceUrl: "https://www.zayo.com/newsroom/zayo-announces-construction-of-5000-new-fiber-route-miles-as-ai-demand-is-forecasted-to-grow-2-6x-by-2030/", operators: ["Lumen", "Zayo", "Cogent", "AT&T", "Verizon"] },
     { from: "chicago", to: "los-angeles", capacityTbps: 150, confidence: "estimated", source: "Lumen, Zayo western expansion, Cogent, AT&T", operators: ["Lumen", "Zayo", "Cogent", "AT&T"] },
-    { from: "new-york", to: "washington-dc", capacityTbps: 200, confidence: "estimated", source: "Highest-density US corridor, all major carriers", operators: ["Lumen", "Zayo", "AT&T", "Verizon", "Cogent"] },
+    { from: "new-york", to: "washington-dc", capacityTbps: 200, confidence: "estimated", source: "Highest-density US corridor (NE I-95 + Ashburn nexus). Lumen, Zayo, AT&T, Verizon, Cogent", sourceUrl: "https://www.zayo.com/newsroom/zayo-announces-construction-of-5000-new-fiber-route-miles-as-ai-demand-is-forecasted-to-grow-2-6x-by-2030/", operators: ["Lumen", "Zayo", "AT&T", "Verizon", "Cogent"] },
     { from: "new-york", to: "dallas", capacityTbps: 100, confidence: "estimated", source: "Lumen, Zayo, AT&T", operators: ["Lumen", "Zayo", "AT&T"] },
     { from: "dallas", to: "los-angeles", capacityTbps: 100, confidence: "estimated", source: "Lumen, Zayo, AT&T", operators: ["Lumen", "Zayo", "AT&T"] },
     { from: "chicago", to: "dallas", capacityTbps: 80, confidence: "estimated", source: "Lumen, Zayo, AT&T", operators: ["Lumen", "Zayo", "AT&T"] },
     { from: "new-york", to: "miami", capacityTbps: 80, confidence: "estimated", source: "Lumen, AT&T, Zayo", operators: ["Lumen", "AT&T", "Zayo"] },
     { from: "dallas", to: "houston", capacityTbps: 60, confidence: "estimated", source: "Regional trunk", operators: ["Lumen", "AT&T"] },
     { from: "seattle", to: "los-angeles", capacityTbps: 60, confidence: "estimated", source: "West Coast backbone, Zayo western expansion", operators: ["Zayo", "Lumen"] },
-    { from: "denver", to: "dallas", capacityTbps: 40, confidence: "estimated", source: "Lumen 1.2 Tbps single carrier test on this route", operators: ["Lumen", "Zayo"] },
+    { from: "denver", to: "dallas", capacityTbps: 40, confidence: "estimated", source: "Lumen + Ciena record 1.2 Tbps wavelength over 3,050 km on this route (Mar 2025, WaveLogic 6e)", sourceUrl: "https://www.ciena.com/about/newsroom/press-releases/lumen-and-ciena-transmit-record-breaking-1.2-tbps-wavelength-service-across-3,050-kilometers", operators: ["Lumen", "Zayo"] },
     { from: "denver", to: "chicago", capacityTbps: 40, confidence: "estimated", source: "Lumen, Zayo", operators: ["Lumen", "Zayo"] },
     { from: "atlanta", to: "miami", capacityTbps: 40, confidence: "estimated", source: "SE US trunk", operators: ["Lumen", "AT&T"] },
 
     // US Cross-Border
-    { from: "san-diego", to: "tijuana", capacityTbps: 25, confidence: "estimated", source: "MDC Data Centers, multiple carriers", operators: ["MDC"] },
-    { from: "laredo", to: "monterrey", capacityTbps: 30, confidence: "estimated", source: "MDC, Zayo + Fermaca", operators: ["MDC", "Zayo", "Fermaca"] },
-    { from: "el-paso", to: "ciudad-juarez", capacityTbps: 20, confidence: "estimated", source: "MDC, Zayo + Fermaca", operators: ["MDC", "Zayo", "Fermaca"] },
-    { from: "seattle", to: "vancouver", capacityTbps: 30, confidence: "estimated", source: "Zayo, multiple carriers", operators: ["Zayo"] },
+    { from: "san-diego", to: "tijuana", capacityTbps: 25, confidence: "estimated", source: "MDC Data Centers International Fiber Crossings (San Ysidro + Otay Mesa routes)", sourceUrl: "https://www.mdcdatacenters.com/company/blog/san-diegos-international-fiber-crossing-market-growth/", operators: ["MDC"] },
+    { from: "laredo", to: "monterrey", capacityTbps: 30, confidence: "estimated", source: "MDC IFC Laredo-Nuevo Laredo (3 conduits, 144 strands G652D, Q2 2025)", sourceUrl: "https://www.mdcdatacenters.com/company/blog/mdc-expands-fiber-cross-border-routes-laredo-el-paso/", operators: ["MDC"] },
+    { from: "el-paso", to: "ciudad-juarez", capacityTbps: 20, confidence: "estimated", source: "MDC sub-river crossing (Q4 2025) + Zayo-Fermaca partnership (El Paso to Monterrey/Queretaro, newest US-MX route in 20 yrs)", sourceUrl: "https://www.zayo.com/newsroom/zayo-and-fermaca-partner-to-deliver-the-most-advanced-cross-border-connectivity-between-the-united-states-and-mexico/", operators: ["MDC", "Zayo", "Fermaca"] },
+    { from: "seattle", to: "vancouver", capacityTbps: 30, confidence: "estimated", source: "Zayo, multiple carriers", sourceUrl: "https://www.zayo.com/newsroom/zayo-announces-construction-of-5000-new-fiber-route-miles-as-ai-demand-is-forecasted-to-grow-2-6x-by-2030/", operators: ["Zayo"] },
     { from: "new-york", to: "toronto", capacityTbps: 40, confidence: "estimated", source: "Zayo, Cogent, multiple carriers", operators: ["Zayo", "Cogent"] },
     { from: "chicago", to: "toronto", capacityTbps: 30, confidence: "estimated", source: "Multiple carriers", operators: [] },
 
     // Africa
-    { from: "mombasa", to: "nairobi", capacityTbps: 12, confidence: "verified", source: "Liquid 12 Tbps Mombasa-Johannesburg corridor", operators: ["Liquid"] },
+    { from: "mombasa", to: "nairobi", capacityTbps: 12, confidence: "verified", source: "Liquid Intelligent Technologies + Nokia, 16,576 km Mombasa-Johannesburg corridor, 12 Tbps capacity", sourceUrl: "https://www.lightwaveonline.com/network-design/dwdm-roadm/article/14289208/liquid-intelligent-technologies-deploys-nokia-optical-transport-systems-on-mombasa-to-johannesburg-fiber-network", operators: ["Liquid"] },
     { from: "nairobi", to: "kampala", capacityTbps: 5, confidence: "estimated", source: "Liquid backbone, WIOCC", operators: ["Liquid", "WIOCC"] },
     { from: "kampala", to: "kigali", capacityTbps: 2, confidence: "estimated", source: "Liquid backbone", operators: ["Liquid"] },
-    { from: "nairobi", to: "addis-ababa", capacityTbps: 4, confidence: "verified", source: "Liquid Kenya-Ethiopia 4 Tbps", operators: ["Liquid"] },
-    { from: "lusaka", to: "lilongwe", capacityTbps: 1, confidence: "verified", source: "Liquid Zambia-Malawi 711 km", operators: ["Liquid"] },
+    { from: "nairobi", to: "addis-ababa", capacityTbps: 4, confidence: "verified", source: "Liquid Kenya-Ethiopia fiber route, 1,000+ km, 4 Tbps. Partnership with KETRACO + Ethiopia Electric Power", sourceUrl: "https://www.computerweekly.com/news/366552080/Liquid-opens-tap-on-Kenya-and-Ethiopia-fibre-link", operators: ["Liquid"] },
+    { from: "lusaka", to: "lilongwe", capacityTbps: 1, confidence: "estimated", source: "Liquid Zambia-Malawi fiber route, 711 km. Capacity unverified (1 Tbps is estimate)", sourceUrl: "https://www.connectingafrica.com/fiber-networking/liquid-launches-kenya-ethiopia-zambia-malawi-fiber-routes", operators: ["Liquid"] },
     { from: "johannesburg", to: "cape-town", capacityTbps: 10, confidence: "estimated", source: "Telkom SA, WIOCC, Liquid", operators: ["Telkom SA", "WIOCC", "Liquid"] },
     { from: "johannesburg", to: "maputo", capacityTbps: 3, confidence: "estimated", source: "Liquid, regional carriers", operators: ["Liquid"] },
     { from: "lusaka", to: "harare", capacityTbps: 3, confidence: "estimated", source: "Liquid backbone", operators: ["Liquid"] },
@@ -1424,19 +1657,39 @@ function main() {
 
     // East Asia
     { from: "hanoi", to: "nanning", capacityTbps: 10, confidence: "estimated", source: "China-Vietnam Pingxiang/Dongxing crossings", operators: ["China Telecom", "China Unicom"] },
-    { from: "mandalay", to: "kunming", capacityTbps: 2, confidence: "estimated", source: "CMI Cable 800 Gbps design", operators: ["China Unicom", "MPT"] },
+    { from: "mandalay", to: "kunming", capacityTbps: 0.8, confidence: "verified", source: "CMI terrestrial cable: China Unicom + MPT, 1,500 km, 24 fiber pairs, 80x10 Gbps = 800 Gbps design. Route runs Ruili (Yunnan)-Mandalay-Naypyidaw-Yangon-Ngwe Saung", sourceUrl: "https://www.submarinenetworks.com/en/nv/news/china-myanmar-international-cmi-terrestrial-cable-launches-for-service", operators: ["China Unicom", "MPT"] },
     { from: "vientiane", to: "kunming", capacityTbps: 2, confidence: "estimated", source: "China-Laos terrestrial", operators: ["China Telecom"] },
     { from: "dhaka", to: "kolkata", capacityTbps: 5, confidence: "estimated", source: "Three India-Bangladesh cross-border cables", operators: ["BTCL", "BSNL", "Airtel", "Tata"] },
 
     // South America
-    { from: "sao-paulo", to: "buenos-aires", capacityTbps: 50, confidence: "estimated", source: "SAC, Cirion 668 Tbps LATAM, Internexa", operators: ["SAC", "Cirion", "Internexa"] },
-    { from: "buenos-aires", to: "santiago", capacityTbps: 15, confidence: "estimated", source: "Andes crossing, SAC, Cirion, Conect Infra", operators: ["SAC", "Cirion", "Conect Infra"] },
+    { from: "sao-paulo", to: "buenos-aires", capacityTbps: 50, confidence: "estimated", source: "SAC terrestrial segments, Cirion (668 Tbps LATAM-wide, 2024), Internexa (32,000+ km fiber)", sourceUrl: "https://www.internexa.com/en/cobertura-red", operators: ["SAC", "Cirion", "Internexa"] },
+    { from: "buenos-aires", to: "santiago", capacityTbps: 15, confidence: "estimated", source: "Andes crossing via SAC terrestrial segment + Cirion LATAM backbone (668 Tbps network-wide, 2024) + Conecta Infra (US$350M, 6,000 km dark fiber, launched Mar 2026)", sourceUrl: "https://press.ciriontechnologies.com/en/2025/05/28/expands-network-infrastructure-capacity-access-metro-pops/", operators: ["SAC", "Cirion", "Conecta Infra"] },
     { from: "sao-paulo", to: "rio-de-janeiro", capacityTbps: 80, confidence: "estimated", source: "Domestic trunk, Cirion, multiple carriers", operators: ["Cirion"] },
     { from: "lima", to: "santiago", capacityTbps: 10, confidence: "estimated", source: "Internexa, SAC", operators: ["Internexa", "SAC"] },
     { from: "bogota", to: "lima", capacityTbps: 8, confidence: "estimated", source: "Internexa backbone", operators: ["Internexa"] },
     { from: "bogota", to: "cali", capacityTbps: 15, confidence: "estimated", source: "Domestic trunk, Internexa", operators: ["Internexa"] },
     { from: "quito", to: "bogota", capacityTbps: 8, confidence: "estimated", source: "Internexa Colombia-Ecuador", operators: ["Internexa"] },
-    { from: "sao-paulo", to: "porto-alegre", capacityTbps: 30, confidence: "estimated", source: "Domestic trunk, Conect Infra", operators: ["Conect Infra"] },
+    { from: "sao-paulo", to: "porto-alegre", capacityTbps: 30, confidence: "estimated", source: "Domestic trunk, Conecta Infra", sourceUrl: "https://www.prnewswire.com/news-releases/conecta-infra-launches-with-us350-million-investment-to-connect-south-americas-leading-data-center-hubs-302720079.html", operators: ["Conecta Infra"] },
+
+    // West Africa (new)
+    { from: "lagos", to: "accra", capacityTbps: 1, confidence: "verified", source: "CSquared + Phase3 + SBIN Lagos-Accra terrestrial fiber (commissioned May 2025), via Cotonou/Lome. Also Orange Djoliba network", sourceUrl: "https://csquared.com/2025/05/06/csquared-phase3-and-sbin-commission-lagos-to-accra-terrestrial-fibre-route-strengthening-west-africas-digital-resilience/", operators: ["CSquared", "Phase3", "SBIN", "Orange"] },
+    { from: "accra", to: "abidjan", capacityTbps: 1, confidence: "estimated", source: "CSquared backbone + Orange Djoliba pan-West African fiber network (10,000 km terrestrial, up to 100 Gbps)", sourceUrl: "https://www.lightwaveonline.com/network-design/high-speed-networks/article/14072161/orange-plans-fiber-backbone-network-in-west-africa", operators: ["CSquared", "Orange"] },
+    { from: "abidjan", to: "dakar", capacityTbps: 0.5, confidence: "estimated", source: "Orange Djoliba backbone via Mali/Burkina Faso/Senegal. Also Phase3 + Sonatel Lagos-Dakar terrestrial (launched May 2025, 32ms latency)", sourceUrl: "https://www.businesswire.com/news/home/20250507073118/en/Phase3-and-Sonatel-Launch-Lagos-to-Dakar-Terrestrial-Fibre-Route-Unlocking-Resilience-Across-West-Africa", operators: ["Orange", "Phase3", "Sonatel"] },
+
+    // Balkans (new)
+    { from: "budapest", to: "belgrade", capacityTbps: 5, confidence: "verified", source: "RETN 932 km Budapest-Belgrade-Sofia DWDM route (N*100G per circuit)", sourceUrl: "https://retn.net/news-events/retn_deploys_dwdm_%20route_budapest_belgrade_sofia", operators: ["RETN", "CETIN"] },
+    { from: "belgrade", to: "sofia", capacityTbps: 5, confidence: "verified", source: "RETN Budapest-Belgrade-Sofia DWDM route + Neterra backbone", sourceUrl: "https://retn.net/news-events/retn_deploys_dwdm_%20route_budapest_belgrade_sofia", operators: ["RETN", "CETIN", "Neterra"] },
+    { from: "bucharest", to: "sofia", capacityTbps: 5, confidence: "verified", source: "RETN diverse Budapest-Sofia route via Romania (second path)", sourceUrl: "https://retn.net/news-events/RETN_Strengthens_Network_Diversity_with_New_Budapest_to_Sofia_Route_via_Romania", operators: ["RETN", "Neterra"] },
+    { from: "zagreb", to: "budapest", capacityTbps: 5, confidence: "estimated", source: "Telia Carrier (PoP in Zagreb since 2016), Hrvatski Telekom", sourceUrl: "https://www.prnewswire.com/news-releases/telia-carrier-expands-global-backbone-to-zagreb-improves-connectivity-for-cee-and-the-balkans-300357941.html", operators: ["Telia", "Hrvatski Telekom"] },
+
+    // Middle East (new)
+    { from: "fujairah", to: "riyadh", capacityTbps: 6, confidence: "verified", source: "RCN (Regional Cable Network): Etisalat + Zain + Mobily + Orange consortium. 7,750 km round trip, 2 redundant fiber pairs, 6.4 Tbps design, 1.2 Tbps initial. Commercial since May 2015", sourceUrl: "https://zain.com/en/press-release/rcn-regional-cable-network-new-terrestrial-route-c", operators: ["Etisalat", "Zain", "Mobily", "Orange"] },
+    { from: "fujairah", to: "muscat", capacityTbps: 5, confidence: "estimated", source: "Omantel + du terrestrial cross-border links + OEG submarine cable (275 km)", sourceUrl: "https://en.wikipedia.org/wiki/Omantel", operators: ["Omantel", "du"] },
+
+    // Southeast Asia (new)
+    { from: "bangkok", to: "phnom-penh", capacityTbps: 1, confidence: "estimated", source: "Thailand-Cambodia-Vietnam Backbone (TCV), ~600 km. LXT Networks, CAT Telecom, Viettel Cambodia", sourceUrl: "https://www.prnewswire.com/news-releases/metro-optical-and-lxt-networks-partner-to-deliver-internet-access-and-sdwan-services-throughout-the-emerging-markets-of-thailand-cambodia-myanmar-laos-and-vietnam-300736393.html", operators: ["LXT Networks", "CAT Telecom", "Viettel"] },
+    { from: "phnom-penh", to: "ho-chi-minh-city", capacityTbps: 0.5, confidence: "estimated", source: "Viettel Cambodia terrestrial to Vietnam (45 Gbps), CFOCN 2,000 km backbone in Cambodia", sourceUrl: "https://www.aiib.org/en/projects/details/2019/approved/Cambodia-Fiber-Optic-Communication-Network-Project.html", operators: ["Viettel", "CFOCN"] },
+    { from: "kuala-lumpur", to: "singapore", capacityTbps: 30, confidence: "estimated", source: "MSAR (neutral carrier since 2014), Telekom Malaysia (540,000 km fiber), Fiberail (5,500 km via rail/pipeline corridors), Singtel. Dual access via Johor Causeway + Tuas Second Link", operators: ["MSAR", "TM", "Fiberail", "Singtel"] },
   ];
 
   const terrestrial: TerrestrialEdge[] = terrestrialDefs.map((def, i) => {
@@ -1459,6 +1712,7 @@ function main() {
       distanceKm: distKm,
       confidence: def.confidence,
       source: def.source,
+      ...(def.sourceUrl ? { sourceUrl: def.sourceUrl } : {}),
       operators: def.operators,
       ...(def.notes ? { notes: def.notes } : {}),
     };

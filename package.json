@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "data:fetch": "tsx scripts/fetch-telegeography.ts",
-    "data:build": "tsx scripts/build-data.ts"
+    "data:build": "tsx scripts/build-data.ts",
+    "test:e2e": "tsx e2e/run.ts"
   },
   "dependencies": {
     "@deck.gl/core": "^9.1.14",
@@ -41,6 +42,7 @@
     "@vitejs/plugin-react": "^6.0.1",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.5",
+    "puppeteer": "^24.40.0",
     "tailwindcss": "^4.1.10",
     "tsx": "^4.19.4",
     "typescript": "~5.9.3",
@@ -50,7 +52,8 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "@biomejs/biome",
-      "esbuild"
+      "esbuild",
+      "puppeteer"
     ]
   }
 }
