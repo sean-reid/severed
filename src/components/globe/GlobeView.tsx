@@ -65,12 +65,18 @@ export function GlobeView() {
 	useEffect(() => {
 		if (!mapRef.current) return;
 		if (fitBounds) {
+			const isMobile = window.innerWidth < 768;
 			mapRef.current.fitBounds(
 				[
 					[fitBounds.minLng, fitBounds.minLat],
 					[fitBounds.maxLng, fitBounds.maxLat],
 				],
-				{ padding: 60, duration: 1500 },
+				{
+					padding: isMobile
+						? { top: 60, bottom: 60, left: 20, right: 20 }
+						: { top: 40, bottom: 40, left: 240, right: 350 },
+					duration: 1500,
+				},
 			);
 			clearFlyTo();
 		} else if (flyTo) {
