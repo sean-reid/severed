@@ -96,7 +96,6 @@ export function ImpactPanel() {
 				Math.min(SNAPS[SNAPS.length - 1], dragRef.current.startH + dvh),
 			);
 			dragRef.current.lastY = y;
-			dragRef.current.lastTime = Date.now();
 			setSheetHeight(newH);
 		},
 		[setSheetHeight],
@@ -104,10 +103,13 @@ export function ImpactPanel() {
 
 	const onTouchEnd = useCallback(() => {
 		if (!dragRef.current) return;
-		// Use drag direction to pick the next snap point up or down
 		const draggedUp = dragRef.current.lastY < dragRef.current.startY;
 		const dragDist = Math.abs(dragRef.current.startY - dragRef.current.lastY);
-		const minDrag = 15; // px threshold to count as intentional
+		const totalTime = Date.now() - dragRef.current.lastTime;
+		// Velocity: px per ms over total drag. Fast flick = >0.4 px/ms
+		const velocity = totalTime > 0 ? dragDist / totalTime : 0;
+		const isFastFlick = velocity > 0.4 && dragDist > 30;
+		const minDrag = 15;
 
 		let target: number;
 		if (dragDist < minDrag) {
@@ -115,11 +117,14 @@ export function ImpactPanel() {
 			target = SNAPS.reduce((a, b) =>
 				Math.abs(b - sheetHeight) < Math.abs(a - sheetHeight) ? b : a,
 			);
+		} else if (isFastFlick) {
+			// Fast flick -- jump to endpoint
+			target = draggedUp ? SNAPS[SNAPS.length - 1] : SNAPS[0];
 		} else if (draggedUp) {
-			// Dragged up -- snap to next higher point above current
+			// Slow drag up -- snap to next higher point
 			target = SNAPS.find((s) => s > sheetHeight) ?? SNAPS[SNAPS.length - 1];
 		} else {
-			// Dragged down -- snap to next lower point below current
+			// Slow drag down -- snap to next lower point
 			target = [...SNAPS].reverse().find((s) => s < sheetHeight) ?? SNAPS[0];
 		}
 
