@@ -9,6 +9,7 @@ export function CutAction() {
 	const addCut = useStore((s) => s.addCut);
 	const selectCable = useStore((s) => s.selectCable);
 	const mobileSheetHeight = useStore((s) => s.mobileSheetHeight);
+	const sheetDragging = useStore((s) => s.mobileSheetDragging);
 	const [expanded, setExpanded] = useState(false);
 
 	const selectedCable = selectedCableId ? cablesById.get(selectedCableId) : null;
@@ -34,7 +35,7 @@ export function CutAction() {
 
 	return (
 		<div
-			className="absolute z-20 md:hidden left-3 right-3 "
+			className={`absolute z-20 md:hidden left-3 right-3 ${sheetDragging ? "" : "transition-[bottom] duration-300 ease-out"}`}
 			style={{ bottom: `calc(${mobileSheetHeight}dvh + 12px)` }}
 		>
 			<div className="bg-surface border border-border rounded-2xl shadow-xl shadow-black/40 overflow-hidden">

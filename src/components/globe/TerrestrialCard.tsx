@@ -8,6 +8,7 @@ export function TerrestrialCard() {
 	const metrosById = useStore((s) => s.metrosById);
 	const selectTerrestrial = useStore((s) => s.selectTerrestrial);
 	const mobileSheetHeight = useStore((s) => s.mobileSheetHeight);
+	const sheetDragging = useStore((s) => s.mobileSheetDragging);
 	const [expanded, setExpanded] = useState(false);
 
 	const edge = selectedTerrestrialId
@@ -22,7 +23,7 @@ export function TerrestrialCard() {
 
 	return (
 		<div
-			className="absolute z-20 md:hidden left-3 right-3 "
+			className={`absolute z-20 md:hidden left-3 right-3 ${sheetDragging ? "" : "transition-[bottom] duration-300 ease-out"}`}
 			style={{ bottom: `calc(${mobileSheetHeight}dvh + 12px)` }}
 		>
 			<div className="bg-surface border border-border rounded-2xl shadow-xl shadow-black/40 overflow-hidden">

@@ -46,6 +46,7 @@ interface StoreState {
 	panelOpen: boolean;
 	sidebarOpen: boolean;
 	mobileSheetHeight: number; // dvh units
+	mobileSheetDragging: boolean;
 
 	// Camera
 	flyTo: { lng: number; lat: number; zoom: number } | null;
@@ -66,6 +67,7 @@ interface StoreState {
 	togglePanel: () => void;
 	toggleSidebar: () => void;
 	setMobileSheetHeight: (h: number) => void;
+	setMobileSheetDragging: (v: boolean) => void;
 }
 
 export const useStore = create<StoreState>((set) => ({
@@ -96,6 +98,7 @@ export const useStore = create<StoreState>((set) => ({
 	panelOpen: true,
 	sidebarOpen: typeof window !== "undefined" && window.innerWidth >= 768,
 	mobileSheetHeight: 45,
+	mobileSheetDragging: false,
 
 	// Camera
 	flyTo: null,
@@ -179,4 +182,5 @@ export const useStore = create<StoreState>((set) => ({
 	togglePanel: () => set((s) => ({ panelOpen: !s.panelOpen })),
 	toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
 	setMobileSheetHeight: (h) => set({ mobileSheetHeight: h }),
+	setMobileSheetDragging: (v) => set({ mobileSheetDragging: v }),
 }));

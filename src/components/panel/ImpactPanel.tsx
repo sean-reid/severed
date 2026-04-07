@@ -38,7 +38,15 @@ export function ImpactPanel() {
 	const SNAPS = [15, 30, 45, 65, 85];
 	const [sheetHeight, setSheetHeightLocal] = useState(SNAPS[2]);
 	const setMobileSheetHeight = useStore((s) => s.setMobileSheetHeight);
-	const [dragging, setDragging] = useState(false);
+	const setMobileSheetDragging = useStore((s) => s.setMobileSheetDragging);
+	const [dragging, setDraggingLocal] = useState(false);
+	const setDragging = useCallback(
+		(v: boolean) => {
+			setDraggingLocal(v);
+			setMobileSheetDragging(v);
+		},
+		[setMobileSheetDragging],
+	);
 	const dragRef = useRef<{
 		startY: number;
 		startH: number;
