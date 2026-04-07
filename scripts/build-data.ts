@@ -1648,10 +1648,10 @@ function main() {
 				// Must stay south of Sulawesi's north arm (lat ~1.5 at lng 125)
 				[132.0, 5.0],
 				[130.0, 2.0], // south of Morotai, east of Halmahera
-				[128.5, -0.5], // Halmahera Sea, south of equator
-				[126.5, -2.5], // Banda Sea, well south of Sulawesi
-				[124.0, -3.5], // Banda Sea
-				[121.0, -4.5], // Flores Sea
+				[128.5, -1.0], // Halmahera Sea
+				[127.0, -3.5], // Banda Sea, passing south of Sulawesi SE arm
+				[125.0, -5.0], // Banda Sea
+				[122.5, -5.5], // Flores Sea, south of Sulawesi SE tip
 				[118.0, -5.0], // south of Sumbawa
 				[116.0, -5.5], // Java Sea
 				// Branch south to Tanjung Pakis
