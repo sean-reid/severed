@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useStore } from "../../state/store";
 
 export function ImpactPanel() {
@@ -33,12 +33,7 @@ export function ImpactPanel() {
 		},
 		[cablesById, addCut],
 	);
-	const selectedCableId = useStore((s) => s.selectedCableId);
-	const selectedTerrestrialId = useStore((s) => s.selectedTerrestrialId);
-	const hasCard = !!(selectedCableId || selectedMetroId || selectedTerrestrialId);
-	// When a floating card is showing, cap max height so card stays below scenario bar
-	const maxSnap = hasCard ? 50 : 85;
-	const SNAPS = useMemo(() => (hasCard ? [15, 30, 50] : [15, 30, 45, 65, 85]), [hasCard]);
+	const SNAPS = useMemo(() => [15, 30, 45, 65, 85], []);
 	const [sheetHeight, setSheetHeightLocal] = useState(SNAPS[2]);
 	const setMobileSheetHeight = useStore((s) => s.setMobileSheetHeight);
 	const setMobileSheetDragging = useStore((s) => s.setMobileSheetDragging);
@@ -56,15 +51,6 @@ export function ImpactPanel() {
 		lastY: number;
 		lastTime: number;
 	} | null>(null);
-
-	// Clamp sheet height when card appears/disappears
-	useEffect(() => {
-		if (typeof window === "undefined" || window.innerWidth >= 768) return;
-		if (sheetHeight > maxSnap) {
-			setSheetHeightLocal(maxSnap);
-			setMobileSheetHeight(maxSnap);
-		}
-	}, [maxSnap, sheetHeight, setMobileSheetHeight]);
 
 	const setSheetHeight = useCallback(
 		(h: number) => {
@@ -149,9 +135,23 @@ export function ImpactPanel() {
 		}
 
 		setSheetHeight(target);
+		// If dragging up past where cards would overlap, dismiss them
+		if (target > 55) {
+			selectCable(null);
+			selectMetro(null);
+			selectTerrestrial(null);
+		}
 		setDragging(false);
 		dragRef.current = null;
-	}, [sheetHeight, setSheetHeight, setDragging, SNAPS]);
+	}, [
+		sheetHeight,
+		setSheetHeight,
+		setDragging,
+		SNAPS,
+		selectCable,
+		selectMetro,
+		selectTerrestrial,
+	]);
 
 	return (
 		<>
