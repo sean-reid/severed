@@ -1656,13 +1656,11 @@ function main() {
 				[111.0, -5.0], // south toward Java
 				[108.5, -6.0],
 				[106.89, -6.1], // Tanjung Pakis / Jakarta area
-				[105.5, -6.2], // west along Java north coast
-				[104.8, -6.0], // Sunda Strait (between Java and Sumatra)
-				[104.0, -5.5], // through Sunda Strait into Indian Ocean side
-				[103.5, -4.0], // south of Sumatra in open sea
-				[103.2, -2.0], // west of Bangka Island
-				[103.5, 0.0], // approaching Singapore from south
-				[103.7, 0.8], // Malacca Strait approach
+				[106.0, -5.5], // north from Java coast
+				[105.5, -4.0], // Java Sea
+				[105.0, -2.5], // north through Java Sea
+				[104.6, -1.0], // approaching Riau Islands
+				[104.2, 0.3], // Singapore Strait approach
 				[103.88, 1.33], // Singapore (Tuas)
 			];
 			fixedPath = {
