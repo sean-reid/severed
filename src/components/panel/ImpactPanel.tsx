@@ -303,7 +303,7 @@ export function ImpactPanel() {
 								<div className="text-[10px] text-text-secondary/60 uppercase mb-1.5">
 									Traffic shifts to
 								</div>
-								{selectedImpact.reroutedVia.map((r, i) => {
+								{selectedImpact.reroutedVia.map((r) => {
 									const isSubCable = r.type === "submarine" && r.cableId;
 									const isTerrestrial = r.type === "terrestrial" && r.terrestrialId;
 									return (
