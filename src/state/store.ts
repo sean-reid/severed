@@ -164,11 +164,16 @@ export const useStore = create<StoreState>((set) => ({
 				}
 			}
 
+			// Fly to the center of the first cut location
+			const firstCut = newCuts[0];
+			const flyTo = firstCut ? { lng: firstCut.lng, lat: firstCut.lat, zoom: 4 } : null;
+
 			return {
 				cuts: newCuts,
 				activeScenarioId: scenarioId,
 				simulation: null,
 				selectedCableId: null,
+				flyTo,
 			};
 		}),
 
