@@ -1103,6 +1103,18 @@ const MANUAL_HUB_IDS = new Set([
 	"delhi",
 	"dhaka",
 	"colombo",
+	"beijing",
+	"shenzhen",
+	"nanjing",
+	"wuhan",
+	"chengdu",
+	"xian",
+	"montreal",
+	"oslo",
+	"krakow",
+	"mexico-city",
+	"casablanca",
+	"suez",
 	// Russia / Central Asia
 	"moscow",
 	"vladivostok",
@@ -2203,6 +2215,17 @@ function main() {
 		seoul: { name: "Seoul", countryCode: "KR", lat: 37.5665, lng: 126.978 },
 		taipei: { name: "Taipei", countryCode: "TW", lat: 25.033, lng: 121.5654 },
 		colombo: { name: "Colombo", countryCode: "LK", lat: 6.9271, lng: 79.8612 },
+		beijing: { name: "Beijing", countryCode: "CN", lat: 39.9042, lng: 116.4074 },
+		shenzhen: { name: "Shenzhen", countryCode: "CN", lat: 22.5431, lng: 114.0579 },
+		nanjing: { name: "Nanjing", countryCode: "CN", lat: 32.0603, lng: 118.7969 },
+		wuhan: { name: "Wuhan", countryCode: "CN", lat: 30.5928, lng: 114.3055 },
+		chengdu: { name: "Chengdu", countryCode: "CN", lat: 30.5728, lng: 104.0668 },
+		xian: { name: "Xi'an", countryCode: "CN", lat: 34.3416, lng: 108.9398 },
+		montreal: { name: "Montreal", countryCode: "CA", lat: 45.5017, lng: -73.5673 },
+		oslo: { name: "Oslo", countryCode: "NO", lat: 59.9139, lng: 10.7522 },
+		krakow: { name: "Krakow", countryCode: "PL", lat: 50.0647, lng: 19.945 },
+		"mexico-city": { name: "Mexico City", countryCode: "MX", lat: 19.4326, lng: -99.1332 },
+		casablanca: { name: "Casablanca", countryCode: "MA", lat: 33.5731, lng: -7.5898 },
 		lisbon: { name: "Lisbon", countryCode: "PT", lat: 38.7223, lng: -9.1393 },
 	};
 
@@ -3496,6 +3519,191 @@ function main() {
 				"MSAR (neutral carrier since 2014), Telekom Malaysia (540,000 km fiber), Fiberail (5,500 km via rail/pipeline corridors), Singtel. Dual access via Johor Causeway + Tuas Second Link [4 ops × ~8 Tbps = 30 Tbps]",
 			sourceUrl: "https://msar.tech",
 			operators: ["MSAR", "TM", "Fiberail", "Singtel"],
+		},
+
+		// ── China backbone (ChinaNet 8 supercore nodes + CN2) ──
+		{
+			from: "beijing",
+			to: "shanghai",
+			capacityTbps: 100,
+			confidence: "estimated",
+			source:
+				"China Telecom ChinaNet + CN2 + China Unicom 169 + China Mobile CMNet. 64 Tbps trial on Nanjing-Shanghai G.652 fiber. G.654E deployment Beijing-Jinan-Nanjing [3 ops × ~33 Tbps = 100 Tbps]",
+			sourceUrl:
+				"https://www.submarinenetworks.com/en/nv/news/china-telecom-transports-64tbps-over-1200km-g-652-fiber-using-c-l-technology",
+			operators: ["China Telecom", "China Unicom", "China Mobile"],
+		},
+		{
+			from: "beijing",
+			to: "wuhan",
+			capacityTbps: 60,
+			confidence: "estimated",
+			source:
+				"ChinaNet + CN2 + CERNET FITI 1.2 Tbps backbone (Beijing-Wuhan-Guangzhou). Both are supercore nodes [3 ops × ~20 Tbps = 60 Tbps]",
+			sourceUrl:
+				"https://developingtelecoms.com/telecom-technology/optical-fixed-networks/15795-tsinghua-team-launch-china-s-first-1-2-tbps-internet-backbone.html",
+			operators: ["China Telecom", "China Unicom", "China Mobile"],
+		},
+		{
+			from: "wuhan",
+			to: "guangzhou",
+			capacityTbps: 60,
+			confidence: "estimated",
+			source:
+				"ChinaNet + CN2 + CERNET FITI 1.2 Tbps backbone. Both are supercore nodes [3 ops × ~20 Tbps = 60 Tbps]",
+			sourceUrl:
+				"https://www.scmp.com/news/china/science/article/3241453/china-launches-worlds-fastest-internet-12-terabit-second-link-years-ahead-forecasts",
+			operators: ["China Telecom", "China Unicom", "China Mobile"],
+		},
+		{
+			from: "guangzhou",
+			to: "shenzhen",
+			capacityTbps: 80,
+			confidence: "estimated",
+			source:
+				"China Telecom hollow-core fiber Dongguan-Shenzhen-HK 110km, sub-1ms RTT. All 3 operators parallel trunk [3 ops × ~27 Tbps = 80 Tbps]",
+			sourceUrl:
+				"https://www.lightreading.com/cable-technology/chinese-operators-get-cracking-on-hollow-core-fiber",
+			operators: ["China Telecom", "China Unicom", "China Mobile"],
+		},
+		{
+			from: "shanghai",
+			to: "nanjing",
+			capacityTbps: 60,
+			confidence: "estimated",
+			source:
+				"China Telecom 64 Tbps trial on this exact segment (Nanjing-Shanghai G.652 fiber). Both are supercore/CN2 nodes [3 ops × ~20 Tbps = 60 Tbps]",
+			sourceUrl:
+				"https://www.submarinenetworks.com/en/nv/news/china-telecom-transports-64tbps-over-1200km-g-652-fiber-using-c-l-technology",
+			operators: ["China Telecom", "China Unicom", "China Mobile"],
+		},
+		{
+			from: "wuhan",
+			to: "chengdu",
+			capacityTbps: 40,
+			confidence: "estimated",
+			source:
+				"Both are ChinaNet supercore + CN2 core nodes. Eastern Data Western Computing computing hub corridor [3 ops × ~13 Tbps = 40 Tbps]",
+			sourceUrl:
+				"https://newsroom.cisco.com/c/r/newsroom/en/us/a/y2006/m07/china-telecom-selects-cisco-as-primary-supplier-for-chinanet-2006-expansion.html",
+			operators: ["China Telecom", "China Unicom", "China Mobile"],
+		},
+		{
+			from: "xian",
+			to: "wuhan",
+			capacityTbps: 30,
+			confidence: "estimated",
+			source:
+				"Both are ChinaNet supercore + CN2 core nodes. Xi'an is junction of east-west and north-south trunk routes [3 ops × ~10 Tbps = 30 Tbps]",
+			sourceUrl: "https://en.wikipedia.org/wiki/Internet_in_China",
+			operators: ["China Telecom", "China Unicom", "China Mobile"],
+		},
+		{
+			from: "beijing",
+			to: "nanjing",
+			capacityTbps: 80,
+			confidence: "estimated",
+			source:
+				"China Mobile G.654E fiber Beijing-Jinan-Nanjing trunk deployment [3 ops × ~27 Tbps = 80 Tbps]",
+			sourceUrl:
+				"https://www.daytaifiberoptic.com/news/welcome-the-first-year-of-large-scale-commerci-71098886.html",
+			operators: ["China Telecom", "China Unicom", "China Mobile"],
+		},
+
+		// ── South Korea ──
+		{
+			from: "seoul",
+			to: "busan",
+			capacityTbps: 10,
+			confidence: "verified",
+			source:
+				"SK Telecom 800 Gbps live on Seoul-Busan (1.2 Tbps tested). KT 1.2 Tbps pilot over 530 km Seoul-Busan. LG Uplus also 800G",
+			sourceUrl:
+				"https://www.mobileworldlive.com/asia-pacific/sk-units-prepare-for-data-surge-with-backbone-upgrade/",
+			operators: ["SK Telecom", "KT", "LG Uplus"],
+		},
+
+		// ── Canada ──
+		{
+			from: "toronto",
+			to: "montreal",
+			capacityTbps: 30,
+			confidence: "estimated",
+			source:
+				"Bell Canada + FirstLight 400G wavelengths with triple redundancy (3 diverse routes). Q1 2024 [2 ops × ~15 Tbps = 30 Tbps]",
+			sourceUrl:
+				"https://www.firstlight.net/bell-and-firstlight-to-offer-new-high-speed-routes-with-triple-redundancy-between-secaucus-nj-toronto-and-montreal/",
+			operators: ["Bell Canada", "FirstLight"],
+		},
+
+		// ── Scandinavia ──
+		{
+			from: "oslo",
+			to: "stockholm",
+			capacityTbps: 20,
+			confidence: "verified",
+			source:
+				"Arelion 1.6 Tbps waves with 400G coherent pluggable optics (Ciena 6500 RLS). New high-fiber-count cables in existing ducts. Complete mid-2025",
+			sourceUrl: "https://www.arelion.com/why-arelion/press-releases/scandinavian-fiber-upgrade-ai",
+			operators: ["Arelion"],
+		},
+
+		// ── Spain ──
+		{
+			from: "madrid",
+			to: "barcelona",
+			capacityTbps: 40,
+			confidence: "estimated",
+			source:
+				"Reintel 54,000+ km dark fiber mesh on ADIF AV railway + Red Electrica. Lyntia 55,200 km. Telefonica [3 ops × ~13 Tbps = 40 Tbps]",
+			sourceUrl: "https://www.reintel.es/en/solutions/backbone-network",
+			operators: ["Reintel", "Lyntia", "Telefonica"],
+		},
+
+		// ── Poland ──
+		{
+			from: "warsaw",
+			to: "krakow",
+			capacityTbps: 10,
+			confidence: "estimated",
+			source:
+				"HAWE Telekom 4,000 km trunk line with two tele-technical rings surrounding Poland. Atman Nx10 Gbps backbone [2 ops × ~5 Tbps = 10 Tbps]",
+			sourceUrl: "https://hawetelekom.com/en/about-us",
+			operators: ["HAWE Telekom", "Atman"],
+		},
+
+		// ── Mexico ──
+		{
+			from: "mexico-city",
+			to: "dallas",
+			capacityTbps: 20,
+			confidence: "estimated",
+			source:
+				"Cirion Mexico City-Queretaro-Monterrey ring (~4,260 km) + Fermaca/Zayo FN-1 El Paso-Queretaro 2,000 km. Cross-border to US backbone [2 ops × ~10 Tbps = 20 Tbps]",
+			sourceUrl: "https://press.ciriontechnologies.com/en/2024/12/09/expands-fiber-optic-mexico/",
+			operators: ["Cirion", "Fermaca"],
+		},
+
+		// ── North Africa ──
+		{
+			from: "casablanca",
+			to: "marseille",
+			capacityTbps: 5,
+			confidence: "estimated",
+			source:
+				"Maroc Telecom West Africa cable (North segment: 814 km Casablanca-Lisbon, 60 Tbps submarine). No direct terrestrial to Marseille. Capacity estimate for transit via submarine cables [1 op × ~5 Tbps = 5 Tbps]",
+			sourceUrl: "https://en.wikipedia.org/wiki/Telecommunications_in_Morocco",
+			operators: ["Maroc Telecom"],
+		},
+		{
+			from: "cairo",
+			to: "suez",
+			capacityTbps: 200,
+			confidence: "verified",
+			source:
+				"Telecom Egypt 10 diversified terrestrial trans-Egypt crossing routes connecting all Red Sea and Mediterranean landing stations. 200+ Tbps total transit",
+			sourceUrl: "https://www.csis.org/analysis/strategic-future-subsea-cables-egypt-case-study",
+			operators: ["Telecom Egypt"],
 		},
 	];
 
