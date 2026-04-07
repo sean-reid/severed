@@ -285,7 +285,15 @@ export function GlobeView() {
 				style={{
 					bottom:
 						typeof window !== "undefined" && window.innerWidth < 768
-							? `min(calc(100dvh - 70px), calc(${mobileSheetHeight}dvh + ${selectedCableId || selectedMetroId || selectedTerrestrialId ? "88" : "8"}px))`
+							? selectedCableId || selectedMetroId || selectedTerrestrialId
+								? undefined // use CSS top positioning instead
+								: `calc(${mobileSheetHeight}dvh + 8px)`
+							: undefined,
+					top:
+						typeof window !== "undefined" &&
+						window.innerWidth < 768 &&
+						(selectedCableId || selectedMetroId || selectedTerrestrialId)
+							? "60px" // below scenario bar, always visible
 							: undefined,
 				}}
 				title="Reset map view"
