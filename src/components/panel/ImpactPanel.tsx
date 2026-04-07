@@ -37,8 +37,8 @@ export function ImpactPanel() {
 	const selectedTerrestrialId = useStore((s) => s.selectedTerrestrialId);
 	const hasCard = !!(selectedCableId || selectedMetroId || selectedTerrestrialId);
 	// When a floating card is showing, cap max height so card stays below scenario bar
-	const maxSnap = hasCard ? 60 : 85;
-	const SNAPS = useMemo(() => (hasCard ? [15, 30, 45, 60] : [15, 30, 45, 65, 85]), [hasCard]);
+	const maxSnap = hasCard ? 50 : 85;
+	const SNAPS = useMemo(() => (hasCard ? [15, 30, 50] : [15, 30, 45, 65, 85]), [hasCard]);
 	const [sheetHeight, setSheetHeightLocal] = useState(SNAPS[2]);
 	const setMobileSheetHeight = useStore((s) => s.setMobileSheetHeight);
 	const setMobileSheetDragging = useStore((s) => s.setMobileSheetDragging);
