@@ -90,7 +90,7 @@ export function ImpactPanel() {
 			setDragging(true);
 			dragRef.current = { startY: y, startH: sheetHeight, lastY: y, lastTime: Date.now() };
 		},
-		[sheetHeight],
+		[sheetHeight, setDragging],
 	);
 
 	const onTouchMove = useCallback(
@@ -139,7 +139,7 @@ export function ImpactPanel() {
 		setSheetHeight(target);
 		setDragging(false);
 		dragRef.current = null;
-	}, [sheetHeight, setSheetHeight]);
+	}, [sheetHeight, setSheetHeight, setDragging]);
 
 	return (
 		<>
