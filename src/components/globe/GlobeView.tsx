@@ -275,7 +275,7 @@ export function GlobeView() {
 					active:bg-border/50 transition-colors
 					shadow-lg shadow-black/20
 					md:bottom-4 md:left-4 max-md:left-4
-					${selectedCableId ? "max-md:hidden" : ""}
+					${selectedCableId || selectedMetroId || selectedTerrestrialId ? "max-md:hidden" : ""}
 				`}
 				style={{
 					bottom:

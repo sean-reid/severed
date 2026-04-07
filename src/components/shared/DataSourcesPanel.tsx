@@ -5,6 +5,9 @@ export function DataSourcesPanel() {
 	const [open, setOpen] = useState(false);
 	const mobileSheetHeight = useStore((s) => s.mobileSheetHeight);
 	const selectedCableId = useStore((s) => s.selectedCableId);
+	const selectedMetroId = useStore((s) => s.selectedMetroId);
+	const selectedTerrestrialId = useStore((s) => s.selectedTerrestrialId);
+	const hasSelection = selectedCableId || selectedMetroId || selectedTerrestrialId;
 
 	return (
 		<>
@@ -19,7 +22,7 @@ export function DataSourcesPanel() {
 					uppercase tracking-wider transition-colors
 					md:bottom-3 md:left-1/2 md:-translate-x-1/2
 					max-md:right-4 max-md:left-auto
-					${selectedCableId ? "max-md:hidden" : ""}
+					${hasSelection ? "max-md:hidden" : ""}
 				`}
 				style={{
 					bottom:
