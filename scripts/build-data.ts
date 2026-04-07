@@ -1644,14 +1644,16 @@ function main() {
 				[139.5, 9.5],
 				[137.0, 8.0],
 				[134.56, 7.53], // Palau (Ngeremlengui)
-				// Palau → west-southwest through Celebes/Banda Sea
-				// Stays south of Philippines, north of main Indonesian islands
-				[131.0, 5.0],
-				[128.0, 2.5],
-				[125.0, 0.5], // Celebes Sea
-				[122.0, -1.0], // Banda Sea
-				[119.0, -2.5], // Flores Sea
-				[116.0, -4.0], // Java Sea
+				// Palau → south past Halmahera → Banda Sea → west
+				// Must stay south of Sulawesi's north arm (lat ~1.5 at lng 125)
+				[132.0, 5.0],
+				[130.0, 2.0], // south of Morotai, east of Halmahera
+				[128.5, -0.5], // Halmahera Sea, south of equator
+				[126.5, -2.5], // Banda Sea, well south of Sulawesi
+				[124.0, -3.5], // Banda Sea
+				[121.0, -4.5], // Flores Sea
+				[118.0, -5.0], // south of Sumbawa
+				[116.0, -5.5], // Java Sea
 				// Branch south to Tanjung Pakis
 				[113.0, -5.5],
 				[112.7, -6.7], // Tanjung Pakis
