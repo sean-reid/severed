@@ -9,6 +9,8 @@ export function Sidebar() {
 	const selectedMetroId = useStore((s) => s.selectedMetroId);
 	const selectedTerrestrialId = useStore((s) => s.selectedTerrestrialId);
 	const cablesById = useStore((s) => s.cablesById);
+	const cuts = useStore((s) => s.cuts);
+	const simulation = useStore((s) => s.simulation);
 	const terrestrial = useStore((s) => s.terrestrial);
 	const cables = useStore((s) => s.cables);
 	const metrosById = useStore((s) => s.metrosById);
@@ -41,8 +43,7 @@ export function Sidebar() {
 			affectedSegmentIds: segmentIds,
 		};
 		addCut(cut);
-		selectCable(null);
-	}, [selectedCable, addCut, selectCable]);
+	}, [selectedCable, addCut]);
 
 	return (
 		<>
@@ -208,18 +209,32 @@ export function Sidebar() {
 								</a>
 							)}
 						</div>
-						<button
-							type="button"
-							onClick={cutSelectedCable}
-							className="
-								mt-3 w-full py-2 rounded-lg
-								bg-cable-cut/20 border border-cable-cut/40
-								text-cable-cut text-xs font-semibold uppercase tracking-wider
-								hover:bg-cable-cut/30 transition-colors
-							"
-						>
-							Cut This Cable
-						</button>
+						{(() => {
+							const isCut =
+								selectedCableId &&
+								(cuts.some((c) =>
+									c.affectedSegmentIds.some((s) => s.startsWith(`${selectedCableId}:`)),
+								) ||
+									simulation?.affectedEdgeIds?.some((id) => id.startsWith(`${selectedCableId}:`)));
+							return isCut ? (
+								<div className="mt-3 w-full py-2 rounded-lg bg-cable-cut/10 text-cable-cut/60 text-xs font-semibold uppercase tracking-wider text-center">
+									Severed
+								</div>
+							) : (
+								<button
+									type="button"
+									onClick={cutSelectedCable}
+									className="
+										mt-3 w-full py-2 rounded-lg
+										bg-cable-cut/20 border border-cable-cut/40
+										text-cable-cut text-xs font-semibold uppercase tracking-wider
+										hover:bg-cable-cut/30 transition-colors
+									"
+								>
+									Cut This Cable
+								</button>
+							);
+						})()}
 					</div>
 				)}
 

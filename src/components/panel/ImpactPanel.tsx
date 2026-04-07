@@ -437,22 +437,38 @@ export function ImpactPanel() {
 													{r.additionalLoadTbps.toFixed(0)} Tbps
 												</span>
 											</button>
-											{isSubCable && r.cableId && (
-												<button
-													type="button"
-													onClick={() => {
-														if (r.cableId) cutCableById(r.cableId);
-													}}
-													className="
-													flex-none ml-2 px-2.5 py-1 rounded-lg
-													text-[10px] font-semibold uppercase
-													text-cable-cut bg-cable-cut/10 border border-cable-cut/30
-													active:bg-cable-cut/20 transition-colors
-												"
-												>
-													Cut
-												</button>
-											)}
+											{isSubCable &&
+												r.cableId &&
+												(() => {
+													const rCableAlreadyCut =
+														cuts.some((c) =>
+															c.affectedSegmentIds.some((s) => s.startsWith(`${r.cableId}:`)),
+														) ||
+														(simulation?.affectedEdgeIds?.some((id) =>
+															id.startsWith(`${r.cableId}:`),
+														) ??
+															false);
+													return rCableAlreadyCut ? (
+														<span className="flex-none ml-2 px-2 py-0.5 rounded text-[9px] text-cable-cut/40 bg-cable-cut/5">
+															severed
+														</span>
+													) : (
+														<button
+															type="button"
+															onClick={() => {
+																if (r.cableId) cutCableById(r.cableId);
+															}}
+															className="
+															flex-none ml-2 px-2.5 py-1 rounded-lg
+															text-[10px] font-semibold uppercase
+															text-cable-cut bg-cable-cut/10 border border-cable-cut/30
+															active:bg-cable-cut/20 transition-colors
+														"
+														>
+															Cut
+														</button>
+													);
+												})()}
 										</div>
 									);
 								})}
