@@ -1615,6 +1615,62 @@ function main() {
 			});
 		}
 
+		// Hardcoded path fix for cables with incomplete dateline geometry.
+		// Echo's TeleGeography data only has the US-side path; we add the Asia-side.
+		let fixedPath = path;
+		if (entry.id === "echo") {
+			// Echo route: Eureka → mid-Pacific (path already in data) → dateline →
+			// Guam → Palau → Indonesia → Singapore (synthesized below)
+			// Waypoints traced from SubmarineNetworks route map
+			// Traced from SubmarineNetworks Echo route map:
+			// Eureka → great circle arc SW across N Pacific → Guam →
+			// south through Philippine Sea → west past Palau →
+			// west above N Indonesia → branch south to Tanjung Pakis (Java) →
+			// main trunk continues west → Singapore
+			const asiaSide: number[][] = [
+				[180.0, 26.3], // dateline continuation
+				[177.0, 25.2],
+				[174.0, 24.0],
+				[171.0, 22.8],
+				[168.0, 21.5],
+				[165.0, 20.2],
+				[162.0, 19.0],
+				[159.0, 17.8],
+				[156.0, 16.7],
+				[153.0, 15.7],
+				[150.0, 14.8],
+				[147.5, 14.0],
+				[144.75, 13.48], // Guam (Piti)
+				[143.0, 12.5], // south through Philippine Sea
+				[141.0, 11.0],
+				[139.0, 9.5],
+				[137.0, 8.5],
+				[134.56, 7.53], // Palau (Ngeremlengui)
+				[131.0, 6.0], // west past Palau
+				[128.0, 4.5],
+				[125.0, 3.0], // north of Sulawesi
+				[122.0, 1.5],
+				[119.0, 0.0], // above N Indonesia / Kalimantan
+				[116.0, -1.5],
+				[113.5, -3.0], // branch point toward Java
+				[111.0, -5.0], // south toward Java
+				[108.5, -6.0],
+				[106.89, -6.1], // Tanjung Pakis / Jakarta area
+				[106.0, -5.0], // back north from Java branch
+				[105.0, -2.5], // through Bangka Strait
+				[104.5, -0.5],
+				[104.0, 0.5], // approach Singapore from SE
+				[103.88, 1.33], // Singapore (Tuas)
+			];
+			fixedPath = {
+				...path,
+				geometry: {
+					type: "MultiLineString" as const,
+					coordinates: [...path.geometry.coordinates, asiaSide],
+				},
+			};
+		}
+
 		cables.push({
 			id: entry.id,
 			name: detail.name,
@@ -1627,7 +1683,7 @@ function main() {
 			...(override?.sourceUrl ? { sourceUrl: override.sourceUrl } : {}),
 			owners,
 			landingStationIds,
-			path,
+			path: fixedPath,
 			segments,
 		});
 	}
