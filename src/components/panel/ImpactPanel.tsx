@@ -474,6 +474,58 @@ export function ImpactPanel() {
 								})}
 							</div>
 						)}
+						{/* Show cables that were severed affecting this metro */}
+						{simulation?.affectedEdgeIds &&
+							(() => {
+								const severedCableIds = new Set<string>();
+								for (const edgeId of simulation.affectedEdgeIds) {
+									const cableId = edgeId.split(":")[0];
+									if (cableId !== "terr") severedCableIds.add(cableId);
+								}
+								const severedCables = [...severedCableIds]
+									.map((id) => cablesById.get(id))
+									.filter(
+										(c) =>
+											c &&
+											c.segments.some(
+												(s) => s.from === selectedMetroId || s.to === selectedMetroId,
+											),
+									);
+								if (severedCables.length === 0) return null;
+								return (
+									<div className="mt-3 pt-2.5 border-t border-border/50">
+										<div className="text-[10px] text-text-secondary/60 uppercase mb-1.5">
+											Severed
+										</div>
+										{severedCables.map(
+											(c) =>
+												c && (
+													<div
+														key={c.id}
+														className="flex items-center justify-between text-sm py-1.5 opacity-50"
+													>
+														<button
+															type="button"
+															onClick={() => selectCable(c.id)}
+															className="flex items-center gap-2 min-w-0 text-left"
+														>
+															<span className="w-2 h-2 rounded-full flex-none bg-cable-cut" />
+															<span className="text-text-primary truncate line-through">
+																{c.name}
+															</span>
+															<span className="font-data text-text-secondary/70 text-xs flex-none">
+																{c.designCapacityTbps.toFixed(0)} Tbps
+															</span>
+														</button>
+														<span className="flex-none ml-2 px-2 py-0.5 rounded text-[9px] text-cable-cut/40 bg-cable-cut/5">
+															severed
+														</span>
+													</div>
+												),
+										)}
+									</div>
+								);
+							})()}
 					</div>
 				)}
 
