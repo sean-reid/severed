@@ -34,13 +34,17 @@ export function ImpactPanel() {
 		[cablesById, addCut],
 	);
 	// Mobile bottom sheet: three snap points as % of viewport height
-	const SNAP_PEEK = 25;
-	const SNAP_HALF = 45;
-	const SNAP_FULL = 85;
-	const [sheetHeight, setSheetHeightLocal] = useState(SNAP_HALF);
+	// 5 snap points for smoother drag stops
+	const SNAPS = [15, 30, 45, 65, 85];
+	const [sheetHeight, setSheetHeightLocal] = useState(SNAPS[2]);
 	const setMobileSheetHeight = useStore((s) => s.setMobileSheetHeight);
 	const [dragging, setDragging] = useState(false);
-	const dragRef = useRef<{ startY: number; startH: number } | null>(null);
+	const dragRef = useRef<{
+		startY: number;
+		startH: number;
+		lastY: number;
+		lastTime: number;
+	} | null>(null);
 
 	const setSheetHeight = useCallback(
 		(h: number) => {
@@ -70,15 +74,13 @@ export function ImpactPanel() {
 		? affected.find((i) => i.metroId === selectedMetroId)
 		: null;
 
-	// ── Render ──
+	// ── Touch drag with velocity-based snapping ──
 
 	const onTouchStart = useCallback(
 		(e: React.TouchEvent) => {
+			const y = e.touches[0].clientY;
 			setDragging(true);
-			dragRef.current = {
-				startY: e.touches[0].clientY,
-				startH: sheetHeight,
-			};
+			dragRef.current = { startY: y, startH: sheetHeight, lastY: y, lastTime: Date.now() };
 		},
 		[sheetHeight],
 	);
@@ -86,9 +88,15 @@ export function ImpactPanel() {
 	const onTouchMove = useCallback(
 		(e: React.TouchEvent) => {
 			if (!dragRef.current) return;
-			const dy = dragRef.current.startY - e.touches[0].clientY;
+			const y = e.touches[0].clientY;
+			const dy = dragRef.current.startY - y;
 			const dvh = (dy / window.innerHeight) * 100;
-			const newH = Math.max(SNAP_PEEK, Math.min(SNAP_FULL, dragRef.current.startH + dvh));
+			const newH = Math.max(
+				SNAPS[0],
+				Math.min(SNAPS[SNAPS.length - 1], dragRef.current.startH + dvh),
+			);
+			dragRef.current.lastY = y;
+			dragRef.current.lastTime = Date.now();
 			setSheetHeight(newH);
 		},
 		[setSheetHeight],
@@ -96,18 +104,26 @@ export function ImpactPanel() {
 
 	const onTouchEnd = useCallback(() => {
 		if (!dragRef.current) return;
-		// Snap to nearest snap point
-		const snaps = [SNAP_PEEK, SNAP_HALF, SNAP_FULL];
-		let nearest = SNAP_HALF;
-		let minDist = Number.POSITIVE_INFINITY;
-		for (const s of snaps) {
-			const d = Math.abs(sheetHeight - s);
-			if (d < minDist) {
-				minDist = d;
-				nearest = s;
-			}
+		// Use drag direction to pick the next snap point up or down
+		const draggedUp = dragRef.current.lastY < dragRef.current.startY;
+		const dragDist = Math.abs(dragRef.current.startY - dragRef.current.lastY);
+		const minDrag = 15; // px threshold to count as intentional
+
+		let target: number;
+		if (dragDist < minDrag) {
+			// Tiny drag -- snap to nearest
+			target = SNAPS.reduce((a, b) =>
+				Math.abs(b - sheetHeight) < Math.abs(a - sheetHeight) ? b : a,
+			);
+		} else if (draggedUp) {
+			// Dragged up -- snap to next higher point above current
+			target = SNAPS.find((s) => s > sheetHeight) ?? SNAPS[SNAPS.length - 1];
+		} else {
+			// Dragged down -- snap to next lower point below current
+			target = [...SNAPS].reverse().find((s) => s < sheetHeight) ?? SNAPS[0];
 		}
-		setSheetHeight(nearest);
+
+		setSheetHeight(target);
 		setDragging(false);
 		dragRef.current = null;
 	}, [sheetHeight, setSheetHeight]);
@@ -195,7 +211,7 @@ export function ImpactPanel() {
 								type="button"
 								onClick={() => {
 									if (window.innerWidth < 768) {
-										setSheetHeight(SNAP_PEEK);
+										setSheetHeight(SNAPS[0]);
 									} else {
 										togglePanel();
 									}
@@ -343,7 +359,7 @@ export function ImpactPanel() {
 														}
 													}
 													// On mobile, collapse the sheet so the selection is visible
-													if (window.innerWidth < 768) setMobileSheetHeight(25);
+													if (window.innerWidth < 768) setSheetHeight(SNAPS[0]);
 												}}
 												className="flex items-center gap-2 min-w-0 text-left hover:opacity-80 transition-opacity"
 											>
