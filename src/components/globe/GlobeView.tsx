@@ -33,21 +33,23 @@ const INITIAL_VIEW = {
 
 const DARK_BASEMAP = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
 
-/** Gap half-width in degrees (~1km at equator). */
-const GAP = 0.01;
+/** Half-gap in degrees (~1.5km at equator). */
+const GAP = 0.015;
 
 /**
- * Find the closest point on a polyline to a target, returning the segment index
- * and the projected position on that segment.
+ * Project a point onto the nearest segment of a polyline.
+ * Returns segment index, projected position, and unit direction along the segment.
+ * Pure function — never mutates input.
  */
 function projectOnLine(
-	coords: Position[],
+	coords: readonly Position[],
 	lat: number,
 	lng: number,
-): { segIdx: number; point: Position } {
+): { segIdx: number; point: Position; dir: Position } {
 	let bestSeg = 0;
 	let bestDist = Number.MAX_VALUE;
 	let bestPoint: Position = [lng, lat];
+	let bestDir: Position = [1, 0];
 
 	for (let i = 0; i < coords.length - 1; i++) {
 		const ax = coords[i][0];
@@ -57,7 +59,6 @@ function projectOnLine(
 		const dx = bx - ax;
 		const dy = by - ay;
 		const len2 = dx * dx + dy * dy;
-		// Project point onto segment [0,1]
 		let t = len2 > 0 ? ((lng - ax) * dx + (lat - ay) * dy) / len2 : 0;
 		t = Math.max(0, Math.min(1, t));
 		const px = ax + t * dx;
@@ -67,14 +68,16 @@ function projectOnLine(
 			bestDist = d;
 			bestSeg = i;
 			bestPoint = [px, py];
+			const len = Math.sqrt(len2) || 1;
+			bestDir = [dx / len, dy / len];
 		}
 	}
-	return { segIdx: bestSeg, point: bestPoint };
+	return { segIdx: bestSeg, point: bestPoint, dir: bestDir };
 }
 
 /**
- * Split a cable's GeoJSON path at cut points, creating a small visual gap.
- * Projects each cut onto the nearest line segment and inserts a precise break.
+ * Split a cable path at cut points with small, symmetric gaps.
+ * Pure function — never mutates the input path. Safe to call on every render.
  */
 function splitCablePath(
 	path: Feature<LineString | MultiLineString>,
@@ -82,81 +85,75 @@ function splitCablePath(
 ): Feature<LineString | MultiLineString>[] {
 	const props = path.properties ?? {};
 	const geom = path.geometry;
-	const lines: Position[][] =
+	const origLines: readonly (readonly Position[])[] =
 		geom.type === "MultiLineString" ? geom.coordinates : [geom.coordinates];
 
-	// For each cut, find which line and where to split
-	const splits: { lineIdx: number; segIdx: number; point: Position }[] = [];
+	// Resolve each cut to a specific line + position
+	type ResolvedCut = { segIdx: number; point: Position; dir: Position };
+	const cutsByLine = new Map<number, ResolvedCut[]>();
+
 	for (const cut of cableCuts) {
 		let bestLine = 0;
 		let bestDist = Number.MAX_VALUE;
-		let bestResult = { segIdx: 0, point: [cut.lng, cut.lat] as Position };
-		for (let li = 0; li < lines.length; li++) {
-			const result = projectOnLine(lines[li], cut.lat, cut.lng);
-			const d = (result.point[0] - cut.lng) ** 2 + (result.point[1] - cut.lat) ** 2;
+		let best: ResolvedCut = { segIdx: 0, point: [cut.lng, cut.lat], dir: [1, 0] };
+		for (let li = 0; li < origLines.length; li++) {
+			const r = projectOnLine(origLines[li], cut.lat, cut.lng);
+			const d = (r.point[0] - cut.lng) ** 2 + (r.point[1] - cut.lat) ** 2;
 			if (d < bestDist) {
 				bestDist = d;
 				bestLine = li;
-				bestResult = result;
+				best = r;
 			}
 		}
-		splits.push({ lineIdx: bestLine, ...bestResult });
+		const arr = cutsByLine.get(bestLine) ?? [];
+		arr.push(best);
+		cutsByLine.set(bestLine, arr);
 	}
 
-	// Group by line, sort by segment position
-	const splitsByLine = new Map<number, { segIdx: number; point: Position }[]>();
-	for (const s of splits) {
-		const arr = splitsByLine.get(s.lineIdx) ?? [];
-		arr.push({ segIdx: s.segIdx, point: s.point });
-		splitsByLine.set(s.lineIdx, arr);
-	}
+	// Build split features
+	const out: Position[][] = [];
 
-	const resultLines: Position[][] = [];
-	for (let li = 0; li < lines.length; li++) {
-		const lineSplits = splitsByLine.get(li);
-		if (!lineSplits) {
-			resultLines.push(lines[li]);
+	for (let li = 0; li < origLines.length; li++) {
+		const lineCuts = cutsByLine.get(li);
+		if (!lineCuts) {
+			out.push([...origLines[li]]);
 			continue;
 		}
-		// Sort splits by their position along the line
-		lineSplits.sort((a, b) => a.segIdx - b.segIdx);
+		lineCuts.sort((a, b) => a.segIdx - b.segIdx);
+		const coords = origLines[li];
 
-		let startIdx = 0;
-		for (const { segIdx, point } of lineSplits) {
-			// Direction along the segment for the gap offset
-			const a = lines[li][segIdx];
-			const b = lines[li][segIdx + 1];
-			const dx = b[0] - a[0];
-			const dy = b[1] - a[1];
-			const len = Math.sqrt(dx * dx + dy * dy) || 1;
-			const ux = (dx / len) * GAP;
-			const uy = (dy / len) * GAP;
+		// Walk the coordinate array, splitting at each cut
+		let pending: Position[] = []; // current segment being built
+		let nextCoord = 0; // next original coord to consume
 
-			// Before-cut half: all coords from startIdx to segIdx, then approach the cut point
-			const before = lines[li].slice(startIdx, segIdx + 1);
-			before.push([point[0] - ux, point[1] - uy]);
-			resultLines.push(before);
+		for (const { segIdx, point, dir } of lineCuts) {
+			// Add original coords from nextCoord up to and including segIdx
+			while (nextCoord <= segIdx) {
+				pending.push(coords[nextCoord]);
+				nextCoord++;
+			}
+			// End the "before" half at GAP before the cut point
+			pending.push([point[0] - dir[0] * GAP, point[1] - dir[1] * GAP]);
+			if (pending.length >= 2) out.push(pending);
 
-			// After-cut half starts just past the gap
-			startIdx = segIdx + 1;
-			// Prepend the post-gap point so the next segment begins right after the break
-			const afterStart: Position = [point[0] + ux, point[1] + uy];
-			lines[li] = [afterStart, ...lines[li].slice(startIdx)];
-			startIdx = 0;
+			// Start the "after" half at GAP past the cut point
+			pending = [[point[0] + dir[0] * GAP, point[1] + dir[1] * GAP]];
+			// nextCoord is already at segIdx + 1, ready for the next stretch
 		}
-		// Remaining tail
-		if (lines[li].length >= 2) {
-			resultLines.push(lines[li]);
+
+		// Tail: remaining coords after the last cut
+		while (nextCoord < coords.length) {
+			pending.push(coords[nextCoord]);
+			nextCoord++;
 		}
+		if (pending.length >= 2) out.push(pending);
 	}
 
-	return resultLines
-		.filter((l) => l.length >= 2)
-		.map((coords) => ({
-			type: "Feature" as const,
-			properties: props,
-			geometry: { type: "LineString" as const, coordinates: coords },
-		}));
+	return out.map((c) => ({
+		type: "Feature" as const,
+		properties: props,
+		geometry: { type: "LineString" as const, coordinates: c },
+	}));
 }
 
 export function GlobeView() {
