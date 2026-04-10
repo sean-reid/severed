@@ -34,10 +34,9 @@ export function DataSourcesPanel() {
 							: undefined,
 				}}
 			>
-				Sources
+				About
 			</button>
 
-			{/* Panel overlay */}
 			{open && (
 				<div className="fixed inset-0 z-50 flex items-center justify-center p-4">
 					{/* Backdrop */}
@@ -54,7 +53,7 @@ export function DataSourcesPanel() {
 					<div className="relative w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-2xl bg-surface border border-border shadow-2xl">
 						<div className="sticky top-0 flex items-center justify-between px-6 py-4 bg-surface border-b border-border">
 							<h2 className="font-data text-sm font-semibold tracking-wider">
-								DATA SOURCES &amp; METHODOLOGY
+								ABOUT
 							</h2>
 							<button
 								type="button"
@@ -66,6 +65,23 @@ export function DataSourcesPanel() {
 						</div>
 
 						<div className="px-6 py-5 space-y-6 text-sm text-text-secondary leading-relaxed">
+							<section>
+								<p className="text-text-primary text-base font-medium mb-2">
+									What happens when submarine cables get cut?
+								</p>
+								<p>
+									Over 95% of intercontinental data flows through ~500 submarine fiber-optic cables
+									concentrated in a handful of geographic chokepoints. They break more often than
+									most people realize.
+								</p>
+								<p className="mt-2">
+									Severed lets you explore the real topology of the global cable network and
+									simulate what happens when cables fail. Every scenario is a documented historical
+									event. The simulation computes bandwidth loss and latency impact for 930 metro
+									areas.
+								</p>
+							</section>
+
 							<section>
 								<h3 className="text-text-primary font-semibold mb-2">Submarine Cables</h3>
 								<p>
@@ -202,6 +218,17 @@ export function DataSourcesPanel() {
 									</svg>
 									View source on GitHub
 								</a>
+								<p className="text-[10px] text-text-secondary/40 pt-2">
+									Built by{" "}
+									<a
+										href="https://sean-reid.github.io"
+										target="_blank"
+										rel="noopener noreferrer"
+										className="hover:text-text-secondary transition-colors"
+									>
+										Sean Reid
+									</a>
+								</p>
 							</section>
 						</div>
 					</div>

@@ -10,11 +10,11 @@ export default async function test(ctx: TestContext) {
 	await ctx.goto();
 
 	// I click "Sources" to learn about the data behind the simulator
-	await ctx.clickButton("Sources");
+	await ctx.clickButton("About");
 	await new Promise((r) => setTimeout(r, 500));
 
-	// The panel opens and shows "DATA SOURCES" as its heading
-	await ctx.waitForText("DATA SOURCES");
+	// The panel opens and shows "ABOUT" as its heading
+	await ctx.waitForText("ABOUT");
 	const pageText = await ctx.bodyText();
 
 	// I can see the capacity heuristic table used for estimation
@@ -47,7 +47,7 @@ export default async function test(ctx: TestContext) {
 
 	// The panel should disappear cleanly
 	const stillOpen = await ctx.page.evaluate(
-		() => document.body.textContent?.includes("DATA SOURCES") ?? false,
+		() => document.body.textContent?.includes("ABOUT") ?? false,
 	);
 	ctx.assert(!stillOpen, "Sources panel should close after clicking CLOSE");
 
