@@ -17,6 +17,8 @@ export interface SimulationInput {
 	terrestrial: TerrestrialEdge[];
 	chokepoints: Chokepoint[];
 	cuts: CutLocation[];
+	/** When set, only cables with rfsYear <= this date's year are included in the graph */
+	historicalDate?: string;
 }
 
 export interface SimulationOutput {
@@ -114,15 +116,17 @@ function computeBaseline(graph: NetworkGraph): BaselineMetrics {
 	const latency = new Map<string, number>();
 	const diversity = new Map<string, number>();
 
-	// Initialize
+	// Pre-compute total outgoing capacity per metro (for traffic weighting)
+	const totalOutCap = new Map<string, number>();
 	for (const [metroId] of graph.nodes) {
 		bandwidth.set(metroId, 0);
 		latency.set(metroId, Number.POSITIVE_INFINITY);
 		const adj = graph.adjacency.get(metroId);
 		diversity.set(metroId, adj ? new Set(adj.map((e) => e.cableId ?? e.id)).size : 0);
+		totalOutCap.set(metroId, adj ? adj.reduce((sum, e) => sum + e.capacityTbps, 0) : 0);
 	}
 
-	// Run Dijkstra from each hub, accumulate bandwidth per metro
+	// Run Dijkstra from each hub, accumulate capacity-weighted bandwidth per metro
 	for (const hubId of graph.hubIds) {
 		const { dist, prev } = dijkstraDistance(graph, hubId);
 
@@ -134,12 +138,17 @@ function computeBaseline(graph: NetworkGraph): BaselineMetrics {
 				latency.set(metroId, d * 0.005); // km to ms
 			}
 
-			// Bandwidth: bottleneck along shortest path to this hub
+			// Bandwidth: capacity-weighted bottleneck along shortest path to this hub
+			// Weight = first edge capacity / total outgoing capacity
+			// This ensures high-capacity cables contribute proportionally more
 			if (metroId === hubId) continue;
 			const path = reconstructPath(prev, metroId);
 			if (path.length === 0) continue;
 			const bottleneck = Math.min(...path.map((e) => e.capacityTbps));
-			bandwidth.set(metroId, (bandwidth.get(metroId) ?? 0) + bottleneck);
+			const lastEdge = path[path.length - 1]; // edge touching this metro
+			const total = totalOutCap.get(metroId) ?? 1;
+			const weight = total > 0 ? lastEdge.capacityTbps / total : 1;
+			bandwidth.set(metroId, (bandwidth.get(metroId) ?? 0) + bottleneck * weight);
 		}
 	}
 
@@ -194,8 +203,15 @@ function computeRerouting(
 export function runSimulation(input: SimulationInput): SimulationOutput {
 	const { metros, cables, terrestrial, chokepoints, cuts } = input;
 
+	// Filter cables by historical date if set (only include cables that existed at that time)
+	let activeCables = cables;
+	if (input.historicalDate) {
+		const cutoffYear = new Date(input.historicalDate).getFullYear();
+		activeCables = cables.filter((c) => c.rfsYear <= cutoffYear);
+	}
+
 	// Build baseline graph
-	const baselineGraph = new NetworkGraph(metros, cables, terrestrial);
+	const baselineGraph = new NetworkGraph(metros, activeCables, terrestrial);
 
 	// Compute baseline metrics
 	const baseline = computeBaseline(baselineGraph);
@@ -227,7 +243,7 @@ export function runSimulation(input: SimulationInput): SimulationOutput {
 	}
 
 	// Resolve which edges are affected
-	const affectedEdgeIds = resolveAffectedEdges(baselineGraph, cuts, cables, chokepoints);
+	const affectedEdgeIds = resolveAffectedEdges(baselineGraph, cuts, activeCables, chokepoints);
 
 	// Build damaged graph
 	const damagedGraph = baselineGraph.withoutEdges(affectedEdgeIds);
@@ -237,12 +253,14 @@ export function runSimulation(input: SimulationInput): SimulationOutput {
 	const damagedLatency = new Map<string, number>();
 	const damagedDiversity = new Map<string, number>();
 
-	// Same hub-first Dijkstra approach for damaged graph
+	// Same capacity-weighted hub-first Dijkstra for damaged graph
+	const damagedOutCap = new Map<string, number>();
 	for (const [metroId] of damagedGraph.nodes) {
 		damagedBandwidth.set(metroId, 0);
 		damagedLatency.set(metroId, Number.POSITIVE_INFINITY);
 		const adj = damagedGraph.adjacency.get(metroId);
 		damagedDiversity.set(metroId, adj ? new Set(adj.map((e) => e.cableId ?? e.id)).size : 0);
+		damagedOutCap.set(metroId, adj ? adj.reduce((sum, e) => sum + e.capacityTbps, 0) : 0);
 	}
 
 	for (const hubId of damagedGraph.hubIds) {
@@ -257,7 +275,10 @@ export function runSimulation(input: SimulationInput): SimulationOutput {
 			const path = reconstructPath(prev, metroId);
 			if (path.length === 0) continue;
 			const bottleneck = Math.min(...path.map((e) => e.capacityTbps));
-			damagedBandwidth.set(metroId, (damagedBandwidth.get(metroId) ?? 0) + bottleneck);
+			const lastEdge = path[path.length - 1];
+			const total = damagedOutCap.get(metroId) ?? 1;
+			const weight = total > 0 ? lastEdge.capacityTbps / total : 1;
+			damagedBandwidth.set(metroId, (damagedBandwidth.get(metroId) ?? 0) + bottleneck * weight);
 		}
 	}
 	for (const hubId of damagedGraph.hubIds) {

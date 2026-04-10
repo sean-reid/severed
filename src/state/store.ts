@@ -9,6 +9,7 @@ import type {
 	Scenario,
 	TerrestrialEdge,
 } from "../data/types";
+import { haversineKm } from "../utils/geo";
 
 interface SimulationState {
 	impacts: MetroImpact[];
@@ -158,16 +159,44 @@ export const useStore = create<StoreState>((set) => ({
 						affectedSegmentIds: [],
 					});
 				} else if (cutLoc.type === "cable" && cutLoc.cableIds) {
-					// Cut specific cables by ID -- most accurate for historical events
+					// Cut specific cables -- optionally only segments near the cut location
+					const hasCutLocation = cutLoc.cutLat != null && cutLoc.cutLng != null;
+					const cutRadius = cutLoc.cutRadius ?? 500;
+
 					for (const cableId of cutLoc.cableIds) {
 						const cable = s.cablesById.get(cableId);
 						if (!cable) continue;
-						const segmentIds = cable.segments.map((_s, i) => `${cableId}:${i}`);
+
+						let segmentIds: string[];
+						if (hasCutLocation) {
+							// Location-based: only sever segments near the cut point
+							segmentIds = [];
+							for (let i = 0; i < cable.segments.length; i++) {
+								const seg = cable.segments[i];
+								const from = s.metrosById.get(seg.from);
+								const to = s.metrosById.get(seg.to);
+								if (!from || !to) continue;
+								const midLat = (from.lat + to.lat) / 2;
+								const midLng = (from.lng + to.lng) / 2;
+								const dist = haversineKm(cutLoc.cutLat ?? 0, cutLoc.cutLng ?? 0, midLat, midLng);
+								if (dist < cutRadius) {
+									segmentIds.push(`${cableId}:${i}`);
+								}
+							}
+							// Fallback: if no segments matched geometry, cut all
+							if (segmentIds.length === 0) {
+								segmentIds = cable.segments.map((_s, i) => `${cableId}:${i}`);
+							}
+						} else {
+							// No cut location: cut all segments (legacy behavior)
+							segmentIds = cable.segments.map((_s, i) => `${cableId}:${i}`);
+						}
+
 						newCuts.push({
 							id: `scenario-${scenarioId}-cable-${cableId}`,
 							type: "point",
-							lat: 0,
-							lng: 0,
+							lat: cutLoc.cutLat ?? 0,
+							lng: cutLoc.cutLng ?? 0,
 							affectedSegmentIds: segmentIds,
 						});
 					}

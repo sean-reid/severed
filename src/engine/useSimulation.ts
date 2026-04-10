@@ -13,8 +13,12 @@ export function useSimulation() {
 	const terrestrial = useStore((s) => s.terrestrial);
 	const chokepoints = useStore((s) => s.chokepoints);
 	const cuts = useStore((s) => s.cuts);
+	const activeScenarioId = useStore((s) => s.activeScenarioId);
+	const scenarios = useStore((s) => s.scenarios);
 	const setSimulation = useStore((s) => s.setSimulation);
 	const setSimulating = useStore((s) => s.setSimulating);
+
+	const activeScenario = activeScenarioId ? scenarios.find((s) => s.id === activeScenarioId) : null;
 
 	// Initialize worker
 	useEffect(() => {
@@ -49,9 +53,10 @@ export function useSimulation() {
 			terrestrial,
 			chokepoints,
 			cuts,
+			historicalDate: activeScenario?.historicalDate,
 		};
 		workerRef.current.postMessage(input);
-	}, [cuts, metros, cables, terrestrial, chokepoints, setSimulating]);
+	}, [cuts, metros, cables, terrestrial, chokepoints, setSimulating, activeScenario]);
 
 	// Manual trigger
 	const runNow = useCallback(() => {
@@ -63,9 +68,10 @@ export function useSimulation() {
 			terrestrial,
 			chokepoints,
 			cuts,
+			historicalDate: activeScenario?.historicalDate,
 		};
 		workerRef.current.postMessage(input);
-	}, [metros, cables, terrestrial, chokepoints, cuts, setSimulating]);
+	}, [metros, cables, terrestrial, chokepoints, cuts, setSimulating, activeScenario]);
 
 	return { runNow };
 }

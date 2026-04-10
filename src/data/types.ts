@@ -75,6 +75,11 @@ export interface ScenarioCut {
 	lat?: number;
 	lng?: number;
 	cableIds?: string[];
+	/** Where the cable was physically cut (for location-based segment resolution) */
+	cutLat?: number;
+	cutLng?: number;
+	/** Radius in km for segment matching (defaults to 500) */
+	cutRadius?: number;
 }
 
 export interface Scenario {
