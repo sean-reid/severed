@@ -1,48 +1,51 @@
 import type { TestContext } from "../context";
 
 /**
- * Verify the Sources panel opens, shows methodology, and has working content.
+ * As a user, I want to open the Sources panel and review the methodology,
+ * data provenance, and confidence levels so I understand where the data comes from.
+ *
+ * Story: Checking methodology -- I open the Sources panel to understand where the data comes from.
  */
 export default async function test(ctx: TestContext) {
 	await ctx.goto();
 
-	// Click the "Sources" button
+	// I click "Sources" to learn about the data behind the simulator
 	await ctx.clickButton("Sources");
 	await new Promise((r) => setTimeout(r, 500));
 
-	// Panel should be visible with methodology content
+	// The panel opens and shows "DATA SOURCES" as its heading
 	await ctx.waitForText("DATA SOURCES");
-	const body = await ctx.bodyText();
+	const pageText = await ctx.bodyText();
 
-	// Should show the heuristic table
-	ctx.assert(body.includes("Before 2005"), "Heuristic table missing 'Before 2005' row");
+	// I can see the capacity heuristic table used for estimation
+	ctx.assert(pageText.includes("Before 2005"), "Heuristic table missing 'Before 2005' row");
 	ctx.assert(
-		body.includes("280 Tbps") || body.includes("280"),
+		pageText.includes("280 Tbps") || pageText.includes("280"),
 		"Heuristic table missing 2022+ value",
 	);
 
-	// Should show confidence level descriptions
-	ctx.assert(body.includes("verified"), "Missing verified confidence description");
-	ctx.assert(body.includes("estimated"), "Missing estimated confidence description");
-	ctx.assert(body.includes("approximated"), "Missing approximated confidence description");
+	// Confidence levels are explained so I know what "verified" vs "estimated" means
+	ctx.assert(pageText.includes("verified"), "Missing verified confidence description");
+	ctx.assert(pageText.includes("estimated"), "Missing estimated confidence description");
+	ctx.assert(pageText.includes("approximated"), "Missing approximated confidence description");
 
-	// Should show TeleGeography link
-	ctx.assert(body.includes("TeleGeography"), "Missing TeleGeography attribution");
+	// TeleGeography is credited as the primary cable data source
+	ctx.assert(pageText.includes("TeleGeography"), "Missing TeleGeography attribution");
 
-	// Should mention terrestrial edges are clickable
+	// There is a hint telling me I can click terrestrial edges for their sources
 	ctx.assert(
-		body.includes("Click any") || body.includes("click any"),
+		pageText.includes("Click any") || pageText.includes("click any"),
 		"Missing instruction to click for sources",
 	);
 
-	// Should have the GitHub link
-	ctx.assert(body.includes("GitHub"), "Missing GitHub link");
+	// The project GitHub link is available for full transparency
+	ctx.assert(pageText.includes("GitHub"), "Missing GitHub link");
 
-	// Close button should work
+	// I close the panel when I am done reading
 	await ctx.clickButton("CLOSE");
 	await new Promise((r) => setTimeout(r, 300));
 
-	// Panel should be gone
+	// The panel should disappear cleanly
 	const stillOpen = await ctx.page.evaluate(
 		() => document.body.textContent?.includes("DATA SOURCES") ?? false,
 	);

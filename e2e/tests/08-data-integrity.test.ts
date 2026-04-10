@@ -1,8 +1,11 @@
 import type { TestContext } from "../context";
 
 /**
- * Verify the built data files are well-formed and have expected counts.
- * This catches build regressions that might not show up visually.
+ * Data quality -- the built dataset has the expected number of cables, metros,
+ * and terrestrial links.
+ *
+ * As a user, I rely on the underlying data being complete and well-formed.
+ * This test validates that build regressions haven't silently dropped records.
  */
 export default async function test(ctx: TestContext) {
 	// Only run on desktop to avoid duplicating data checks
@@ -10,7 +13,7 @@ export default async function test(ctx: TestContext) {
 
 	await ctx.goto();
 
-	// Fetch and validate cables.json
+	// Verify the cables dataset has the expected shape and counts
 	const cableStats = await ctx.page.evaluate(() =>
 		fetch("/data/cables.json")
 			.then((r) => r.json())
@@ -51,8 +54,8 @@ export default async function test(ctx: TestContext) {
 	);
 	ctx.assert(cableStats.hasPath === cableStats.total, `All cables should have paths`);
 
-	// Fetch and validate terrestrial.json
-	const terrStats = await ctx.page.evaluate(() =>
+	// Verify the terrestrial links dataset is complete and reasonable
+	const terrestrialStats = await ctx.page.evaluate(() =>
 		fetch("/data/terrestrial.json")
 			.then((r) => r.json())
 			.then(
@@ -76,18 +79,18 @@ export default async function test(ctx: TestContext) {
 			),
 	);
 
-	ctx.assert(terrStats.total >= 110, `Expected >=110 terrestrial edges, got ${terrStats.total}`);
+	ctx.assert(terrestrialStats.total >= 110, `Expected >=110 terrestrial edges, got ${terrestrialStats.total}`);
 	ctx.assert(
-		terrStats.withSourceUrl >= 40,
-		`Expected >=40 terrestrial edges with sourceUrl, got ${terrStats.withSourceUrl}`,
+		terrestrialStats.withSourceUrl >= 40,
+		`Expected >=40 terrestrial edges with sourceUrl, got ${terrestrialStats.withSourceUrl}`,
 	);
 	ctx.assert(
-		terrStats.maxDistance < 8000,
-		`No terrestrial edge should exceed 8000km, got ${terrStats.maxDistance}`,
+		terrestrialStats.maxDistance < 8000,
+		`No terrestrial edge should exceed 8000km, got ${terrestrialStats.maxDistance}`,
 	);
-	ctx.assert(terrStats.zeroDistance === 0, `No terrestrial edge should have 0 distance`);
+	ctx.assert(terrestrialStats.zeroDistance === 0, `No terrestrial edge should have 0 distance`);
 
-	// Fetch and validate metros.json
+	// Verify the metros dataset covers enough cities and hubs
 	const metroStats = await ctx.page.evaluate(() =>
 		fetch("/data/metros.json")
 			.then((r) => r.json())

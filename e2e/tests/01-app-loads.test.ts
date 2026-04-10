@@ -1,23 +1,26 @@
 import type { TestContext } from "../context";
 
 /**
- * Verify the app loads, renders the main UI, and has no console errors.
+ * As a user, I want to open the simulator and immediately see the globe
+ * with submarine cables rendered -- no errors, no blank screen.
+ *
+ * Story: First visit -- I open the simulator and see the globe with submarine cables.
  */
 export default async function test(ctx: TestContext) {
-	const errors: string[] = [];
-	ctx.page.on("pageerror", (err) => errors.push(err.message));
+	const consoleErrors: string[] = [];
+	ctx.page.on("pageerror", (err) => consoleErrors.push(err.message));
 
 	await ctx.goto();
 	await ctx.screenshot("app-loaded");
 
-	// Title should be present
-	const title = await ctx.page.$eval("h1", (el) => el.textContent?.trim() ?? "");
-	ctx.assert(title.includes("SEVERED"), `Expected title "SEVERED", got "${title}"`);
+	// The page headline tells me I am in the right place
+	const headline = await ctx.page.$eval("h1", (el) => el.textContent?.trim() ?? "");
+	ctx.assert(headline.includes("SEVERED"), `Expected title "SEVERED", got "${headline}"`);
 
-	// Subtitle should be present
-	const body = await ctx.bodyText();
-	ctx.assert(body.includes("Submarine Cable Failure Simulator"), "Subtitle missing");
+	// A subtitle confirms this is the cable failure simulator
+	const pageText = await ctx.bodyText();
+	ctx.assert(pageText.includes("Submarine Cable Failure Simulator"), "Subtitle missing");
 
-	// No JS errors
-	ctx.assert(errors.length === 0, `Console errors: ${errors.join("; ")}`);
+	// Nothing broke while loading the page
+	ctx.assert(consoleErrors.length === 0, `Console errors: ${consoleErrors.join("; ")}`);
 }

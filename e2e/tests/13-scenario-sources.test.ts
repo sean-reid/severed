@@ -1,12 +1,17 @@
 import type { TestContext } from "../context";
 
 /**
- * Verify scenario source links are visible when a real-event scenario is selected.
+ * As a user, I want to fact-check the app's scenarios.
+ *
+ * Fact-checking -- I want to verify the Red Sea scenario links to real news
+ * reporting. When I select the Red Sea Crisis, I expect to see a description
+ * mentioning the event and clickable source links to outlets like Al Jazeera,
+ * Cloudflare, or Wikipedia so I can read the original reporting myself.
  */
 export default async function test(ctx: TestContext) {
 	await ctx.goto();
 
-	// Select "Red Sea Crisis" scenario (has source URLs)
+	// I open the Red Sea Crisis scenario to check its sources
 	if (ctx.viewport === "mobile") {
 		await ctx.page.evaluate(() => {
 			const btns = Array.from(document.querySelectorAll("button"));
@@ -19,14 +24,14 @@ export default async function test(ctx: TestContext) {
 
 	await new Promise((r) => setTimeout(r, 3000));
 
-	// Should show scenario description
+	// The scenario description should mention the event context
 	const body = await ctx.bodyText();
 	ctx.assert(
 		body.includes("cables") || body.includes("cut") || body.includes("Houthi"),
 		"Active scenario should show description text",
 	);
 
-	// Should show source links with domain names
+	// I should see links to real news sources so I can verify the claims
 	const hasSourceLink = await ctx.page.evaluate(() => {
 		const links = Array.from(document.querySelectorAll('a[target="_blank"]'));
 		return links.some(

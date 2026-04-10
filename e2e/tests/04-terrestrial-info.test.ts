@@ -1,34 +1,33 @@
 import type { TestContext } from "../context";
 
 /**
- * Verify terrestrial edge data is loaded and the terrestrial info panel
- * structure exists in the store/types (since we can't easily click deck.gl
- * layers in headless Puppeteer, we verify the data contract instead).
+ * As a user, I want the terrestrial backbone data to be well-sourced and
+ * correctly structured so I can trust the simulation results.
+ *
+ * Story: Data quality -- terrestrial backbone links are well-sourced and correctly structured.
  */
 export default async function test(ctx: TestContext) {
 	await ctx.goto();
 
-	// Verify terrestrial data is loaded into the app
-	const terrCount = await ctx.page.evaluate(() => {
-		// Access the Zustand store through React internals
-		// We check that the data JSON was loaded correctly
+	// The dataset should contain a healthy number of backbone links
+	const edgeCount = await ctx.page.evaluate(() => {
 		return fetch("/data/terrestrial.json")
 			.then((r) => r.json())
 			.then((data: unknown[]) => data.length);
 	});
 
-	ctx.assert(terrCount > 100, `Expected >100 terrestrial edges, got ${terrCount}`);
+	ctx.assert(edgeCount > 100, `Expected >100 terrestrial edges, got ${edgeCount}`);
 
-	// Verify sourceUrl field exists in the data
-	const withUrls = await ctx.page.evaluate(() => {
+	// Most edges should cite their source URL for transparency
+	const sourcedEdgeCount = await ctx.page.evaluate(() => {
 		return fetch("/data/terrestrial.json")
 			.then((r) => r.json())
 			.then((data: Array<{ sourceUrl?: string }>) => data.filter((e) => e.sourceUrl).length);
 	});
 
-	ctx.assert(withUrls > 30, `Expected >30 edges with sourceUrl, got ${withUrls}`);
+	ctx.assert(sourcedEdgeCount > 30, `Expected >30 edges with sourceUrl, got ${sourcedEdgeCount}`);
 
-	// Verify a known edge exists with correct data
+	// Spot-check: look for a known European backbone link
 	const frankfurtAmsterdam = await ctx.page.evaluate(() => {
 		return fetch("/data/terrestrial.json")
 			.then((r) => r.json())
@@ -41,9 +40,8 @@ export default async function test(ctx: TestContext) {
 			);
 	});
 
-	// There may not be a direct frankfurt-amsterdam match due to metro clustering,
-	// so just verify the data shape of any edge
-	const anyEdge = await ctx.page.evaluate(() => {
+	// Verify every edge has the required fields with correct types
+	const sampleEdge = await ctx.page.evaluate(() => {
 		return fetch("/data/terrestrial.json")
 			.then((r) => r.json())
 			.then(
@@ -70,12 +68,12 @@ export default async function test(ctx: TestContext) {
 			);
 	});
 
-	ctx.assert(anyEdge.hasId, "Terrestrial edge missing id");
-	ctx.assert(anyEdge.hasFrom, "Terrestrial edge missing from");
-	ctx.assert(anyEdge.hasTo, "Terrestrial edge missing to");
-	ctx.assert(anyEdge.hasCapacity, "Terrestrial edge missing capacityTbps");
-	ctx.assert(anyEdge.hasConfidence, "Terrestrial edge has invalid confidence");
-	ctx.assert(anyEdge.hasSource, "Terrestrial edge missing source");
+	ctx.assert(sampleEdge.hasId, "Terrestrial edge missing id");
+	ctx.assert(sampleEdge.hasFrom, "Terrestrial edge missing from");
+	ctx.assert(sampleEdge.hasTo, "Terrestrial edge missing to");
+	ctx.assert(sampleEdge.hasCapacity, "Terrestrial edge missing capacityTbps");
+	ctx.assert(sampleEdge.hasConfidence, "Terrestrial edge has invalid confidence");
+	ctx.assert(sampleEdge.hasSource, "Terrestrial edge missing source");
 
 	await ctx.screenshot("terrestrial-data-check");
 }

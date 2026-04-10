@@ -1,12 +1,15 @@
 import type { TestContext } from "../context";
 
 /**
- * Verify scenario can be applied and then reset, returning to clean state.
+ * Starting fresh -- after exploring Baltic Sea sabotage, I reset to try another scenario.
+ *
+ * As a user, I want to apply a scenario, see its impact, then reset the app
+ * so I can start over with a clean slate.
  */
 export default async function test(ctx: TestContext) {
 	await ctx.goto();
 
-	// Apply a scenario
+	// I select the Baltic Sea sabotage scenario
 	if (ctx.viewport === "mobile") {
 		await ctx.page.evaluate(() => {
 			const btns = Array.from(document.querySelectorAll("button"));
@@ -20,15 +23,15 @@ export default async function test(ctx: TestContext) {
 	await new Promise((r) => setTimeout(r, 3000));
 	await ctx.waitForText("IMPACT");
 
-	// Should show impact data
-	let body = await ctx.bodyText();
-	ctx.assert(body.includes("cables"), "Impact should show after scenario");
+	// I should see the impact analysis for the Baltic scenario
+	let pageContent = await ctx.bodyText();
+	ctx.assert(pageContent.includes("cables"), "Impact should show after scenario");
 
-	// Reset
+	// I click Reset to clear everything and start fresh
 	if (ctx.viewport === "desktop") {
 		await ctx.clickButton("Reset");
 	} else {
-		// On mobile, reset may be in the impact panel
+		// On mobile, the reset button lives inside the impact panel
 		const resetClicked = await ctx.page.evaluate(() => {
 			const btns = Array.from(document.querySelectorAll("button"));
 			const reset = btns.find((b) => b.textContent?.trim() === "Reset");
@@ -43,10 +46,10 @@ export default async function test(ctx: TestContext) {
 
 	await new Promise((r) => setTimeout(r, 1000));
 
-	// Should show the empty state prompt
-	body = await ctx.bodyText();
+	// The app should return to its welcome state, prompting me to pick a new scenario
+	pageContent = await ctx.bodyText();
 	ctx.assert(
-		body.includes("Select a scenario") || body.includes("tap a cable"),
+		pageContent.includes("Select a scenario") || pageContent.includes("tap a cable"),
 		"After reset, should show empty state prompt",
 	);
 

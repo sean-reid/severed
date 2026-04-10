@@ -1,7 +1,12 @@
 import type { TestContext } from "../context";
 
 /**
- * Verify all scenarios are based on real events (have historicalDate and sourceUrls).
+ * As a user, I want confidence that every scenario is grounded in reality.
+ *
+ * No hypotheticals -- every scenario in the app is a documented real-world
+ * event with sources. Each one must carry a historical date and at least one
+ * source URL pointing to verifiable reporting. If any scenario lacks these,
+ * it should not ship.
  */
 export default async function test(ctx: TestContext) {
 	// Only run on desktop to avoid duplicating
@@ -9,7 +14,7 @@ export default async function test(ctx: TestContext) {
 
 	await ctx.goto();
 
-	const scenarioData = await ctx.page.evaluate(() =>
+	const allScenarios = await ctx.page.evaluate(() =>
 		fetch("/data/scenarios.json")
 			.then((r) => r.json())
 			.then(
@@ -31,11 +36,12 @@ export default async function test(ctx: TestContext) {
 			),
 	);
 
-	for (const s of scenarioData) {
-		ctx.assert(s.hasDate, `Scenario "${s.name}" must have a historicalDate (real event)`);
-		ctx.assert(s.hasUrls, `Scenario "${s.name}" must have sourceUrls`);
+	// Every scenario must be a documented real event with a date and sources
+	for (const scenario of allScenarios) {
+		ctx.assert(scenario.hasDate, `Scenario "${scenario.name}" must have a historicalDate (real event)`);
+		ctx.assert(scenario.hasUrls, `Scenario "${scenario.name}" must have sourceUrls`);
 	}
 
-	// Should have at least 6 scenarios
-	ctx.assert(scenarioData.length >= 6, `Expected >=6 scenarios, got ${scenarioData.length}`);
+	// The app should offer a meaningful number of real-world scenarios
+	ctx.assert(allScenarios.length >= 6, `Expected >=6 scenarios, got ${allScenarios.length}`);
 }

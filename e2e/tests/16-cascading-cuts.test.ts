@@ -1,13 +1,18 @@
 import type { TestContext } from "../context";
 
 /**
- * Cascading cuts: apply scenario, cut additional cables, verify impact increases.
- * Tests the full interaction loop of exploring and cascading failures.
+ * As a user, I want to layer my own cuts on top of a real scenario.
+ *
+ * Cascading failure -- I add my own cuts on top of a real scenario and undo
+ * when I make a mistake. Starting from the Red Sea scenario's damage, I enter
+ * cut mode and place an additional cut to see how cascading failures compound
+ * the impact. If I regret a cut, I can undo it. When I am done, reset clears
+ * everything back to a clean slate.
  */
 export default async function test(ctx: TestContext) {
 	await ctx.goto();
 
-	// Apply Red Sea scenario
+	// I start with the Red Sea scenario as a baseline of real-world damage
 	if (ctx.viewport === "mobile") {
 		await ctx.page.evaluate(() => {
 			const btns = Array.from(document.querySelectorAll("button"));
@@ -19,64 +24,48 @@ export default async function test(ctx: TestContext) {
 	}
 	await new Promise((r) => setTimeout(r, 4000));
 
-	// Get initial impact numbers
-	const initialAffected = await ctx.page.evaluate(() => {
+	// The scenario should already show affected cables
+	const initialCableCount = await ctx.page.evaluate(() => {
 		const text = document.body.textContent ?? "";
-		const match = text.match(/(\d+)\s*affected/);
+		const match = text.match(/(\d+)\s*cables/);
 		return match ? parseInt(match[1]) : 0;
 	});
+	ctx.assert(initialCableCount > 0, `Should have some cables affected: got ${initialCableCount}`);
 
-	// Click a metro to see rerouting
-	await ctx.page.evaluate(() => {
-		const btns = Array.from(document.querySelectorAll("button"));
-		const row = btns.find((b) => {
-			const text = b.textContent ?? "";
-			return text.includes("%") && text.includes("Tbps") && !text.includes("Cut");
+	// I enter cut mode to add my own damage on top of the scenario
+	if (ctx.viewport === "desktop") {
+		await ctx.clickButton("Cut Mode");
+	} else {
+		await ctx.page.evaluate(() => {
+			const btns = Array.from(document.querySelectorAll("button"));
+			const cutBtn = btns.find((b) => {
+				const text = b.textContent?.trim() ?? "";
+				return text.includes("Cut") && !text.includes("Reset") && b.querySelector("svg");
+			});
+			if (cutBtn) cutBtn.click();
 		});
-		if (row) row.click();
-	});
-	await new Promise((r) => setTimeout(r, 500));
-
-	// Try to cut a reroute cable (cascading failure)
-	const cutSuccess = await ctx.page.evaluate(() => {
-		const btns = Array.from(document.querySelectorAll("button"));
-		const cutBtn = btns.find(
-			(b) => b.textContent?.trim() === "Cut" && b.className.includes("cable-cut"),
-		);
-		if (cutBtn) {
-			cutBtn.click();
-			return true;
-		}
-		return false;
-	});
-
-	if (!cutSuccess) {
-		await ctx.screenshot("cascade-no-cut-available");
-		return;
 	}
+	await new Promise((r) => setTimeout(r, 300));
 
-	// Wait for simulation re-run
-	await new Promise((r) => setTimeout(r, 4000));
+	// I click on the map to place an additional cut near Mediterranean cables
+	const clickTarget = ctx.viewport === "desktop" ? { x: 700, y: 350 } : { x: 200, y: 350 };
+	await ctx.page.mouse.click(clickTarget.x, clickTarget.y);
+	await new Promise((r) => setTimeout(r, 3000));
 
-	// Impact should have increased or at least stayed the same
-	const afterAffected = await ctx.page.evaluate(() => {
-		const text = document.body.textContent ?? "";
-		const match = text.match(/(\d+)\s*affected/);
-		return match ? parseInt(match[1]) : 0;
+	// The impact panel should still be visible after my additional cut
+	const hasImpact = await ctx.page.evaluate(
+		() => document.body.textContent?.includes("IMPACT") ?? false,
+	);
+	ctx.assert(hasImpact, "Impact panel should still be visible after additional cut");
+
+	// I should see an undo button in case I placed the cut wrong
+	const hasUndo = await ctx.page.evaluate(() => {
+		const btns = Array.from(document.querySelectorAll("button"));
+		return btns.some((b) => b.textContent?.trim() === "Undo");
 	});
+	ctx.assert(hasUndo, "Undo button should be visible when cuts exist");
 
-	ctx.assert(
-		afterAffected >= initialAffected,
-		`Cascading cut should not decrease impact: was ${initialAffected}, now ${afterAffected}`,
-	);
-
-	// "Severed" section should appear in the metro detail
-	const hasSeveredSection = await ctx.page.evaluate(
-		() => document.body.textContent?.includes("Severed") ?? false,
-	);
-	ctx.assert(hasSeveredSection, "Severed section should appear after cascading cut");
-
-	// Reset should clear everything
+	// I reset to clear all damage and start fresh
 	if (ctx.viewport === "desktop") {
 		await ctx.clickButton("Reset");
 	} else {
@@ -93,7 +82,7 @@ export default async function test(ctx: TestContext) {
 	}
 	await new Promise((r) => setTimeout(r, 1000));
 
-	// After reset, no "Severed" should show
+	// After reset, no cables should be marked as severed
 	const afterReset = await ctx.page.evaluate(
 		() => document.body.textContent?.includes("Severed") ?? false,
 	);

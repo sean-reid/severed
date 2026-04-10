@@ -1,32 +1,36 @@
 import type { TestContext } from "../context";
 
 /**
- * Verify that clicking a terrestrial edge in the "traffic shifts to" list
- * opens the terrestrial info panel and keeps the metro detail visible.
+ * Tracing a reroute -- after a cable is severed, I follow the traffic to its
+ * terrestrial backup link.
+ *
+ * As a user, I want to apply a scenario, expand an affected metro, and click
+ * on a terrestrial reroute to inspect the backup link details -- confirming
+ * the panel appears only after I explicitly ask for it.
  */
 export default async function test(ctx: TestContext) {
 	if (ctx.viewport !== "desktop") return;
 
 	await ctx.goto();
 
-	// Check that "Terrestrial Link" is NOT visible before we do anything
+	// Before anything, the Terrestrial Link panel should not be showing
 	const beforeClick = await ctx.page.evaluate(
 		() => document.body.textContent?.includes("Terrestrial Link") ?? false,
 	);
 	ctx.assert(!beforeClick, "Terrestrial Link should NOT be visible before any click");
 
-	// Apply Red Sea scenario
+	// I apply the Red Sea scenario to sever cables in that region
 	await ctx.clickButton("Red Sea");
 	await new Promise((r) => setTimeout(r, 4000));
 	await ctx.waitForText("IMPACT");
 
-	// Still no Terrestrial Link panel
+	// Even after the scenario loads, no terrestrial detail should appear yet
 	const afterScenario = await ctx.page.evaluate(
 		() => document.body.textContent?.includes("Terrestrial Link") ?? false,
 	);
 	ctx.assert(!afterScenario, "Terrestrial Link should NOT appear just from scenario");
 
-	// Click an affected metro to expand its details
+	// I click on an affected metro to see where its traffic is rerouted
 	const clickedMetro = await ctx.page.evaluate(() => {
 		const btns = Array.from(document.querySelectorAll("button"));
 		const metroRow = btns.find((b) => {
@@ -43,14 +47,14 @@ export default async function test(ctx: TestContext) {
 
 	await new Promise((r) => setTimeout(r, 500));
 
-	// Check for "Traffic shifts to" and terrestrial items
+	// I check for the "Traffic shifts to" section showing reroute destinations
 	const hasTrafficShifts = await ctx.page.evaluate(
 		() => document.body.textContent?.includes("Traffic shifts to") ?? false,
 	);
 	if (!hasTrafficShifts) return; // Metro might be isolated
 
-	// Find and click a terrestrial reroute button (has cyan dot)
-	const clickedTerr = await ctx.page.evaluate(() => {
+	// I click a terrestrial reroute entry (identified by its cyan indicator dot)
+	const clickedTerrestrialLink = await ctx.page.evaluate(() => {
 		const btns = Array.from(document.querySelectorAll("button"));
 		const terrBtn = btns.find((b) => {
 			const dot = b.querySelector('[style*="rgb(34, 211, 238)"], [style*="#22d3ee"]');
@@ -63,7 +67,7 @@ export default async function test(ctx: TestContext) {
 		return false;
 	});
 
-	if (!clickedTerr) {
+	if (!clickedTerrestrialLink) {
 		// No terrestrial reroutes for this metro -- not a failure
 		await ctx.screenshot("terr-reroute-none-for-metro");
 		return;
@@ -72,7 +76,7 @@ export default async function test(ctx: TestContext) {
 	await new Promise((r) => setTimeout(r, 500));
 	await ctx.screenshot("after-terrestrial-click");
 
-	// NOW "Terrestrial Link" should appear (it wasn't there before)
+	// NOW the Terrestrial Link detail panel should appear
 	const hasTerrestrialInfo = await ctx.page.evaluate(
 		() => document.body.textContent?.includes("Terrestrial Link") ?? false,
 	);
@@ -81,7 +85,7 @@ export default async function test(ctx: TestContext) {
 		"Clicking terrestrial reroute MUST show 'Terrestrial Link' panel -- this was NOT visible before the click",
 	);
 
-	// Metro detail should still be visible
+	// The metro detail should still be visible alongside the terrestrial info
 	const metroStillVisible = await ctx.page.evaluate(
 		() => document.body.textContent?.includes("Traffic shifts to") ?? false,
 	);

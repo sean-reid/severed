@@ -1,15 +1,19 @@
 import type { TestContext } from "../context";
 
 /**
- * Verify mobile-specific interactions: hamburger menu, sheet drag snap points,
- * and scenario chips in the mobile bar.
+ * Mobile navigation -- I open the sidebar, browse scenarios, and interact with
+ * the bottom sheet on my phone.
+ *
+ * As a user on a mobile device, I want to access the sidebar via the hamburger
+ * menu, see scenario chips I can scroll through, and have a bottom sheet for
+ * viewing impact details.
  */
 export default async function test(ctx: TestContext) {
 	if (ctx.viewport !== "mobile") return;
 
 	await ctx.goto();
 
-	// Click hamburger to open sidebar (use evaluate to avoid Puppeteer click issues)
+	// I tap the hamburger icon to open the sidebar
 	const hamburgerClicked = await ctx.page.evaluate(() => {
 		const btns = Array.from(document.querySelectorAll("button"));
 		// Find the hamburger: it's a button with the 3-line SVG, positioned top-left
@@ -30,20 +34,20 @@ export default async function test(ctx: TestContext) {
 	{
 		await new Promise((r) => setTimeout(r, 400));
 
-		// Sidebar should now be visible (translate-x-0)
+		// The sidebar should slide in with the app title visible
 		const sidebarVisible = await ctx.page.evaluate(() => {
 			const sidebar = document.querySelector(".translate-x-0");
 			return sidebar !== null && sidebar.textContent?.includes("SEVERED");
 		});
 		ctx.assert(sidebarVisible, "Sidebar should be visible after hamburger click");
 
-		// Sidebar should show scenarios
+		// I should see the Scenarios section listed in the sidebar
 		const hasScenarios = await ctx.page.evaluate(
 			() => document.body.textContent?.includes("Scenarios") ?? false,
 		);
 		ctx.assert(hasScenarios, "Sidebar should show Scenarios section");
 
-		// Close sidebar
+		// I close the sidebar to return to the map
 		await ctx.page.evaluate(() => {
 			const btns = Array.from(document.querySelectorAll("button"));
 			const close = btns.find((b) => {
@@ -56,10 +60,8 @@ export default async function test(ctx: TestContext) {
 		await new Promise((r) => setTimeout(r, 400));
 	}
 
-	// Mobile scenario bar should have scrollable chips
-	// The MobileScenarioBar is inside a div.md\:hidden wrapper, but we just check
-	// that scenario names appear as buttons somewhere in the page
-	const scenarioNames = await ctx.page.evaluate(() => {
+	// I should see scrollable scenario chips in the mobile bar
+	const visibleScenarioCount = await ctx.page.evaluate(() => {
 		const btns = Array.from(document.querySelectorAll("button"));
 		const scenarios = btns.filter((b) => {
 			const text = b.textContent?.trim() ?? "";
@@ -69,9 +71,9 @@ export default async function test(ctx: TestContext) {
 		});
 		return scenarios.length;
 	});
-	ctx.assert(scenarioNames >= 3, `Expected >=3 scenario buttons visible, got ${scenarioNames}`);
+	ctx.assert(visibleScenarioCount >= 3, `Expected >=3 scenario buttons visible, got ${visibleScenarioCount}`);
 
-	// Bottom sheet should be present with the impact panel
+	// The bottom sheet should be present for showing impact details
 	const sheetExists = await ctx.page.evaluate(() => {
 		const el = document.querySelector('[style*="--sheet-h"]');
 		return el !== null;
