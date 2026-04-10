@@ -1695,6 +1695,63 @@ function main() {
 			};
 		}
 
+		// 2Africa: fix Red Sea branches that cross land.
+		// The source data has short branch stubs as straight lines from the main
+		// trunk to Saudi landing stations (Jeddah, Yanbu) that cut through land.
+		// Replace them with waypoints that stay in the Red Sea.
+		if (entry.id === "2africa") {
+			const coords = (fixedPath.geometry as { coordinates: number[][][] }).coordinates;
+			const fixed: number[][][] = coords.map((line) => {
+				// Line 3: trunk (37.46, 22.05) → Jeddah area (39.18, 21.48)
+				// Straight line crosses Saudi coast. Route through Red Sea.
+				if (
+					line.length === 2 &&
+					Math.abs(line[0][0] - 37.46) < 0.1 &&
+					Math.abs(line[1][0] - 39.18) < 0.1
+				) {
+					return [
+						line[0], // main trunk point
+						[38.2, 21.9], // Red Sea midpoint
+						[38.9, 21.6], // approach Jeddah from sea
+						line[1], // Jeddah landing
+					];
+				}
+				// Line 2: Yanbu branch (34.68, 26.56) → (35.70, 27.35)
+				// Short stub near Yanbu — add a sea waypoint
+				if (
+					line.length === 3 &&
+					Math.abs(line[0][0] - 34.68) < 0.1 &&
+					Math.abs(line[0][1] - 26.56) < 0.1
+				) {
+					return [
+						[35.5, 26.0], // Red Sea approach
+						line[0],
+						[35.3, 26.9],
+						line[2], // Yanbu landing
+					];
+				}
+				// Line 14: trunk (36.23, 24.12) → (38.11, 24.07) crosses Saudi
+				if (
+					line.length === 4 &&
+					Math.abs(line[0][0] - 36.23) < 0.1 &&
+					Math.abs(line[3][0] - 38.11) < 0.1
+				) {
+					return [
+						line[0], // main trunk
+						[37.0, 23.5], // Red Sea
+						[37.8, 23.0], // approach from sea
+						[38.5, 22.5], // along coast
+						line[3], // landing
+					];
+				}
+				return line;
+			});
+			fixedPath = {
+				...fixedPath,
+				geometry: { type: "MultiLineString" as const, coordinates: fixed },
+			};
+		}
+
 		cables.push({
 			id: entry.id,
 			name: detail.name,
