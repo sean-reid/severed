@@ -1,6 +1,7 @@
 import type { Layer } from "@deck.gl/core";
 import { GeoJsonLayer, PathLayer, ScatterplotLayer } from "@deck.gl/layers";
 import { MapboxOverlay } from "@deck.gl/mapbox";
+import type { Feature, LineString, MultiLineString, Position } from "geojson";
 import { useEffect, useMemo, useRef } from "react";
 import { Map as MapGL, useControl } from "react-map-gl/maplibre";
 import type { MapRef } from "react-map-gl/maplibre";
@@ -32,6 +33,101 @@ const INITIAL_VIEW = {
 
 const DARK_BASEMAP = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
 
+/** Find the index of the closest coordinate in a LineString to a target point. */
+function closestCoordIndex(coords: Position[], lat: number, lng: number): number {
+	let best = 0;
+	let bestDist = Number.MAX_VALUE;
+	for (let i = 0; i < coords.length; i++) {
+		const dx = coords[i][0] - lng;
+		const dy = coords[i][1] - lat;
+		const d = dx * dx + dy * dy;
+		if (d < bestDist) {
+			bestDist = d;
+			best = i;
+		}
+	}
+	return best;
+}
+
+/**
+ * Split a cable's GeoJSON path at one or more cut points, creating a visual gap.
+ * Returns multiple Features (one per uncut section) with the same properties.
+ */
+function splitCablePath(
+	path: Feature<LineString | MultiLineString>,
+	cableCuts: { lat: number; lng: number }[],
+): Feature<LineString | MultiLineString>[] {
+	const props = path.properties ?? {};
+	const geom = path.geometry;
+
+	// Collect all coordinate arrays (LineString has 1, MultiLineString has N)
+	const lines: Position[][] =
+		geom.type === "MultiLineString" ? geom.coordinates : [geom.coordinates];
+
+	// For each cut, find which line and where to split
+	const splits: { lineIdx: number; coordIdx: number }[] = [];
+	for (const cut of cableCuts) {
+		let bestLine = 0;
+		let bestCoord = 0;
+		let bestDist = Number.MAX_VALUE;
+		for (let li = 0; li < lines.length; li++) {
+			const idx = closestCoordIndex(lines[li], cut.lat, cut.lng);
+			const c = lines[li][idx];
+			const dx = c[0] - cut.lng;
+			const dy = c[1] - cut.lat;
+			const d = dx * dx + dy * dy;
+			if (d < bestDist) {
+				bestDist = d;
+				bestLine = li;
+				bestCoord = idx;
+			}
+		}
+		splits.push({ lineIdx: bestLine, coordIdx: bestCoord });
+	}
+
+	// Group splits by line, sort by coordIdx
+	const splitsByLine = new Map<number, number[]>();
+	for (const s of splits) {
+		const arr = splitsByLine.get(s.lineIdx) ?? [];
+		arr.push(s.coordIdx);
+		splitsByLine.set(s.lineIdx, arr);
+	}
+
+	// Build result Features
+	const resultLines: Position[][] = [];
+	for (let li = 0; li < lines.length; li++) {
+		const lineSplits = splitsByLine.get(li);
+		if (!lineSplits) {
+			resultLines.push(lines[li]);
+			continue;
+		}
+		const sorted = [...new Set(lineSplits)].sort((a, b) => a - b);
+		let start = 0;
+		for (const splitIdx of sorted) {
+			// Segment before the cut (at least 2 coords to form a line)
+			const beforeEnd = Math.max(start + 1, splitIdx);
+			if (beforeEnd > start) {
+				resultLines.push(lines[li].slice(start, beforeEnd + 1));
+			}
+			// Skip past the cut point to create a gap
+			start = Math.min(splitIdx + 1, lines[li].length - 1);
+		}
+		// Remaining segment after last cut
+		if (start < lines[li].length - 1) {
+			resultLines.push(lines[li].slice(start));
+		}
+	}
+
+	// Return each line segment as its own Feature
+	return resultLines
+		.filter((l) => l.length >= 2)
+		.map((coords) => ({
+			type: "Feature" as const,
+			properties: props,
+			geometry: { type: "LineString" as const, coordinates: coords },
+		}));
+}
+
 export function GlobeView() {
 	const cables = useStore((s) => s.cables);
 	const metros = useStore((s) => s.metros);
@@ -60,8 +156,10 @@ export function GlobeView() {
 	const removeCut = useStore((s) => s.removeCut);
 	const selectPointCut = useStore((s) => s.selectPointCut);
 	const flyToBounds = useStore((s) => s.flyToBounds);
+	const cablesById = useStore((s) => s.cablesById);
 	const mapRef = useRef<MapRef>(null);
 	const lastDeckClickTime = useRef(0);
+	const lastDeckClickCable = useRef<string | null>(null);
 
 	useSimulation();
 
@@ -119,13 +217,32 @@ export function GlobeView() {
 		const result: Layer[] = [];
 
 		if (cables.length > 0) {
+			// Build cable features, splitting paths at cut points
+			const segmentCuts = cuts.filter((c) => c.type === "segment" && c.cableId);
+			const cutsByCable = new Map<string, { lat: number; lng: number }[]>();
+			for (const cut of segmentCuts) {
+				if (!cut.cableId) continue;
+				const arr = cutsByCable.get(cut.cableId) ?? [];
+				arr.push({ lat: cut.lat, lng: cut.lng });
+				cutsByCable.set(cut.cableId, arr);
+			}
+
+			const cableFeatures = cables.flatMap((c) => {
+				const props = { ...(c.path.properties ?? {}), cableId: c.id, cable: c };
+				const cableCuts = cutsByCable.get(c.id);
+				if (!cableCuts || cableCuts.length === 0) {
+					return [{ ...c.path, properties: props }];
+				}
+				return splitCablePath(
+					{ ...c.path, properties: props } as Feature<LineString | MultiLineString>,
+					cableCuts,
+				);
+			});
+
 			result.push(
 				new GeoJsonLayer({
 					id: "cables",
-					data: cables.map((c) => ({
-						...c.path,
-						properties: { ...(c.path.properties ?? {}), cableId: c.id, cable: c },
-					})),
+					data: cableFeatures,
 					getLineColor: (d: { properties: { cable: Cable } }) => {
 						const cable = d.properties.cable;
 						if (cutCableIds.has(cable.id)) return CUT_COLOR;
@@ -146,10 +263,17 @@ export function GlobeView() {
 						if (info.object) {
 							lastDeckClickTime.current = Date.now();
 							const cable = info.object.properties.cable;
-							selectCable(cable.id);
-							selectMetro(null);
-							const bounds = cableBounds(cable, metrosById);
-							if (bounds) flyToBounds(bounds.minLng, bounds.minLat, bounds.maxLng, bounds.maxLat);
+							if (cutMode) {
+								// In cut mode: record which cable was clicked so MapGL onClick
+								// can create a segment cut with exact lat/lng
+								lastDeckClickCable.current = cable.id;
+							} else {
+								lastDeckClickCable.current = null;
+								selectCable(cable.id);
+								selectMetro(null);
+								const bounds = cableBounds(cable, metrosById);
+								if (bounds) flyToBounds(bounds.minLng, bounds.minLat, bounds.maxLng, bounds.maxLat);
+							}
 						}
 					},
 					onHover: (info: { object?: { properties: { cable: Cable } } }) => {
@@ -157,6 +281,7 @@ export function GlobeView() {
 					},
 					updateTriggers: {
 						getLineColor: [cutCableIds, hoveredCableId, selectedCableId],
+						getData: [cuts],
 					},
 				}),
 			);
@@ -265,38 +390,21 @@ export function GlobeView() {
 			);
 		}
 
-		// Point cut markers (radius circles + center pins)
-		const pointCuts = cuts.filter(
-			(c) => c.type === "point" && (c.lat !== 0 || c.lng !== 0) && !c.affectedSegmentIds?.length,
+		// Cut break markers — red dots at each segment cut point
+		const allVisibleCuts = cuts.filter(
+			(c) => (c.type === "segment" || (c.type === "point" && c.lat !== 0)) && c.lat !== 0,
 		);
-		if (pointCuts.length > 0) {
-			// Radius circles
+		if (allVisibleCuts.length > 0) {
 			result.push(
 				new ScatterplotLayer({
-					id: "cut-radius",
-					data: pointCuts,
+					id: "cut-breaks",
+					data: allVisibleCuts,
 					getPosition: (d: CutLocation) => [d.lng, d.lat],
-					getRadius: (d: CutLocation) => (d.radius ?? 150) * 1000,
-					radiusUnits: "meters" as const,
-					getFillColor: [239, 68, 68, 25],
-					stroked: true,
-					getLineColor: [239, 68, 68, 120],
-					getLineWidth: 1.5,
-					lineWidthUnits: "pixels" as const,
-					pickable: false,
-				}),
-			);
-			// Center pins
-			result.push(
-				new ScatterplotLayer({
-					id: "cut-pins",
-					data: pointCuts,
-					getPosition: (d: CutLocation) => [d.lng, d.lat],
-					getRadius: 6,
+					getRadius: 5,
 					radiusUnits: "pixels" as const,
-					getFillColor: [239, 68, 68, 220],
+					getFillColor: [239, 68, 68, 240],
 					stroked: true,
-					getLineColor: [255, 255, 255, 180],
+					getLineColor: [255, 255, 255, 200],
 					getLineWidth: 1.5,
 					lineWidthUnits: "pixels" as const,
 					pickable: true,
@@ -329,6 +437,7 @@ export function GlobeView() {
 		simulation,
 		metrosById,
 		flyToBounds,
+		cutMode,
 	]);
 
 	const resetView = () => {
@@ -505,45 +614,56 @@ export function GlobeView() {
 					style={{ width: "100%", height: "100%", cursor: cutMode ? "crosshair" : undefined }}
 					attributionControl={false}
 					onClick={(e) => {
-						// Deck.gl onClick sets a timestamp. If it fired within
-						// the last 100ms, a layer handled this click — don't deselect/cut.
-						if (Date.now() - lastDeckClickTime.current < 100) return;
+						const deckClickRecent = Date.now() - lastDeckClickTime.current < 100;
 
-						if (cutMode) {
-							// In cut mode: only place a cut if at least one cable segment is within radius
+						if (cutMode && deckClickRecent && lastDeckClickCable.current) {
+							// Cut mode + cable clicked: create a precise segment cut
+							const cableId = lastDeckClickCable.current;
+							lastDeckClickCable.current = null;
+							const cable = cablesById.get(cableId);
+							if (!cable) return;
+
+							// Find the nearest segment to the click point
 							const clickLat = e.lngLat.lat;
 							const clickLng = e.lngLat.lng;
-							const radius = 50;
-							let hasNearby = false;
-							for (const cable of cables) {
-								if (hasNearby) break;
-								for (const seg of cable.segments) {
-									const from = metrosById.get(seg.from);
-									const to = metrosById.get(seg.to);
-									if (!from || !to) continue;
-									const midLat = (from.lat + to.lat) / 2;
-									const midLng = (from.lng + to.lng) / 2;
-									if (haversineKm(clickLat, clickLng, midLat, midLng) < radius) {
-										hasNearby = true;
-										break;
-									}
+							let bestSeg = 0;
+							let bestDist = Number.MAX_VALUE;
+							for (let i = 0; i < cable.segments.length; i++) {
+								const seg = cable.segments[i];
+								const from = metrosById.get(seg.from);
+								const to = metrosById.get(seg.to);
+								if (!from || !to) continue;
+								const midLat = (from.lat + to.lat) / 2;
+								const midLng = (from.lng + to.lng) / 2;
+								const d = haversineKm(clickLat, clickLng, midLat, midLng);
+								if (d < bestDist) {
+									bestDist = d;
+									bestSeg = i;
 								}
 							}
-							if (!hasNearby) return;
+
 							addCut({
-								id: `point-${Date.now()}`,
-								type: "point",
+								id: `seg-${cableId}-${bestSeg}-${Date.now()}`,
+								type: "segment",
 								lat: clickLat,
 								lng: clickLng,
-								radius: 50,
-								affectedSegmentIds: [],
+								cableId,
+								segmentIndex: bestSeg,
+								affectedSegmentIds: [`${cableId}:${bestSeg}`],
 							});
-						} else {
-							// Normal mode: deselect everything
-							selectCable(null);
-							selectMetro(null);
-							selectTerrestrial(null);
+							return;
 						}
+
+						if (deckClickRecent) return;
+
+						if (cutMode) {
+							// Cut mode but clicked empty ocean — do nothing
+							return;
+						}
+						// Normal mode: deselect everything
+						selectCable(null);
+						selectMetro(null);
+						selectTerrestrial(null);
 					}}
 				>
 					<DeckGLOverlay layers={layers} />

@@ -136,11 +136,13 @@ export interface GraphEdge {
 
 export interface CutLocation {
 	id: string;
-	type: "chokepoint" | "point";
+	type: "chokepoint" | "point" | "segment";
 	lat: number;
 	lng: number;
 	radius?: number; // km, for point cuts
 	chokepointId?: string;
+	cableId?: string; // for segment cuts: which cable
+	segmentIndex?: number; // for segment cuts: which segment
 	affectedSegmentIds: string[]; // resolved after intersection test
 }
 
