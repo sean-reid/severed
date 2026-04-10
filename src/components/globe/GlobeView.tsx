@@ -293,9 +293,26 @@ export function GlobeView() {
 							lastDeckClickTime.current = Date.now();
 							const cable = info.object.properties.cable;
 							if (cutMode && info.coordinate && info.coordinate.length >= 2) {
-								// In cut mode: create a segment cut immediately
+								// In cut mode: snap the cut point to the cable path
 								const clickLng = info.coordinate[0];
 								const clickLat = info.coordinate[1];
+								const geom = cable.path.geometry;
+								const pathLines: readonly (readonly Position[])[] =
+									geom.type === "MultiLineString" ? geom.coordinates : [geom.coordinates];
+								// Project onto the cable's actual rendered path
+								const snap = projectOnLine(
+									pathLines.reduce((best, line) => {
+										const r = projectOnLine(line, clickLat, clickLng);
+										const d = (r.point[0] - clickLng) ** 2 + (r.point[1] - clickLat) ** 2;
+										const bestR = projectOnLine(best, clickLat, clickLng);
+										const bestD =
+											(bestR.point[0] - clickLng) ** 2 + (bestR.point[1] - clickLat) ** 2;
+										return d < bestD ? line : best;
+									}),
+									clickLat,
+									clickLng,
+								);
+								// Find the nearest logical segment (metro-to-metro)
 								let bestSeg = 0;
 								let bestDist = Number.MAX_VALUE;
 								for (let i = 0; i < cable.segments.length; i++) {
@@ -305,7 +322,7 @@ export function GlobeView() {
 									if (!from || !to) continue;
 									const midLat = (from.lat + to.lat) / 2;
 									const midLng = (from.lng + to.lng) / 2;
-									const d = haversineKm(clickLat, clickLng, midLat, midLng);
+									const d = haversineKm(snap.point[1], snap.point[0], midLat, midLng);
 									if (d < bestDist) {
 										bestDist = d;
 										bestSeg = i;
@@ -314,8 +331,8 @@ export function GlobeView() {
 								addCut({
 									id: `seg-${cable.id}-${bestSeg}-${Date.now()}`,
 									type: "segment",
-									lat: clickLat,
-									lng: clickLng,
+									lat: snap.point[1],
+									lng: snap.point[0],
 									cableId: cable.id,
 									segmentIndex: bestSeg,
 									affectedSegmentIds: [`${cable.id}:${bestSeg}`],
