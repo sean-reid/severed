@@ -156,10 +156,8 @@ export function GlobeView() {
 	const removeCut = useStore((s) => s.removeCut);
 	const selectPointCut = useStore((s) => s.selectPointCut);
 	const flyToBounds = useStore((s) => s.flyToBounds);
-	const cablesById = useStore((s) => s.cablesById);
 	const mapRef = useRef<MapRef>(null);
 	const lastDeckClickTime = useRef(0);
-	const lastDeckClickCable = useRef<string | null>(null);
 
 	useSimulation();
 
@@ -259,16 +257,42 @@ export function GlobeView() {
 					pickable: true,
 					autoHighlight: true,
 					highlightColor: [147, 197, 253, 140],
-					onClick: (info: { object?: { properties: { cable: Cable } } }) => {
+					onClick: (info: {
+						object?: { properties: { cable: Cable } };
+						coordinate?: number[];
+					}) => {
 						if (info.object) {
 							lastDeckClickTime.current = Date.now();
 							const cable = info.object.properties.cable;
-							if (cutMode) {
-								// In cut mode: record which cable was clicked so MapGL onClick
-								// can create a segment cut with exact lat/lng
-								lastDeckClickCable.current = cable.id;
+							if (cutMode && info.coordinate && info.coordinate.length >= 2) {
+								// In cut mode: create a segment cut immediately
+								const clickLng = info.coordinate[0];
+								const clickLat = info.coordinate[1];
+								let bestSeg = 0;
+								let bestDist = Number.MAX_VALUE;
+								for (let i = 0; i < cable.segments.length; i++) {
+									const seg = cable.segments[i];
+									const from = metrosById.get(seg.from);
+									const to = metrosById.get(seg.to);
+									if (!from || !to) continue;
+									const midLat = (from.lat + to.lat) / 2;
+									const midLng = (from.lng + to.lng) / 2;
+									const d = haversineKm(clickLat, clickLng, midLat, midLng);
+									if (d < bestDist) {
+										bestDist = d;
+										bestSeg = i;
+									}
+								}
+								addCut({
+									id: `seg-${cable.id}-${bestSeg}-${Date.now()}`,
+									type: "segment",
+									lat: clickLat,
+									lng: clickLng,
+									cableId: cable.id,
+									segmentIndex: bestSeg,
+									affectedSegmentIds: [`${cable.id}:${bestSeg}`],
+								});
 							} else {
-								lastDeckClickCable.current = null;
 								selectCable(cable.id);
 								selectMetro(null);
 								const bounds = cableBounds(cable, metrosById);
@@ -438,6 +462,7 @@ export function GlobeView() {
 		metrosById,
 		flyToBounds,
 		cutMode,
+		addCut,
 	]);
 
 	const resetView = () => {
@@ -613,53 +638,10 @@ export function GlobeView() {
 					mapStyle={DARK_BASEMAP}
 					style={{ width: "100%", height: "100%", cursor: cutMode ? "crosshair" : undefined }}
 					attributionControl={false}
-					onClick={(e) => {
-						const deckClickRecent = Date.now() - lastDeckClickTime.current < 100;
-
-						if (cutMode && deckClickRecent && lastDeckClickCable.current) {
-							// Cut mode + cable clicked: create a precise segment cut
-							const cableId = lastDeckClickCable.current;
-							lastDeckClickCable.current = null;
-							const cable = cablesById.get(cableId);
-							if (!cable) return;
-
-							// Find the nearest segment to the click point
-							const clickLat = e.lngLat.lat;
-							const clickLng = e.lngLat.lng;
-							let bestSeg = 0;
-							let bestDist = Number.MAX_VALUE;
-							for (let i = 0; i < cable.segments.length; i++) {
-								const seg = cable.segments[i];
-								const from = metrosById.get(seg.from);
-								const to = metrosById.get(seg.to);
-								if (!from || !to) continue;
-								const midLat = (from.lat + to.lat) / 2;
-								const midLng = (from.lng + to.lng) / 2;
-								const d = haversineKm(clickLat, clickLng, midLat, midLng);
-								if (d < bestDist) {
-									bestDist = d;
-									bestSeg = i;
-								}
-							}
-
-							addCut({
-								id: `seg-${cableId}-${bestSeg}-${Date.now()}`,
-								type: "segment",
-								lat: clickLat,
-								lng: clickLng,
-								cableId,
-								segmentIndex: bestSeg,
-								affectedSegmentIds: [`${cableId}:${bestSeg}`],
-							});
-							return;
-						}
-
-						if (deckClickRecent) return;
-
-						if (cutMode) {
-							// Cut mode but clicked empty ocean — do nothing
-							return;
-						}
+					onClick={() => {
+						// If Deck.gl handled this click, don't also deselect
+						if (Date.now() - lastDeckClickTime.current < 100) return;
+						if (cutMode) return; // empty ocean click in cut mode — ignore
 						// Normal mode: deselect everything
 						selectCable(null);
 						selectMetro(null);
