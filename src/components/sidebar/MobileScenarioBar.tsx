@@ -3,6 +3,8 @@ import { useStore } from "../../state/store";
 export function MobileScenarioBar() {
 	const scenarios = useStore((s) => s.scenarios);
 	const activeScenarioId = useStore((s) => s.activeScenarioId);
+	const cutMode = useStore((s) => s.cutMode);
+	const toggleCutMode = useStore((s) => s.toggleCutMode);
 	const cuts = useStore((s) => s.cuts);
 	const applyScenario = useStore((s) => s.applyScenario);
 	const resetCuts = useStore((s) => s.resetCuts);
@@ -34,6 +36,36 @@ export function MobileScenarioBar() {
 							<circle cx="6.5" cy="6.5" r="5" />
 							<line x1="10" y1="10" x2="15" y2="15" />
 						</svg>
+					</button>
+					<button
+						type="button"
+						onClick={toggleCutMode}
+						className={`
+							flex-none h-11 px-4 rounded-full text-sm font-medium
+							whitespace-nowrap transition-colors flex items-center gap-2
+							${
+								cutMode
+									? "bg-cable-cut border-2 border-cable-cut text-white"
+									: "bg-surface/90 backdrop-blur-sm border border-border/70 text-text-primary active:bg-border/50"
+							}
+						`}
+					>
+						<svg
+							width="14"
+							height="14"
+							viewBox="0 0 16 16"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="1.5"
+							strokeLinecap="round"
+						>
+							<title>Cut mode</title>
+							<line x1="4" y1="4" x2="12" y2="12" />
+							<line x1="4" y1="12" x2="12" y2="4" />
+							<circle cx="4" cy="4" r="2" />
+							<circle cx="4" cy="12" r="2" />
+						</svg>
+						Cut
 					</button>
 					{cuts.length > 0 && (
 						<button

@@ -15,7 +15,9 @@ export default async function test(ctx: TestContext) {
 		// Find the hamburger: it's a button with the 3-line SVG, positioned top-left
 		const hamburger = btns.find((b) => {
 			const rect = b.getBoundingClientRect();
-			return rect.top < 60 && rect.left < 60 && rect.width < 50;
+			const text = b.textContent?.trim() ?? "";
+			// Hamburger: small square button in top-left with "sidebar" in SVG title
+			return rect.top < 60 && rect.left < 60 && rect.width < 50 && text.includes("sidebar");
 		});
 		if (hamburger) {
 			hamburger.click();
@@ -46,7 +48,8 @@ export default async function test(ctx: TestContext) {
 			const btns = Array.from(document.querySelectorAll("button"));
 			const close = btns.find((b) => {
 				const rect = b.getBoundingClientRect();
-				return rect.top < 60 && rect.left < 60 && rect.width < 50;
+				const text = b.textContent?.trim() ?? "";
+				return rect.top < 60 && rect.left < 60 && rect.width < 50 && text.includes("sidebar");
 			});
 			if (close) close.click();
 		});

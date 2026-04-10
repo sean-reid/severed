@@ -43,6 +43,10 @@ interface StoreState {
 	simulation: SimulationState | null;
 	simulating: boolean;
 
+	// Cut mode
+	cutMode: boolean;
+	selectedPointCutId: string | null;
+
 	// UI
 	panelOpen: boolean;
 	sidebarOpen: boolean;
@@ -64,6 +68,9 @@ interface StoreState {
 	flyToBounds: (minLng: number, minLat: number, maxLng: number, maxLat: number) => void;
 	clearFlyTo: () => void;
 	addCut: (cut: CutLocation) => void;
+	removeCut: (cutId: string) => void;
+	toggleCutMode: () => void;
+	selectPointCut: (id: string | null) => void;
 	applyScenario: (scenarioId: string) => void;
 	resetCuts: () => void;
 	setSimulation: (sim: SimulationState) => void;
@@ -94,6 +101,8 @@ export const useStore = create<StoreState>((set) => ({
 	// Cuts
 	cuts: [],
 	activeScenarioId: null,
+	cutMode: false,
+	selectedPointCutId: null,
 
 	// Simulation
 	simulation: null,
@@ -136,6 +145,24 @@ export const useStore = create<StoreState>((set) => ({
 			cuts: [...s.cuts, cut],
 			activeScenarioId: null,
 		})),
+
+	removeCut: (cutId) =>
+		set((s) => ({
+			cuts: s.cuts.filter((c) => c.id !== cutId),
+			selectedPointCutId: s.selectedPointCutId === cutId ? null : s.selectedPointCutId,
+		})),
+
+	toggleCutMode: () =>
+		set((s) => ({
+			cutMode: !s.cutMode,
+			selectedCableId: s.cutMode ? s.selectedCableId : null,
+			selectedMetroId: s.cutMode ? s.selectedMetroId : null,
+			selectedTerrestrialId: s.cutMode ? s.selectedTerrestrialId : null,
+			selectedPointCutId: null,
+		})),
+
+	selectPointCut: (id) =>
+		set({ selectedPointCutId: id, selectedCableId: null, selectedMetroId: null }),
 
 	applyScenario: (scenarioId) =>
 		set((s) => {

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { CutAction } from "./components/globe/CutAction";
 import { GlobeView } from "./components/globe/GlobeView";
 import { MetroCard } from "./components/globe/MetroCard";
+import { PointCutCard } from "./components/globe/PointCutCard";
 import { TerrestrialCard } from "./components/globe/TerrestrialCard";
 import { ImpactPanel } from "./components/panel/ImpactPanel";
 import { SearchOverlay } from "./components/search/SearchOverlay";
@@ -28,6 +29,24 @@ export function App() {
 			) {
 				e.preventDefault();
 				setSearchOpen(true);
+			}
+			if (
+				e.key === "c" &&
+				!e.ctrlKey &&
+				!e.metaKey &&
+				document.activeElement?.tagName !== "INPUT"
+			) {
+				useStore.getState().toggleCutMode();
+			}
+			if (
+				(e.ctrlKey || e.metaKey) &&
+				e.key === "z" &&
+				document.activeElement?.tagName !== "INPUT"
+			) {
+				const state = useStore.getState();
+				if (state.cuts.length > 0) {
+					state.removeCut(state.cuts[state.cuts.length - 1].id);
+				}
 			}
 		};
 		const onCustom = () => setSearchOpen(true);
@@ -98,6 +117,9 @@ export function App() {
 
 			{/* Floating terrestrial info — appears when terrestrial edge selected */}
 			<TerrestrialCard />
+
+			{/* Floating point cut info — appears when cut marker selected */}
+			<PointCutCard />
 
 			{/* Impact panel — responsive (right panel desktop, bottom sheet mobile) */}
 			<ImpactPanel />

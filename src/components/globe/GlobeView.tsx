@@ -4,7 +4,7 @@ import { MapboxOverlay } from "@deck.gl/mapbox";
 import { useEffect, useMemo, useRef } from "react";
 import { Map as MapGL, useControl } from "react-map-gl/maplibre";
 import type { MapRef } from "react-map-gl/maplibre";
-import type { Cable, Metro, TerrestrialEdge } from "../../data/types";
+import type { Cable, CutLocation, Metro, TerrestrialEdge } from "../../data/types";
 import { useSimulation } from "../../engine/useSimulation";
 import { useStore } from "../../state/store";
 import { cableBounds } from "../../utils/cableBounds";
@@ -53,6 +53,10 @@ export function GlobeView() {
 	const sheetDragging = useStore((s) => s.mobileSheetDragging);
 	const mobileCardHeight = useStore((s) => s.mobileCardHeight);
 	const metrosById = useStore((s) => s.metrosById);
+	const cutMode = useStore((s) => s.cutMode);
+	const toggleCutMode = useStore((s) => s.toggleCutMode);
+	const addCut = useStore((s) => s.addCut);
+	const selectPointCut = useStore((s) => s.selectPointCut);
 	const flyToBounds = useStore((s) => s.flyToBounds);
 	const mapRef = useRef<MapRef>(null);
 	const lastDeckClickTime = useRef(0);
@@ -259,11 +263,57 @@ export function GlobeView() {
 			);
 		}
 
+		// Point cut markers (radius circles + center pins)
+		const pointCuts = cuts.filter(
+			(c) => c.type === "point" && (c.lat !== 0 || c.lng !== 0) && !c.affectedSegmentIds?.length,
+		);
+		if (pointCuts.length > 0) {
+			// Radius circles
+			result.push(
+				new ScatterplotLayer({
+					id: "cut-radius",
+					data: pointCuts,
+					getPosition: (d: CutLocation) => [d.lng, d.lat],
+					getRadius: (d: CutLocation) => (d.radius ?? 150) * 1000,
+					radiusUnits: "meters" as const,
+					getFillColor: [239, 68, 68, 25],
+					stroked: true,
+					getLineColor: [239, 68, 68, 120],
+					getLineWidth: 1.5,
+					lineWidthUnits: "pixels" as const,
+					pickable: false,
+				}),
+			);
+			// Center pins
+			result.push(
+				new ScatterplotLayer({
+					id: "cut-pins",
+					data: pointCuts,
+					getPosition: (d: CutLocation) => [d.lng, d.lat],
+					getRadius: 6,
+					radiusUnits: "pixels" as const,
+					getFillColor: [239, 68, 68, 220],
+					stroked: true,
+					getLineColor: [255, 255, 255, 180],
+					getLineWidth: 1.5,
+					lineWidthUnits: "pixels" as const,
+					pickable: true,
+					onClick: (info: { object?: CutLocation }) => {
+						if (info.object) {
+							lastDeckClickTime.current = Date.now();
+							selectPointCut(info.object.id);
+						}
+					},
+				}),
+			);
+		}
+
 		return result;
 	}, [
 		cables,
 		metros,
 		terrestrial,
+		cuts,
 		cutCableIds,
 		hoveredCableId,
 		selectedCableId,
@@ -272,6 +322,7 @@ export function GlobeView() {
 		selectCable,
 		selectMetro,
 		selectTerrestrial,
+		selectPointCut,
 		hoverCable,
 		simulation,
 		metrosById,
@@ -337,14 +388,51 @@ export function GlobeView() {
 				</svg>
 			</button>
 
-			{/* Desktop reset button — next to crosshairs */}
+			{/* Desktop cut mode toggle */}
+			<button
+				type="button"
+				onClick={toggleCutMode}
+				className={`
+					absolute z-30 hidden md:flex
+					bottom-4 left-[4.5rem]
+					h-12 px-4 rounded-2xl
+					backdrop-blur-sm border
+					items-center gap-2 text-xs font-medium
+					transition-all shadow-lg shadow-black/20
+					${
+						cutMode
+							? "bg-cable-cut/20 border-cable-cut/50 text-cable-cut shadow-[0_0_12px_rgba(239,68,68,0.2)]"
+							: "bg-surface/80 border-border/50 text-text-secondary hover:text-text-primary"
+					}
+				`}
+				title="Toggle cut mode (C)"
+			>
+				<svg
+					width="16"
+					height="16"
+					viewBox="0 0 16 16"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="1.5"
+					strokeLinecap="round"
+				>
+					<title>Cut mode</title>
+					<line x1="4" y1="4" x2="12" y2="12" />
+					<line x1="4" y1="12" x2="12" y2="4" />
+					<circle cx="4" cy="4" r="2" />
+					<circle cx="4" cy="12" r="2" />
+				</svg>
+				{cutMode ? "Exit Cut" : "Cut Mode"}
+			</button>
+
+			{/* Desktop reset button */}
 			{hasCuts && (
 				<button
 					type="button"
 					onClick={resetCuts}
 					className="
 						absolute z-30 hidden md:flex
-						bottom-4 left-[4.5rem]
+						bottom-4 left-[12rem]
 						h-12 px-4 rounded-2xl
 						bg-surface/80 backdrop-blur-sm border border-border/50
 						items-center gap-2
@@ -362,15 +450,29 @@ export function GlobeView() {
 					ref={mapRef}
 					initialViewState={INITIAL_VIEW}
 					mapStyle={DARK_BASEMAP}
-					style={{ width: "100%", height: "100%" }}
+					style={{ width: "100%", height: "100%", cursor: cutMode ? "crosshair" : undefined }}
 					attributionControl={false}
-					onClick={() => {
+					onClick={(e) => {
 						// Deck.gl onClick sets a timestamp. If it fired within
-						// the last 100ms, a layer handled this click — don't deselect.
+						// the last 100ms, a layer handled this click — don't deselect/cut.
 						if (Date.now() - lastDeckClickTime.current < 100) return;
-						selectCable(null);
-						selectMetro(null);
-						selectTerrestrial(null);
+
+						if (cutMode) {
+							// In cut mode: place a point cut at the clicked location
+							addCut({
+								id: `point-${Date.now()}`,
+								type: "point",
+								lat: e.lngLat.lat,
+								lng: e.lngLat.lng,
+								radius: 150,
+								affectedSegmentIds: [],
+							});
+						} else {
+							// Normal mode: deselect everything
+							selectCable(null);
+							selectMetro(null);
+							selectTerrestrial(null);
+						}
 					}}
 				>
 					<DeckGLOverlay layers={layers} />
