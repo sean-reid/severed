@@ -9,6 +9,7 @@ import { useSimulation } from "../../engine/useSimulation";
 import { useStore } from "../../state/store";
 import { cableBounds } from "../../utils/cableBounds";
 import { CUT_COLOR, TERRESTRIAL_COLOR, cableColor, cableWidthScale } from "../../utils/colors";
+import { haversineKm } from "../../utils/geo";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 function DeckGLOverlay(props: { layers: Layer[] }) {
@@ -56,6 +57,7 @@ export function GlobeView() {
 	const cutMode = useStore((s) => s.cutMode);
 	const toggleCutMode = useStore((s) => s.toggleCutMode);
 	const addCut = useStore((s) => s.addCut);
+	const removeCut = useStore((s) => s.removeCut);
 	const selectPointCut = useStore((s) => s.selectPointCut);
 	const flyToBounds = useStore((s) => s.flyToBounds);
 	const mapRef = useRef<MapRef>(null);
@@ -349,24 +351,20 @@ export function GlobeView() {
 				type="button"
 				onClick={resetView}
 				className={`
-					absolute z-30
+					absolute z-30 md:hidden
 					w-10 h-10 rounded-xl
 					bg-surface/80 backdrop-blur-sm border border-border/50
 					flex items-center justify-center
 					text-text-secondary hover:text-text-primary
 					active:bg-border/50
 					shadow-lg shadow-black/20
-					md:bottom-4 md:left-4 max-md:left-3
-					${sheetDragging ? "" : "max-md:transition-all max-md:duration-300 max-md:ease-out"}
-					${mobileSheetHeight > 55 ? "max-md:opacity-0 max-md:pointer-events-none" : ""}
+					left-3
+					${sheetDragging ? "" : "transition-all duration-300 ease-out"}
+					${mobileSheetHeight > 55 ? "opacity-0 pointer-events-none" : ""}
 				`}
-				style={
-					typeof window !== "undefined" && window.innerWidth < 768
-						? {
-								bottom: `calc(${mobileSheetHeight}dvh + ${mobileCardHeight > 0 ? mobileCardHeight + 20 : 8}px)`,
-							}
-						: undefined
-				}
+				style={{
+					bottom: `calc(${mobileSheetHeight}dvh + ${mobileCardHeight > 0 ? mobileCardHeight + 20 : 8}px)`,
+				}}
 				title="Reset map view"
 			>
 				<svg
@@ -388,62 +386,116 @@ export function GlobeView() {
 				</svg>
 			</button>
 
-			{/* Desktop cut mode toggle */}
-			<button
-				type="button"
-				onClick={toggleCutMode}
-				className={`
-					absolute z-30 hidden md:flex
-					bottom-4 left-[4.5rem]
-					h-12 px-4 rounded-2xl
-					backdrop-blur-sm border
-					items-center gap-2 text-xs font-medium
-					transition-all shadow-lg shadow-black/20
-					${
-						cutMode
-							? "bg-cable-cut/20 border-cable-cut/50 text-cable-cut shadow-[0_0_12px_rgba(239,68,68,0.2)]"
-							: "bg-surface/80 border-border/50 text-text-secondary hover:text-text-primary"
-					}
-				`}
-				title="Toggle cut mode (C)"
-			>
-				<svg
-					width="16"
-					height="16"
-					viewBox="0 0 16 16"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="1.5"
-					strokeLinecap="round"
-				>
-					<title>Cut mode</title>
-					<line x1="4" y1="4" x2="12" y2="12" />
-					<line x1="4" y1="12" x2="12" y2="4" />
-					<circle cx="4" cy="4" r="2" />
-					<circle cx="4" cy="12" r="2" />
-				</svg>
-				{cutMode ? "Exit Cut" : "Cut Mode"}
-			</button>
-
-			{/* Desktop reset button */}
-			{hasCuts && (
+			{/* Desktop bottom-left button bar — consistent sizing and spacing */}
+			<div className="absolute z-30 hidden md:flex bottom-4 left-4 items-center gap-2">
+				{/* Recenter */}
 				<button
 					type="button"
-					onClick={resetCuts}
+					onClick={resetView}
 					className="
-						absolute z-30 hidden md:flex
-						bottom-4 left-[12rem]
-						h-12 px-4 rounded-2xl
+						w-10 h-10 rounded-xl
 						bg-surface/80 backdrop-blur-sm border border-border/50
-						items-center gap-2
-						text-cable-cut text-xs font-medium
-						hover:bg-cable-cut/10 active:bg-cable-cut/20 transition-colors
+						flex items-center justify-center
+						text-text-secondary hover:text-text-primary
+						active:bg-border/50 transition-colors
 						shadow-lg shadow-black/20
 					"
+					title="Reset map view"
 				>
-					Reset
+					<svg
+						width="16"
+						height="16"
+						viewBox="0 0 16 16"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="1.5"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+					>
+						<title>Recenter map</title>
+						<circle cx="8" cy="8" r="3" />
+						<line x1="8" y1="1" x2="8" y2="3" />
+						<line x1="8" y1="13" x2="8" y2="15" />
+						<line x1="1" y1="8" x2="3" y2="8" />
+						<line x1="13" y1="8" x2="15" y2="8" />
+					</svg>
 				</button>
-			)}
+
+				{/* Cut mode toggle */}
+				<button
+					type="button"
+					onClick={toggleCutMode}
+					className={`
+						h-10 px-3.5 rounded-xl
+						backdrop-blur-sm border
+						flex items-center gap-2 text-xs font-medium
+						transition-all shadow-lg shadow-black/20
+						${
+							cutMode
+								? "bg-cable-cut/20 border-cable-cut/50 text-cable-cut shadow-[0_0_12px_rgba(239,68,68,0.2)]"
+								: "bg-surface/80 border-border/50 text-text-secondary hover:text-text-primary"
+						}
+					`}
+					title="Toggle cut mode (C)"
+				>
+					<svg
+						width="14"
+						height="14"
+						viewBox="0 0 16 16"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="1.5"
+						strokeLinecap="round"
+					>
+						<title>Cut mode</title>
+						<line x1="4" y1="4" x2="12" y2="12" />
+						<line x1="4" y1="12" x2="12" y2="4" />
+						<circle cx="4" cy="4" r="2" />
+						<circle cx="4" cy="12" r="2" />
+					</svg>
+					{cutMode ? "Exit Cut" : "Cut Mode"}
+				</button>
+
+				{/* Undo */}
+				{hasCuts && (
+					<button
+						type="button"
+						onClick={() => {
+							const state = useStore.getState();
+							if (state.cuts.length > 0) removeCut(state.cuts[state.cuts.length - 1].id);
+						}}
+						className="
+							h-10 px-3.5 rounded-xl
+							bg-surface/80 backdrop-blur-sm border border-border/50
+							flex items-center gap-2
+							text-text-secondary text-xs font-medium
+							hover:bg-border/40 active:bg-border/60 transition-colors
+							shadow-lg shadow-black/20
+						"
+						title="Undo last cut (Ctrl+Z)"
+					>
+						Undo
+					</button>
+				)}
+
+				{/* Reset */}
+				{hasCuts && (
+					<button
+						type="button"
+						onClick={resetCuts}
+						className="
+							h-10 px-3.5 rounded-xl
+							bg-surface/80 backdrop-blur-sm border border-border/50
+							flex items-center gap-2
+							text-cable-cut text-xs font-medium
+							hover:bg-cable-cut/10 active:bg-cable-cut/20 transition-colors
+							shadow-lg shadow-black/20
+						"
+					>
+						Reset
+					</button>
+				)}
+			</div>
 
 			<div className="absolute inset-0">
 				<MapGL
@@ -458,13 +510,32 @@ export function GlobeView() {
 						if (Date.now() - lastDeckClickTime.current < 100) return;
 
 						if (cutMode) {
-							// In cut mode: place a point cut at the clicked location
+							// In cut mode: only place a cut if at least one cable segment is within radius
+							const clickLat = e.lngLat.lat;
+							const clickLng = e.lngLat.lng;
+							const radius = 50;
+							let hasNearby = false;
+							for (const cable of cables) {
+								if (hasNearby) break;
+								for (const seg of cable.segments) {
+									const from = metrosById.get(seg.from);
+									const to = metrosById.get(seg.to);
+									if (!from || !to) continue;
+									const midLat = (from.lat + to.lat) / 2;
+									const midLng = (from.lng + to.lng) / 2;
+									if (haversineKm(clickLat, clickLng, midLat, midLng) < radius) {
+										hasNearby = true;
+										break;
+									}
+								}
+							}
+							if (!hasNearby) return;
 							addCut({
 								id: `point-${Date.now()}`,
 								type: "point",
-								lat: e.lngLat.lat,
-								lng: e.lngLat.lng,
-								radius: 150,
+								lat: clickLat,
+								lng: clickLng,
+								radius: 50,
 								affectedSegmentIds: [],
 							});
 						} else {

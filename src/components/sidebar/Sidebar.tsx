@@ -1,5 +1,5 @@
-import { useCallback, useMemo } from "react";
-import type { CutLocation, TerrestrialEdge } from "../../data/types";
+import { useMemo } from "react";
+import type { TerrestrialEdge } from "../../data/types";
 import { useStore } from "../../state/store";
 import { cableBounds } from "../../utils/cableBounds";
 
@@ -15,7 +15,6 @@ export function Sidebar() {
 	const terrestrial = useStore((s) => s.terrestrial);
 	const cables = useStore((s) => s.cables);
 	const metrosById = useStore((s) => s.metrosById);
-	const addCut = useStore((s) => s.addCut);
 	const selectCable = useStore((s) => s.selectCable);
 	const selectMetro = useStore((s) => s.selectMetro);
 	const flyToLocation = useStore((s) => s.flyToLocation);
@@ -32,20 +31,6 @@ export function Sidebar() {
 	const selectTerrestrial = useStore((s) => s.selectTerrestrial);
 
 	const storeApplyScenario = useStore((s) => s.applyScenario);
-
-	const cutSelectedCable = useCallback(() => {
-		if (!selectedCable) return;
-		// Cut the entire cable by adding all its segment IDs
-		const segmentIds = selectedCable.segments.map((_seg, i) => `${selectedCable.id}:${i}`);
-		const cut: CutLocation = {
-			id: `cable-${selectedCable.id}`,
-			type: "point",
-			lat: 0,
-			lng: 0,
-			affectedSegmentIds: segmentIds,
-		};
-		addCut(cut);
-	}, [selectedCable, addCut]);
 
 	return (
 		<>
@@ -222,20 +207,7 @@ export function Sidebar() {
 								<div className="mt-3 w-full py-2 rounded-lg bg-cable-cut/10 text-cable-cut/60 text-xs font-semibold uppercase tracking-wider text-center">
 									Severed
 								</div>
-							) : (
-								<button
-									type="button"
-									onClick={cutSelectedCable}
-									className="
-										mt-3 w-full py-2 rounded-lg
-										bg-cable-cut/20 border border-cable-cut/40
-										text-cable-cut text-xs font-semibold uppercase tracking-wider
-										hover:bg-cable-cut/30 transition-colors
-									"
-								>
-									Cut This Cable
-								</button>
-							);
+							) : null;
 						})()}
 					</div>
 				)}

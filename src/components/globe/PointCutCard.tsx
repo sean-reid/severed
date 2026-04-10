@@ -11,7 +11,7 @@ export function PointCutCard() {
 
 	const cut = selectedPointCutId ? cuts.find((c) => c.id === selectedPointCutId) : null;
 
-	if (!cut || cut.lat === 0) return null;
+	if (!cut) return null;
 
 	const latStr = `${Math.abs(cut.lat).toFixed(1)}°${cut.lat >= 0 ? "N" : "S"}`;
 	const lngStr = `${Math.abs(cut.lng).toFixed(1)}°${cut.lng >= 0 ? "E" : "W"}`;
@@ -37,7 +37,7 @@ export function PointCutCard() {
 			subtitle={
 				<>
 					<span className="font-data text-xs text-text-secondary">
-						{cut.radius ?? 150} km radius
+						{cut.radius ?? 50} km radius
 					</span>
 					<span className="text-[9px] px-1.5 py-0.5 rounded-full bg-cable-cut/15 text-cable-cut">
 						point cut

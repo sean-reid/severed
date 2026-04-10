@@ -12,7 +12,6 @@ export function ImpactPanel() {
 	const selectedMetroId = useStore((s) => s.selectedMetroId);
 	const selectMetro = useStore((s) => s.selectMetro);
 	const flyToLocation = useStore((s) => s.flyToLocation);
-	const addCut = useStore((s) => s.addCut);
 	const cablesById = useStore((s) => s.cablesById);
 	const selectCable = useStore((s) => s.selectCable);
 	const flyToBounds = useStore((s) => s.flyToBounds);
@@ -36,21 +35,6 @@ export function ImpactPanel() {
 		[selectCable, cablesById, metrosById, flyToBounds],
 	);
 
-	const cutCableById = useCallback(
-		(cableId: string) => {
-			const cable = cablesById.get(cableId);
-			if (!cable) return;
-			const segmentIds = cable.segments.map((_s: unknown, i: number) => `${cableId}:${i}`);
-			addCut({
-				id: `cable-${cableId}`,
-				type: "point",
-				lat: 0,
-				lng: 0,
-				affectedSegmentIds: segmentIds,
-			});
-		},
-		[cablesById, addCut],
-	);
 	const SNAPS = useMemo(() => [15, 30, 45, 65, 85], []);
 	const [sheetHeight, setSheetHeightLocal] = useState(SNAPS[0]);
 	const setMobileSheetHeight = useStore((s) => s.setMobileSheetHeight);
@@ -386,7 +370,7 @@ export function ImpactPanel() {
 				{!hasCuts && (
 					<div className="flex flex-col items-center justify-center flex-1 px-8 text-center">
 						<div className="text-text-secondary/70 text-sm leading-relaxed">
-							Select a scenario or tap a cable to simulate a failure.
+							Select a scenario, or enter Cut Mode to place cuts on the map.
 						</div>
 					</div>
 				)}
@@ -497,22 +481,7 @@ export function ImpactPanel() {
 														<span className="flex-none ml-2 px-2 py-0.5 rounded text-[9px] text-cable-cut/40 bg-cable-cut/5">
 															severed
 														</span>
-													) : (
-														<button
-															type="button"
-															onClick={() => {
-																if (r.cableId) cutCableById(r.cableId);
-															}}
-															className="
-															flex-none ml-2 px-2.5 py-1 rounded-lg
-															text-[10px] font-semibold uppercase
-															text-cable-cut bg-cable-cut/10 border border-cable-cut/30
-															active:bg-cable-cut/20 transition-colors
-														"
-														>
-															Cut
-														</button>
-													);
+													) : null;
 												})()}
 										</div>
 									);

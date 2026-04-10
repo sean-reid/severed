@@ -1,5 +1,3 @@
-import { useCallback } from "react";
-import type { CutLocation } from "../../data/types";
 import { useStore } from "../../state/store";
 import { confidenceColors } from "../../utils/colors";
 import { BaseCard } from "./BaseCard";
@@ -7,7 +5,6 @@ import { BaseCard } from "./BaseCard";
 export function CutAction() {
 	const selectedCableId = useStore((s) => s.selectedCableId);
 	const cablesById = useStore((s) => s.cablesById);
-	const addCut = useStore((s) => s.addCut);
 	const selectCable = useStore((s) => s.selectCable);
 	const cuts = useStore((s) => s.cuts);
 	const simulation = useStore((s) => s.simulation);
@@ -19,20 +16,6 @@ export function CutAction() {
 		? cuts.some((c) => c.affectedSegmentIds.some((s) => s.startsWith(`${selectedCableId}:`))) ||
 			(simulation?.affectedEdgeIds?.some((id) => id.startsWith(`${selectedCableId}:`)) ?? false)
 		: false;
-
-	const cutCable = useCallback(() => {
-		if (!selectedCable) return;
-		const segmentIds = selectedCable.segments.map((_s, i) => `${selectedCable.id}:${i}`);
-		const cut: CutLocation = {
-			id: `cable-${selectedCable.id}`,
-			type: "point",
-			lat: 0,
-			lng: 0,
-			affectedSegmentIds: segmentIds,
-		};
-		addCut(cut);
-		// Keep cable selected so user sees the "Severed" state
-	}, [selectedCable, addCut]);
 
 	if (!selectedCable) return null;
 
@@ -64,20 +47,7 @@ export function CutAction() {
 					<span className="flex-none px-3 py-1.5 rounded-lg bg-cable-cut/10 text-cable-cut/60 text-[10px] font-semibold uppercase">
 						Severed
 					</span>
-				) : (
-					<button
-						type="button"
-						onClick={cutCable}
-						className="
-							flex-none px-4 py-2.5 rounded-xl
-							bg-cable-cut/20 border border-cable-cut/40
-							text-cable-cut text-sm font-semibold
-							active:bg-cable-cut/30 transition-colors
-						"
-					>
-						Cut
-					</button>
-				)
+				) : undefined
 			}
 		>
 			<div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">

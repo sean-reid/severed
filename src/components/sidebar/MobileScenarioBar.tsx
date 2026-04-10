@@ -6,6 +6,7 @@ export function MobileScenarioBar() {
 	const cutMode = useStore((s) => s.cutMode);
 	const toggleCutMode = useStore((s) => s.toggleCutMode);
 	const cuts = useStore((s) => s.cuts);
+	const removeCut = useStore((s) => s.removeCut);
 	const applyScenario = useStore((s) => s.applyScenario);
 	const resetCuts = useStore((s) => s.resetCuts);
 
@@ -67,6 +68,21 @@ export function MobileScenarioBar() {
 						</svg>
 						Cut
 					</button>
+					{cuts.length > 0 && (
+						<button
+							type="button"
+							onClick={() => {
+								if (cuts.length > 0) removeCut(cuts[cuts.length - 1].id);
+							}}
+							className="
+								flex-none h-11 px-4 rounded-full text-sm font-medium
+								bg-surface/90 backdrop-blur-sm border border-border/70 text-text-secondary
+								active:bg-border/50 transition-colors whitespace-nowrap
+							"
+						>
+							Undo
+						</button>
+					)}
 					{cuts.length > 0 && (
 						<button
 							type="button"
