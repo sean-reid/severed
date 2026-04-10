@@ -1746,6 +1746,26 @@ function main() {
 				}
 				return line;
 			});
+			// Add the missing southern Red Sea trunk: Djibouti → central Red Sea.
+			// The source data has a gap between the Horn of Africa (~44.5E, 11.2N)
+			// and the central Red Sea (~37.5E, 22N). This is the ~1300km trunk
+			// through the Bab el-Mandeb Strait and up the southern Red Sea.
+			const redSeaTrunk: number[][] = [
+				[44.55, 11.24], // Djibouti (end of Line 23)
+				[43.8, 12.3], // Bab el-Mandeb approach
+				[43.3, 12.7], // Bab el-Mandeb Strait
+				[42.8, 13.5], // enter Red Sea
+				[42.2, 14.5], // southern Red Sea
+				[41.5, 15.5],
+				[41.0, 16.5],
+				[40.5, 17.5],
+				[40.0, 18.5],
+				[39.3, 19.5],
+				[38.5, 20.5], // central Red Sea
+				[38.25, 20.36], // connect to Line 24 start
+			];
+			fixed.push(redSeaTrunk);
+
 			fixedPath = {
 				...fixedPath,
 				geometry: { type: "MultiLineString" as const, coordinates: fixed },
