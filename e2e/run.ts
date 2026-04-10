@@ -5,7 +5,7 @@
  * 1. Builds the app (production)
  * 2. Starts vite preview server
  * 3. Discovers and runs test modules in e2e/tests/
- * 4. Runs each test across multiple viewports (desktop, mobile)
+ * 4. Runs each test across multiple viewports IN PARALLEL
  * 5. Saves screenshots on failure
  * 6. Reports results
  *
@@ -17,7 +17,13 @@
 import { type ChildProcess, execSync, spawn } from "node:child_process";
 import { readdirSync } from "node:fs";
 import { basename, resolve } from "node:path";
-import { type ViewportName, createContext } from "./context";
+import {
+	type ViewportName,
+	closeBrowser,
+	createContext,
+	destroyContext,
+	launchBrowser,
+} from "./context";
 
 const E2E_DIR = resolve(import.meta.dirname);
 const ROOT = resolve(E2E_DIR, "..");
@@ -61,9 +67,14 @@ await new Promise<void>((resolve, reject) => {
 	server.on("error", reject);
 });
 
-console.log(`\x1b[2m  Server ready at ${BASE_URL}\x1b[0m\n`);
+console.log(`\x1b[2m  Server ready at ${BASE_URL}\x1b[0m`);
 
-// ── Step 3: Discover tests ──
+// ── Step 3: Launch shared browser ──
+
+await launchBrowser();
+console.log("\x1b[2m  Browser launched\x1b[0m\n");
+
+// ── Step 4: Discover tests ──
 
 const testFiles = readdirSync(resolve(E2E_DIR, "tests"))
 	.filter((f) => f.endsWith(".test.ts"))
@@ -73,7 +84,7 @@ console.log(
 	`\x1b[1mRunning ${testFiles.length} test suites across ${TEST_VIEWPORTS.length} viewports\x1b[0m\n`,
 );
 
-// ── Step 4: Run tests ──
+// ── Step 5: Run tests (viewports in parallel per suite) ──
 
 interface TestResult {
 	name: string;
@@ -90,44 +101,62 @@ for (const file of testFiles) {
 	const suiteName = basename(file, ".test.ts");
 	const mod = await import(`./tests/${file}`);
 
-	for (const viewport of TEST_VIEWPORTS) {
-		const label = `${suiteName} [${viewport}]`;
-		process.stdout.write(`  ${label} `);
-		const start = Date.now();
-
-		const ctx = await createContext(BASE_URL, viewport);
-		try {
-			await mod.default(ctx);
-			const duration = Date.now() - start;
-			results.push({ name: suiteName, viewport, passed: true, durationMs: duration });
-			console.log(`\x1b[32m✓\x1b[0m \x1b[2m${duration}ms\x1b[0m`);
-		} catch (err) {
-			const duration = Date.now() - start;
-			const msg = err instanceof Error ? err.message : String(err);
-			let screenshot: string | undefined;
+	// Run both viewports in parallel
+	const suiteStart = Date.now();
+	const viewportResults = await Promise.all(
+		TEST_VIEWPORTS.map(async (viewport): Promise<TestResult> => {
+			const start = Date.now();
+			const ctx = await createContext(BASE_URL, viewport);
 			try {
-				screenshot = await ctx.screenshot(`FAIL-${suiteName}`);
-			} catch {
-				/* screenshot failed, continue */
+				await mod.default(ctx);
+				return { name: suiteName, viewport, passed: true, durationMs: Date.now() - start };
+			} catch (err) {
+				const msg = err instanceof Error ? err.message : String(err);
+				let screenshot: string | undefined;
+				try {
+					screenshot = await ctx.screenshot(`FAIL-${suiteName}`);
+				} catch {
+					/* screenshot failed */
+				}
+				return {
+					name: suiteName,
+					viewport,
+					passed: false,
+					error: msg,
+					screenshot,
+					durationMs: Date.now() - start,
+				};
+			} finally {
+				await destroyContext(ctx);
 			}
-			results.push({
-				name: suiteName,
-				viewport,
-				passed: false,
-				error: msg,
-				screenshot,
-				durationMs: duration,
-			});
-			console.log(`\x1b[31m✗\x1b[0m \x1b[2m${duration}ms\x1b[0m`);
-		} finally {
-			await ctx.browser.close();
+		}),
+	);
+
+	const suiteDuration = Date.now() - suiteStart;
+	for (const r of viewportResults) {
+		results.push(r);
+		const label = `${r.name} [${r.viewport}]`;
+		if (r.passed) {
+			console.log(`  ${label} \x1b[32m✓\x1b[0m \x1b[2m${r.durationMs}ms\x1b[0m`);
+		} else {
+			console.log(`  ${label} \x1b[31m✗\x1b[0m \x1b[2m${r.durationMs}ms\x1b[0m`);
+		}
+	}
+	// Show parallel savings if both viewports ran
+	if (viewportResults.length > 1) {
+		const serial = viewportResults.reduce((sum, r) => sum + r.durationMs, 0);
+		if (serial > suiteDuration + 500) {
+			console.log(
+				`    \x1b[2m(parallel: ${(suiteDuration / 1000).toFixed(1)}s vs ${(serial / 1000).toFixed(1)}s serial)\x1b[0m`,
+			);
 		}
 	}
 }
 
-// ── Step 5: Cleanup and report ──
+// ── Step 6: Cleanup and report ──
 
-// Kill the server tree
+await closeBrowser();
+
 if (server.pid) {
 	try {
 		execSync(`kill -9 ${server.pid} 2>/dev/null; pkill -9 -P ${server.pid} 2>/dev/null`, {
@@ -141,10 +170,10 @@ server.kill("SIGKILL");
 
 const passed = results.filter((r) => r.passed).length;
 const failed = results.filter((r) => !r.passed).length;
-const totalMs = results.reduce((sum, r) => sum + r.durationMs, 0);
+const wallClock = results.reduce((sum, r) => sum + r.durationMs, 0);
 
 console.log(
-	`\n\x1b[1m${passed + failed} tests, \x1b[32m${passed} passed\x1b[0m\x1b[1m, \x1b[${failed > 0 ? "31" : "2"}m${failed} failed\x1b[0m \x1b[2m(${(totalMs / 1000).toFixed(1)}s)\x1b[0m`,
+	`\n\x1b[1m${passed + failed} tests, \x1b[32m${passed} passed\x1b[0m\x1b[1m, \x1b[${failed > 0 ? "31" : "2"}m${failed} failed\x1b[0m \x1b[2m(${(wallClock / 1000).toFixed(1)}s)\x1b[0m`,
 );
 
 if (failed > 0) {

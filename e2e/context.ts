@@ -41,8 +41,11 @@ export interface TestContext {
 	clickButton(text: string): Promise<void>;
 }
 
-export async function createContext(baseUrl: string, viewport: ViewportName): Promise<TestContext> {
-	const browser = await puppeteer.launch({
+/** Shared browser instance — call launchBrowser() once, closeBrowser() at end. */
+let sharedBrowser: Browser | null = null;
+
+export async function launchBrowser(): Promise<Browser> {
+	sharedBrowser = await puppeteer.launch({
 		headless: true,
 		args: [
 			"--no-sandbox",
@@ -52,26 +55,41 @@ export async function createContext(baseUrl: string, viewport: ViewportName): Pr
 			"--disable-software-rasterizer",
 		],
 	});
-	const page = await browser.newPage();
+	return sharedBrowser;
+}
+
+export async function closeBrowser(): Promise<void> {
+	if (sharedBrowser) {
+		await sharedBrowser.close();
+		sharedBrowser = null;
+	}
+}
+
+export async function createContext(baseUrl: string, viewport: ViewportName): Promise<TestContext> {
+	if (!sharedBrowser) throw new Error("Call launchBrowser() before createContext()");
+
+	// Use incognito context for test isolation without browser launch cost
+	const browserContext = await sharedBrowser.createBrowserContext();
+	const page = await browserContext.newPage();
 	await page.setViewport(VIEWPORTS[viewport]);
 
 	const ctx: TestContext = {
-		browser,
+		browser: sharedBrowser,
 		page,
 		baseUrl,
 		viewport,
 
 		async goto(path = "/") {
 			await page.goto(`${baseUrl}${path}`, { waitUntil: "networkidle2", timeout: 15000 });
-			// Wait for React mount — SEVERED header appears
+			// Wait for React mount
 			await page.waitForSelector("h1", { timeout: 15000 });
 			// Wait for loading screen to clear
 			await page.waitForFunction(
 				() => !document.body.textContent?.includes("Loading cable network data"),
 				{ timeout: 15000 },
 			);
-			// Let deck.gl render layers (shorter wait — tests don't need full render)
-			await new Promise((r) => setTimeout(r, 1500));
+			// Brief pause for deck.gl layer initialization
+			await new Promise((r) => setTimeout(r, 800));
 		},
 
 		async screenshot(name: string) {
@@ -112,4 +130,10 @@ export async function createContext(baseUrl: string, viewport: ViewportName): Pr
 	};
 
 	return ctx;
+}
+
+/** Close the incognito context (not the browser). */
+export async function destroyContext(ctx: TestContext): Promise<void> {
+	const browserContext = ctx.page.browserContext();
+	await browserContext.close();
 }
