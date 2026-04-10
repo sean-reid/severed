@@ -33,25 +33,48 @@ const INITIAL_VIEW = {
 
 const DARK_BASEMAP = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
 
-/** Find the index of the closest coordinate in a LineString to a target point. */
-function closestCoordIndex(coords: Position[], lat: number, lng: number): number {
-	let best = 0;
+/** Gap half-width in degrees (~1km at equator). */
+const GAP = 0.01;
+
+/**
+ * Find the closest point on a polyline to a target, returning the segment index
+ * and the projected position on that segment.
+ */
+function projectOnLine(
+	coords: Position[],
+	lat: number,
+	lng: number,
+): { segIdx: number; point: Position } {
+	let bestSeg = 0;
 	let bestDist = Number.MAX_VALUE;
-	for (let i = 0; i < coords.length; i++) {
-		const dx = coords[i][0] - lng;
-		const dy = coords[i][1] - lat;
-		const d = dx * dx + dy * dy;
+	let bestPoint: Position = [lng, lat];
+
+	for (let i = 0; i < coords.length - 1; i++) {
+		const ax = coords[i][0];
+		const ay = coords[i][1];
+		const bx = coords[i + 1][0];
+		const by = coords[i + 1][1];
+		const dx = bx - ax;
+		const dy = by - ay;
+		const len2 = dx * dx + dy * dy;
+		// Project point onto segment [0,1]
+		let t = len2 > 0 ? ((lng - ax) * dx + (lat - ay) * dy) / len2 : 0;
+		t = Math.max(0, Math.min(1, t));
+		const px = ax + t * dx;
+		const py = ay + t * dy;
+		const d = (px - lng) ** 2 + (py - lat) ** 2;
 		if (d < bestDist) {
 			bestDist = d;
-			best = i;
+			bestSeg = i;
+			bestPoint = [px, py];
 		}
 	}
-	return best;
+	return { segIdx: bestSeg, point: bestPoint };
 }
 
 /**
- * Split a cable's GeoJSON path at one or more cut points, creating a visual gap.
- * Returns multiple Features (one per uncut section) with the same properties.
+ * Split a cable's GeoJSON path at cut points, creating a small visual gap.
+ * Projects each cut onto the nearest line segment and inserts a precise break.
  */
 function splitCablePath(
 	path: Feature<LineString | MultiLineString>,
@@ -59,41 +82,35 @@ function splitCablePath(
 ): Feature<LineString | MultiLineString>[] {
 	const props = path.properties ?? {};
 	const geom = path.geometry;
-
-	// Collect all coordinate arrays (LineString has 1, MultiLineString has N)
 	const lines: Position[][] =
 		geom.type === "MultiLineString" ? geom.coordinates : [geom.coordinates];
 
 	// For each cut, find which line and where to split
-	const splits: { lineIdx: number; coordIdx: number }[] = [];
+	const splits: { lineIdx: number; segIdx: number; point: Position }[] = [];
 	for (const cut of cableCuts) {
 		let bestLine = 0;
-		let bestCoord = 0;
 		let bestDist = Number.MAX_VALUE;
+		let bestResult = { segIdx: 0, point: [cut.lng, cut.lat] as Position };
 		for (let li = 0; li < lines.length; li++) {
-			const idx = closestCoordIndex(lines[li], cut.lat, cut.lng);
-			const c = lines[li][idx];
-			const dx = c[0] - cut.lng;
-			const dy = c[1] - cut.lat;
-			const d = dx * dx + dy * dy;
+			const result = projectOnLine(lines[li], cut.lat, cut.lng);
+			const d = (result.point[0] - cut.lng) ** 2 + (result.point[1] - cut.lat) ** 2;
 			if (d < bestDist) {
 				bestDist = d;
 				bestLine = li;
-				bestCoord = idx;
+				bestResult = result;
 			}
 		}
-		splits.push({ lineIdx: bestLine, coordIdx: bestCoord });
+		splits.push({ lineIdx: bestLine, ...bestResult });
 	}
 
-	// Group splits by line, sort by coordIdx
-	const splitsByLine = new Map<number, number[]>();
+	// Group by line, sort by segment position
+	const splitsByLine = new Map<number, { segIdx: number; point: Position }[]>();
 	for (const s of splits) {
 		const arr = splitsByLine.get(s.lineIdx) ?? [];
-		arr.push(s.coordIdx);
+		arr.push({ segIdx: s.segIdx, point: s.point });
 		splitsByLine.set(s.lineIdx, arr);
 	}
 
-	// Build result Features
 	const resultLines: Position[][] = [];
 	for (let li = 0; li < lines.length; li++) {
 		const lineSplits = splitsByLine.get(li);
@@ -101,24 +118,38 @@ function splitCablePath(
 			resultLines.push(lines[li]);
 			continue;
 		}
-		const sorted = [...new Set(lineSplits)].sort((a, b) => a - b);
-		let start = 0;
-		for (const splitIdx of sorted) {
-			// Segment before the cut (at least 2 coords to form a line)
-			const beforeEnd = Math.max(start + 1, splitIdx);
-			if (beforeEnd > start) {
-				resultLines.push(lines[li].slice(start, beforeEnd + 1));
-			}
-			// Skip past the cut point to create a gap
-			start = Math.min(splitIdx + 1, lines[li].length - 1);
+		// Sort splits by their position along the line
+		lineSplits.sort((a, b) => a.segIdx - b.segIdx);
+
+		let startIdx = 0;
+		for (const { segIdx, point } of lineSplits) {
+			// Direction along the segment for the gap offset
+			const a = lines[li][segIdx];
+			const b = lines[li][segIdx + 1];
+			const dx = b[0] - a[0];
+			const dy = b[1] - a[1];
+			const len = Math.sqrt(dx * dx + dy * dy) || 1;
+			const ux = (dx / len) * GAP;
+			const uy = (dy / len) * GAP;
+
+			// Before-cut half: all coords from startIdx to segIdx, then approach the cut point
+			const before = lines[li].slice(startIdx, segIdx + 1);
+			before.push([point[0] - ux, point[1] - uy]);
+			resultLines.push(before);
+
+			// After-cut half starts just past the gap
+			startIdx = segIdx + 1;
+			// Prepend the post-gap point so the next segment begins right after the break
+			const afterStart: Position = [point[0] + ux, point[1] + uy];
+			lines[li] = [afterStart, ...lines[li].slice(startIdx)];
+			startIdx = 0;
 		}
-		// Remaining segment after last cut
-		if (start < lines[li].length - 1) {
-			resultLines.push(lines[li].slice(start));
+		// Remaining tail
+		if (lines[li].length >= 2) {
+			resultLines.push(lines[li]);
 		}
 	}
 
-	// Return each line segment as its own Feature
 	return resultLines
 		.filter((l) => l.length >= 2)
 		.map((coords) => ({
