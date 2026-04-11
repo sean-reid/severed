@@ -85,11 +85,16 @@ function resolveAffectedEdges(
 					const toMetro = graph.nodes.get(seg.to);
 					if (!fromMetro || !toMetro) continue;
 
-					// Check if the cut point is close to the segment midpoint
+					// Compute segment midpoint (handles dateline crossing)
 					const midLat = (fromMetro.lat + toMetro.lat) / 2;
-					const midLng = (fromMetro.lng + toMetro.lng) / 2;
-					const distDeg = Math.hypot(cut.lat - midLat, cut.lng - midLng);
-					// Rough: 1 degree ≈ 111 km
+					let midLng = (fromMetro.lng + toMetro.lng) / 2;
+					if (Math.abs(fromMetro.lng - toMetro.lng) > 180) {
+						midLng = midLng > 0 ? midLng - 180 : midLng + 180;
+					}
+					// Distance with longitude wrapping
+					let dLng = Math.abs(cut.lng - midLng);
+					if (dLng > 180) dLng = 360 - dLng;
+					const distDeg = Math.hypot(cut.lat - midLat, dLng);
 					if (distDeg * 111 < radius) {
 						affectedEdgeIds.add(`${cable.id}:${i}`);
 					}

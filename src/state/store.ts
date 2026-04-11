@@ -205,7 +205,10 @@ export const useStore = create<StoreState>((set) => ({
 								const to = s.metrosById.get(seg.to);
 								if (!from || !to) continue;
 								const midLat = (from.lat + to.lat) / 2;
-								const midLng = (from.lng + to.lng) / 2;
+								let midLng = (from.lng + to.lng) / 2;
+								if (Math.abs(from.lng - to.lng) > 180) {
+									midLng = midLng > 0 ? midLng - 180 : midLng + 180;
+								}
 								const dist = haversineKm(cutLoc.cutLat ?? 0, cutLoc.cutLng ?? 0, midLat, midLng);
 								if (dist < cutRadius) {
 									segmentIds.push(`${cableId}:${i}`);

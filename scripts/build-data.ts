@@ -4209,14 +4209,14 @@ function main() {
 			id: "tonga-2022",
 			name: "Tonga Eruption (2022)",
 			description:
-				"Hunga Tonga eruption on January 15, 2022 destroyed ~200 km of the Tonga Cable. Tonga was cut off from global communications for over 5 weeks.",
+				"Hunga Tonga eruption on January 15, 2022 severed the Tonga Cable and Tonga Domestic Cable Extension (TDCE). Volcanic debris flows destroyed ~200 km of seabed cable. Tonga was cut off from global communications for over 5 weeks.",
 			cutLocations: [
 				{
 					type: "cable",
-					cableIds: ["tonga-cable"],
+					cableIds: ["tonga-cable", "tonga-domestic-cable-extension-tdce"],
 					cutLat: -20.5,
 					cutLng: -175.4,
-					cutRadius: 100,
+					cutRadius: 400,
 				},
 			],
 			historicalDate: "2022-01-15",
