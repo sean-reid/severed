@@ -220,25 +220,30 @@ export function GlobeView() {
 		}
 	}, [flyTo, fitBounds, clearFlyTo]);
 
-	// Resolved affected cable IDs — from simulation engine + direct cable cuts
-	const cutCableIds = useMemo(() => {
+	// Resolved affected segment IDs (e.g., "2africa:5") — from simulation + direct cuts
+	const affectedSegIds = useMemo(() => {
 		const ids = new Set<string>();
-		// From simulation (resolves chokepoint polygon → segment intersection)
 		if (simulation?.affectedEdgeIds) {
 			for (const edgeId of simulation.affectedEdgeIds) {
-				const cableId = edgeId.split(":")[0];
-				if (cableId !== "terr") ids.add(cableId);
+				if (!edgeId.startsWith("terr")) ids.add(edgeId);
 			}
 		}
-		// From direct cable cuts (Cut button)
 		for (const cut of cuts) {
 			for (const segId of cut.affectedSegmentIds) {
-				const cableId = segId.split(":")[0];
-				if (cableId !== "terr") ids.add(cableId);
+				if (!segId.startsWith("terr")) ids.add(segId);
 			}
 		}
 		return ids;
 	}, [simulation, cuts]);
+
+	// Cable IDs that have at least one affected segment (for split path logic)
+	const cutCableIds = useMemo(() => {
+		const ids = new Set<string>();
+		for (const segId of affectedSegIds) {
+			ids.add(segId.split(":")[0]);
+		}
+		return ids;
+	}, [affectedSegIds]);
 
 	const layers = useMemo((): Layer[] => {
 		const result: Layer[] = [];
@@ -255,24 +260,47 @@ export function GlobeView() {
 			}
 
 			const cableFeatures = cables.flatMap((c) => {
-				const props = { ...(c.path.properties ?? {}), cableId: c.id, cable: c };
+				const baseProps = { ...(c.path.properties ?? {}), cableId: c.id, cable: c };
+
+				// If this cable has user-placed segment cuts, split the path visually
 				const cableCuts = cutsByCable.get(c.id);
-				if (!cableCuts || cableCuts.length === 0) {
-					return [{ ...c.path, properties: props }];
+				if (cableCuts && cableCuts.length > 0) {
+					// Split features get severed=false; the gap + red dot handles the visual
+					return splitCablePath(
+						{ ...c.path, properties: { ...baseProps, severed: false } } as Feature<
+							LineString | MultiLineString
+						>,
+						cableCuts,
+					);
 				}
-				return splitCablePath(
-					{ ...c.path, properties: props } as Feature<LineString | MultiLineString>,
-					cableCuts,
-				);
+
+				// If this cable has affected segments (from scenarios), mark those red
+				if (cutCableIds.has(c.id)) {
+					// Check if ALL segments are affected (common case) vs partial
+					const totalSegs = c.segments.length;
+					let affectedCount = 0;
+					for (let i = 0; i < totalSegs; i++) {
+						if (affectedSegIds.has(`${c.id}:${i}`)) affectedCount++;
+					}
+					if (affectedCount === totalSegs || affectedCount === 0) {
+						// Whole cable affected (or none matched) — color it all red
+						return [{ ...c.path, properties: { ...baseProps, severed: affectedCount > 0 } }];
+					}
+					// Partial: return original path unsplit but marked severed
+					// (We can't split by segment because path coords != segment topology)
+					return [{ ...c.path, properties: { ...baseProps, severed: true } }];
+				}
+
+				return [{ ...c.path, properties: { ...baseProps, severed: false } }];
 			});
 
 			result.push(
 				new GeoJsonLayer({
 					id: "cables",
 					data: cableFeatures,
-					getLineColor: (d: { properties: { cable: Cable } }) => {
+					getLineColor: (d: { properties: { cable: Cable; severed?: boolean } }) => {
 						const cable = d.properties.cable;
-						if (cutCableIds.has(cable.id)) return CUT_COLOR;
+						if (d.properties.severed) return CUT_COLOR;
 						if (cable.id === selectedCableId)
 							return [147, 197, 253, 220] as [number, number, number, number];
 						if (cable.id === hoveredCableId)
@@ -335,8 +363,8 @@ export function GlobeView() {
 						hoverCable(info.object?.properties.cable.id ?? null);
 					},
 					updateTriggers: {
-						getLineColor: [cutCableIds, hoveredCableId, selectedCableId],
-						getData: [cuts],
+						getLineColor: [affectedSegIds, hoveredCableId, selectedCableId],
+						getData: [cuts, affectedSegIds],
 					},
 				}),
 			);
@@ -492,6 +520,7 @@ export function GlobeView() {
 		flyToBounds,
 		cutMode,
 		addCut,
+		affectedSegIds,
 	]);
 
 	const resetView = () => {
