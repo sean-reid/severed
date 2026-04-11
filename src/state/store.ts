@@ -10,6 +10,7 @@ import type {
 	TerrestrialEdge,
 } from "../data/types";
 import { haversineKm } from "../utils/geo";
+import { snapToCablePath } from "../utils/projectOnPath";
 
 interface SimulationState {
 	impacts: MetroImpact[];
@@ -219,28 +220,11 @@ export const useStore = create<StoreState>((set) => ({
 							segmentIds = cable.segments.map((_s, i) => `${cableId}:${i}`);
 						}
 
-						// Snap cut marker to the nearest affected segment midpoint
-						let snapLat = cutLoc.cutLat ?? 0;
-						let snapLng = cutLoc.cutLng ?? 0;
-						if (segmentIds.length > 0 && hasCutLocation) {
-							let bestDist = Number.MAX_VALUE;
-							for (const segId of segmentIds) {
-								const idx = Number.parseInt(segId.split(":")[1]);
-								const seg = cable.segments[idx];
-								if (!seg) continue;
-								const from = s.metrosById.get(seg.from);
-								const to = s.metrosById.get(seg.to);
-								if (!from || !to) continue;
-								const midLat = (from.lat + to.lat) / 2;
-								const midLng = (from.lng + to.lng) / 2;
-								const d = haversineKm(cutLoc.cutLat ?? 0, cutLoc.cutLng ?? 0, midLat, midLng);
-								if (d < bestDist) {
-									bestDist = d;
-									snapLat = midLat;
-									snapLng = midLng;
-								}
-							}
-						}
+						// Snap cut marker to the cable's GeoJSON path
+						const [snapLng, snapLat] =
+							hasCutLocation && cable.path?.geometry
+								? snapToCablePath(cable.path.geometry, cutLoc.cutLat ?? 0, cutLoc.cutLng ?? 0)
+								: [cutLoc.cutLng ?? 0, cutLoc.cutLat ?? 0];
 
 						newCuts.push({
 							id: `scenario-${scenarioId}-cable-${cableId}`,
