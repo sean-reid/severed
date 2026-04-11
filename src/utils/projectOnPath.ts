@@ -1,7 +1,15 @@
+/** Normalize a longitude difference to [-180, 180]. */
+function wrapLng(input: number): number {
+	let d = input;
+	while (d > 180) d -= 360;
+	while (d < -180) d += 360;
+	return d;
+}
+
 /**
  * Project a point onto the nearest segment of a polyline.
+ * Handles dateline wrapping for longitude.
  * Returns the projected [lng, lat] position on the path.
- * Pure function — never mutates input.
  */
 export function projectOnPath(
 	pathCoords: readonly (readonly number[])[],
@@ -16,17 +24,30 @@ export function projectOnPath(
 		const ay = pathCoords[i][1];
 		const bx = pathCoords[i + 1][0];
 		const by = pathCoords[i + 1][1];
-		const dx = bx - ax;
+
+		// Work in a local coordinate system relative to segment start,
+		// wrapping longitude so dateline-adjacent segments work correctly
+		const dx = wrapLng(bx - ax);
 		const dy = by - ay;
+		const pxRel = wrapLng(lng - ax);
+		const pyRel = lat - ay;
 		const len2 = dx * dx + dy * dy;
-		let t = len2 > 0 ? ((lng - ax) * dx + (lat - ay) * dy) / len2 : 0;
+		let t = len2 > 0 ? (pxRel * dx + pyRel * dy) / len2 : 0;
 		t = Math.max(0, Math.min(1, t));
-		const px = ax + t * dx;
-		const py = ay + t * dy;
-		const d = (px - lng) ** 2 + (py - lat) ** 2;
+
+		// Project back to absolute coordinates
+		let projLng = ax + t * dx;
+		const projLat = ay + t * dy;
+		// Normalize projected longitude
+		if (projLng > 180) projLng -= 360;
+		if (projLng < -180) projLng += 360;
+
+		const dLng = wrapLng(projLng - lng);
+		const dLat = projLat - lat;
+		const d = dLng * dLng + dLat * dLat;
 		if (d < bestDist) {
 			bestDist = d;
-			bestPoint = [px, py];
+			bestPoint = [projLng, projLat];
 		}
 	}
 	return bestPoint;
@@ -34,7 +55,7 @@ export function projectOnPath(
 
 /**
  * Project a point onto the nearest line of a MultiLineString / LineString cable path.
- * Returns [lng, lat] snapped to the cable.
+ * Handles dateline wrapping. Returns [lng, lat] snapped to the cable.
  */
 export function snapToCablePath(
 	geometry: { type: string; coordinates: number[][] | number[][][] },
@@ -51,7 +72,9 @@ export function snapToCablePath(
 
 	for (const line of lines) {
 		const p = projectOnPath(line, lat, lng);
-		const d = (p[0] - lng) ** 2 + (p[1] - lat) ** 2;
+		const dLng = wrapLng(p[0] - lng);
+		const dLat = p[1] - lat;
+		const d = dLng * dLng + dLat * dLat;
 		if (d < bestDist) {
 			bestDist = d;
 			bestPoint = p;
