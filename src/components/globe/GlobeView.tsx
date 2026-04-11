@@ -9,7 +9,16 @@ import type { Cable, CutLocation, Metro, TerrestrialEdge } from "../../data/type
 import { useSimulation } from "../../engine/useSimulation";
 import { useStore } from "../../state/store";
 import { cableBounds } from "../../utils/cableBounds";
-import { CUT_COLOR, TERRESTRIAL_COLOR, cableColor, cableWidthScale } from "../../utils/colors";
+import {
+	METRO_DEGRADED,
+	METRO_ISOLATED,
+	METRO_SEVERE,
+	SEVERED_COLOR,
+	TERRESTRIAL_ACTIVE_COLOR,
+	TERRESTRIAL_COLOR,
+	cableColor,
+	cableWidthScale,
+} from "../../utils/colors";
 import { haversineKm } from "../../utils/geo";
 import { snapToCablePath } from "../../utils/projectOnPath";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -235,6 +244,21 @@ export function GlobeView() {
 		return ids;
 	}, [simulation, cuts]);
 
+	// Terrestrial edge IDs actively absorbing rerouted traffic
+	const activeTerrestrialIds = useMemo(() => {
+		const ids = new Set<string>();
+		if (!simulation?.impacts) return ids;
+		for (const impact of simulation.impacts) {
+			if (impact.bandwidthLossPct <= 0) continue;
+			for (const r of impact.reroutedVia) {
+				if (r.type === "terrestrial" && r.terrestrialId) {
+					ids.add(r.terrestrialId);
+				}
+			}
+		}
+		return ids;
+	}, [simulation]);
+
 	// Cable IDs that have at least one severed segment
 	const cutCableIds = useMemo(() => {
 		const ids = new Set<string>();
@@ -284,7 +308,7 @@ export function GlobeView() {
 					data: cableFeatures,
 					getLineColor: (d: { properties: { cable: Cable; severed?: boolean } }) => {
 						const cable = d.properties.cable;
-						if (d.properties.severed) return CUT_COLOR;
+						if (d.properties.severed) return SEVERED_COLOR;
 						if (cable.id === selectedCableId)
 							return [147, 197, 253, 220] as [number, number, number, number];
 						if (cable.id === hoveredCableId)
@@ -376,11 +400,17 @@ export function GlobeView() {
 					id: "terrestrial",
 					data: terrData,
 					getPath: (d: { path: [number, number][] }) => d.path,
-					getColor: (d: { edge: TerrestrialEdge }) =>
-						d.edge.id === selectedTerrestrialId
-							? ([34, 211, 238, 220] as [number, number, number, number])
-							: TERRESTRIAL_COLOR,
-					getWidth: (d: { edge: TerrestrialEdge }) => (d.edge.id === selectedTerrestrialId ? 3 : 1),
+					getColor: (d: { edge: TerrestrialEdge }) => {
+						if (d.edge.id === selectedTerrestrialId)
+							return [34, 211, 238, 220] as [number, number, number, number];
+						if (activeTerrestrialIds.has(d.edge.id)) return TERRESTRIAL_ACTIVE_COLOR;
+						return TERRESTRIAL_COLOR;
+					},
+					getWidth: (d: { edge: TerrestrialEdge }) => {
+						if (d.edge.id === selectedTerrestrialId) return 3;
+						if (activeTerrestrialIds.has(d.edge.id)) return 2;
+						return 1;
+					},
 					widthUnits: "pixels" as const,
 					pickable: true,
 					autoHighlight: true,
@@ -392,8 +422,8 @@ export function GlobeView() {
 						}
 					},
 					updateTriggers: {
-						getColor: [selectedTerrestrialId],
-						getWidth: [selectedTerrestrialId],
+						getColor: [selectedTerrestrialId, activeTerrestrialIds],
+						getWidth: [selectedTerrestrialId, activeTerrestrialIds],
 					},
 				}),
 			);
@@ -406,16 +436,24 @@ export function GlobeView() {
 					id: "metros",
 					data: metros,
 					getPosition: (d: Metro) => [d.lng, d.lat],
-					getRadius: (d: Metro) => (d.isHub ? 5 : 3),
+					getRadius: (d: Metro) => {
+						if (!simulation?.impacts) return d.isHub ? 5 : 3;
+						const impact = simulation.impacts.find((i) => i.metroId === d.id);
+						if (!impact) return d.isHub ? 5 : 3;
+						if (impact.isolated) return 7;
+						if (impact.bandwidthLossPct > 50) return 6;
+						if (impact.bandwidthLossPct > 10) return 5;
+						return d.isHub ? 5 : 3;
+					},
 					getFillColor: (d: Metro) => {
 						if (!simulation?.impacts) {
 							return d.isHub ? [96, 165, 250, 120] : [96, 165, 250, 50];
 						}
 						const impact = simulation.impacts.find((i) => i.metroId === d.id);
 						if (!impact) return [96, 165, 250, 40];
-						if (impact.isolated) return [239, 68, 68, 255];
-						if (impact.bandwidthLossPct > 50) return [245, 158, 11, 230];
-						if (impact.bandwidthLossPct > 10) return [253, 224, 71, 180];
+						if (impact.isolated) return METRO_ISOLATED;
+						if (impact.bandwidthLossPct > 50) return METRO_SEVERE;
+						if (impact.bandwidthLossPct > 10) return METRO_DEGRADED;
 						if (impact.bandwidthLossPct > 0) return [96, 165, 250, 120];
 						return d.isHub ? [96, 165, 250, 100] : [96, 165, 250, 40];
 					},
@@ -432,6 +470,7 @@ export function GlobeView() {
 					},
 					updateTriggers: {
 						getFillColor: [simulation],
+						getRadius: [simulation],
 					},
 				}),
 			);

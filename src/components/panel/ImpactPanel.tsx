@@ -530,20 +530,20 @@ export function ImpactPanel() {
 									{/* Bandwidth loss */}
 									<div className="w-16 text-right">
 										{impact.isolated ? (
-											<span className="font-data text-xs text-cable-cut font-bold">OFFLINE</span>
+											<span className="font-data text-xs font-bold" style={{ color: "#ec4899" }}>
+												OFFLINE
+											</span>
 										) : (
 											<>
 												<div
 													className="font-data text-xs font-medium"
 													style={{
 														color:
-															impact.bandwidthLossPct > 80
-																? "#ef4444"
-																: impact.bandwidthLossPct > 50
+															impact.bandwidthLossPct > 50
+																? "#f97316"
+																: impact.bandwidthLossPct > 10
 																	? "#f59e0b"
-																	: impact.bandwidthLossPct > 20
-																		? "#fde047"
-																		: "#94a3b8",
+																	: "#94a3b8",
 													}}
 												>
 													-{impact.bandwidthLossPct.toFixed(0)}%
@@ -553,7 +553,7 @@ export function ImpactPanel() {
 														className="h-full rounded-full"
 														style={{
 															width: `${100 - impact.bandwidthLossPct}%`,
-															backgroundColor: impact.bandwidthLossPct > 50 ? "#f59e0b" : "#22c55e",
+															backgroundColor: impact.bandwidthLossPct > 50 ? "#f97316" : "#22c55e",
 														}}
 													/>
 												</div>
