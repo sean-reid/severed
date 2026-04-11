@@ -111,50 +111,47 @@ function splitCablePath(
 		cutsByLine.set(bestLine, arr);
 	}
 
-	// Build split features
-	const out: Position[][] = [];
+	// Build split features, marking severed fragments
+	const out: { coords: Position[]; severed: boolean }[] = [];
 
 	for (let li = 0; li < origLines.length; li++) {
 		const lineCuts = cutsByLine.get(li);
 		if (!lineCuts) {
-			out.push([...origLines[li]]);
+			// Intact line — not severed
+			out.push({ coords: [...origLines[li]], severed: false });
 			continue;
 		}
 		lineCuts.sort((a, b) => a.segIdx - b.segIdx);
 		const coords = origLines[li];
 
-		// Walk the coordinate array, splitting at each cut
-		let pending: Position[] = []; // current segment being built
-		let nextCoord = 0; // next original coord to consume
+		let pending: Position[] = [];
+		let nextCoord = 0;
 
 		for (const { segIdx, point, dir } of lineCuts) {
-			// Add original coords from nextCoord up to and including segIdx
 			while (nextCoord <= segIdx) {
 				pending.push(coords[nextCoord]);
 				nextCoord++;
 			}
-			// End the "before" half at GAP before the cut point
 			pending.push([point[0] - dir[0] * GAP, point[1] - dir[1] * GAP]);
-			if (pending.length >= 2) out.push(pending);
+			if (pending.length >= 2) out.push({ coords: pending, severed: true });
 
-			// Start the "after" half at GAP past the cut point
 			pending = [[point[0] + dir[0] * GAP, point[1] + dir[1] * GAP]];
-			// nextCoord is already at segIdx + 1, ready for the next stretch
 		}
 
-		// Tail: remaining coords after the last cut
 		while (nextCoord < coords.length) {
 			pending.push(coords[nextCoord]);
 			nextCoord++;
 		}
-		if (pending.length >= 2) out.push(pending);
+		if (pending.length >= 2) out.push({ coords: pending, severed: true });
 	}
 
-	return out.map((c) => ({
-		type: "Feature" as const,
-		properties: props,
-		geometry: { type: "LineString" as const, coordinates: c },
-	}));
+	return out
+		.filter((f) => f.coords.length >= 2)
+		.map((f) => ({
+			type: "Feature" as const,
+			properties: { ...props, severed: f.severed },
+			geometry: { type: "LineString" as const, coordinates: f.coords },
+		}));
 }
 
 export function GlobeView() {
@@ -259,35 +256,98 @@ export function GlobeView() {
 				cutsByCable.set(cut.cableId, arr);
 			}
 
+			// For cables with segment cuts, determine which side of each cut is isolated.
+			// Build a local graph of the cable's segments, remove cut edges, then check
+			// which connected components still reach a hub metro.
+			const isolatedSegIds = new Set<string>();
+			for (const [cableId] of cutsByCable) {
+				const cable = cables.find((cb) => cb.id === cableId);
+				if (!cable) continue;
+				// Build adjacency list for this cable's metros
+				const cutSegSet = new Set(
+					cuts
+						.filter((ct) => ct.type === "segment" && ct.cableId === cableId)
+						.map((ct) => ct.segmentIndex),
+				);
+				const adj = new Map<string, { metro: string; segIdx: number }[]>();
+				for (let i = 0; i < cable.segments.length; i++) {
+					if (cutSegSet.has(i)) continue; // skip cut edges
+					const seg = cable.segments[i];
+					const a = adj.get(seg.from) ?? [];
+					a.push({ metro: seg.to, segIdx: i });
+					adj.set(seg.from, a);
+					const b = adj.get(seg.to) ?? [];
+					b.push({ metro: seg.from, segIdx: i });
+					adj.set(seg.to, b);
+				}
+				// BFS from each hub metro on this cable to find reachable segments
+				const hubMetros = new Set(
+					cable.segments.flatMap((s) => [s.from, s.to]).filter((m) => metrosById.get(m)?.isHub),
+				);
+				const reachableSegs = new Set<number>();
+				const visited = new Set<string>();
+				for (const hub of hubMetros) {
+					if (visited.has(hub)) continue;
+					const queue = [hub];
+					visited.add(hub);
+					while (queue.length > 0) {
+						const m = queue.shift()!;
+						for (const { metro, segIdx } of adj.get(m) ?? []) {
+							reachableSegs.add(segIdx);
+							if (!visited.has(metro)) {
+								visited.add(metro);
+								queue.push(metro);
+							}
+						}
+					}
+				}
+				// Segments NOT reachable from any hub are isolated
+				for (let i = 0; i < cable.segments.length; i++) {
+					if (cutSegSet.has(i) || !reachableSegs.has(i)) {
+						isolatedSegIds.add(`${cableId}:${i}`);
+					}
+				}
+			}
+
 			const cableFeatures = cables.flatMap((c) => {
 				const baseProps = { ...(c.path.properties ?? {}), cableId: c.id, cable: c };
 
-				// If this cable has user-placed segment cuts, split the path visually
+				// User-placed segment cuts: split path, mark isolated fragments red
 				const cableCuts = cutsByCable.get(c.id);
 				if (cableCuts && cableCuts.length > 0) {
-					// Split features get severed=false; the gap + red dot handles the visual
-					return splitCablePath(
-						{ ...c.path, properties: { ...baseProps, severed: false } } as Feature<
-							LineString | MultiLineString
-						>,
+					const features = splitCablePath(
+						{ ...c.path, properties: baseProps } as Feature<LineString | MultiLineString>,
 						cableCuts,
 					);
+					// Refine: only fragments whose nearest segment is isolated stay red.
+					// For each fragment, find the closest logical segment midpoint to its center.
+					for (const f of features) {
+						const props = f.properties as Record<string, unknown> | null;
+						if (!props?.severed) continue;
+						const coords = (f.geometry as { coordinates: Position[] }).coordinates;
+						const mid = coords[Math.floor(coords.length / 2)];
+						let bestSeg = -1;
+						let bestDist = Number.MAX_VALUE;
+						for (let i = 0; i < c.segments.length; i++) {
+							const seg = c.segments[i];
+							const from = metrosById.get(seg.from);
+							const to = metrosById.get(seg.to);
+							if (!from || !to) continue;
+							const mx = (from.lng + to.lng) / 2;
+							const my = (from.lat + to.lat) / 2;
+							const d = (mid[0] - mx) ** 2 + (mid[1] - my) ** 2;
+							if (d < bestDist) {
+								bestDist = d;
+								bestSeg = i;
+							}
+						}
+						props.severed = isolatedSegIds.has(`${c.id}:${bestSeg}`);
+					}
+					return features;
 				}
 
-				// If this cable has affected segments (from scenarios), mark those red
+				// Scenario cuts: mark affected cables red
 				if (cutCableIds.has(c.id)) {
-					// Check if ALL segments are affected (common case) vs partial
-					const totalSegs = c.segments.length;
-					let affectedCount = 0;
-					for (let i = 0; i < totalSegs; i++) {
-						if (affectedSegIds.has(`${c.id}:${i}`)) affectedCount++;
-					}
-					if (affectedCount === totalSegs || affectedCount === 0) {
-						// Whole cable affected (or none matched) — color it all red
-						return [{ ...c.path, properties: { ...baseProps, severed: affectedCount > 0 } }];
-					}
-					// Partial: return original path unsplit but marked severed
-					// (We can't split by segment because path coords != segment topology)
 					return [{ ...c.path, properties: { ...baseProps, severed: true } }];
 				}
 
