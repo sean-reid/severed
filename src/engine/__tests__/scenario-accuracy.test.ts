@@ -27,6 +27,12 @@ let scenarios: Scenario[];
 let cablesById: Map<string, Cable>;
 let metrosById: Map<string, Metro>;
 
+function getScenario(id: string): Scenario {
+	const s = scenarios.find((sc) => sc.id === id);
+	if (!s) throw new Error(`Scenario "${id}" not found`);
+	return s;
+}
+
 beforeAll(() => {
 	cables = loadJson<Cable[]>("cables.json");
 	metros = loadJson<Metro[]>("metros.json");
@@ -127,7 +133,7 @@ function maxLossForCountry(result: ReturnType<typeof simulate>, countryCode: str
 describe("Red Sea Crisis (2024)", () => {
 	let result: ReturnType<typeof simulate>;
 	beforeAll(() => {
-		const scenario = scenarios.find((s) => s.id === "red-sea-crisis")!;
+		const scenario = getScenario("red-sea-crisis");
 		result = simulate(resolveScenarioCuts(scenario));
 	});
 
@@ -153,7 +159,7 @@ describe("Red Sea Crisis (2024)", () => {
 describe("West Africa Cuts (2024)", () => {
 	let result: ReturnType<typeof simulate>;
 	beforeAll(() => {
-		const scenario = scenarios.find((s) => s.id === "west-africa-2024")!;
+		const scenario = getScenario("west-africa-2024");
 		result = simulate(resolveScenarioCuts(scenario));
 	});
 
@@ -177,7 +183,7 @@ describe("West Africa Cuts (2024)", () => {
 describe("Baltic Sea Sabotage (2024)", () => {
 	let result: ReturnType<typeof simulate>;
 	beforeAll(() => {
-		const scenario = scenarios.find((s) => s.id === "baltic-sabotage")!;
+		const scenario = getScenario("baltic-sabotage");
 		result = simulate(resolveScenarioCuts(scenario));
 	});
 
@@ -198,7 +204,7 @@ describe("Baltic Sea Sabotage (2024)", () => {
 describe("Luzon Strait Earthquake (2006)", () => {
 	let result: ReturnType<typeof simulate>;
 	beforeAll(() => {
-		const scenario = scenarios.find((s) => s.id === "luzon-strait-earthquake")!;
+		const scenario = getScenario("luzon-strait-earthquake");
 		result = simulate(resolveScenarioCuts(scenario), scenario.historicalDate);
 	});
 
@@ -211,7 +217,7 @@ describe("Luzon Strait Earthquake (2006)", () => {
 describe("Mediterranean Cuts (2008)", () => {
 	let result: ReturnType<typeof simulate>;
 	beforeAll(() => {
-		const scenario = scenarios.find((s) => s.id === "mediterranean-2008")!;
+		const scenario = getScenario("mediterranean-2008");
 		result = simulate(resolveScenarioCuts(scenario), scenario.historicalDate);
 	});
 
@@ -228,7 +234,7 @@ describe("Mediterranean Cuts (2008)", () => {
 describe("Vietnam Cable Failures (2023)", () => {
 	let result: ReturnType<typeof simulate>;
 	beforeAll(() => {
-		const scenario = scenarios.find((s) => s.id === "vietnam-2023")!;
+		const scenario = getScenario("vietnam-2023");
 		result = simulate(resolveScenarioCuts(scenario));
 	});
 
@@ -245,7 +251,7 @@ describe("Vietnam Cable Failures (2023)", () => {
 describe("Tonga Eruption (2022)", () => {
 	let result: ReturnType<typeof simulate>;
 	beforeAll(() => {
-		const scenario = scenarios.find((s) => s.id === "tonga-2022")!;
+		const scenario = getScenario("tonga-2022");
 		result = simulate(resolveScenarioCuts(scenario));
 	});
 
@@ -273,7 +279,7 @@ describe("Tonga Eruption (2022)", () => {
 describe("East Africa Cuts (2024)", () => {
 	let result: ReturnType<typeof simulate>;
 	beforeAll(() => {
-		const scenario = scenarios.find((s) => s.id === "east-africa-2024")!;
+		const scenario = getScenario("east-africa-2024");
 		result = simulate(resolveScenarioCuts(scenario));
 	});
 
@@ -291,7 +297,7 @@ describe("East Africa Cuts (2024)", () => {
 describe("Egypt Landing Damage (2022)", () => {
 	let result: ReturnType<typeof simulate>;
 	beforeAll(() => {
-		const scenario = scenarios.find((s) => s.id === "egypt-2022")!;
+		const scenario = getScenario("egypt-2022");
 		result = simulate(resolveScenarioCuts(scenario));
 	});
 
@@ -307,7 +313,7 @@ describe("Egypt Landing Damage (2022)", () => {
 describe("Japan Tohoku Earthquake (2011)", () => {
 	let result: ReturnType<typeof simulate>;
 	beforeAll(() => {
-		const scenario = scenarios.find((s) => s.id === "japan-tohoku-2011")!;
+		const scenario = getScenario("japan-tohoku-2011");
 		result = simulate(resolveScenarioCuts(scenario), scenario.historicalDate);
 	});
 
@@ -325,10 +331,10 @@ describe("Japan Tohoku Earthquake (2011)", () => {
 
 describe("Cross-scenario consistency", () => {
 	it("more cuts produce more impact", () => {
-		const redSea = scenarios.find((s) => s.id === "red-sea-crisis")!;
+		const redSea = getScenario("red-sea-crisis");
 		const single = simulate(resolveScenarioCuts(redSea));
 
-		const westAfrica = scenarios.find((s) => s.id === "west-africa-2024")!;
+		const westAfrica = getScenario("west-africa-2024");
 		const combined = simulate([...resolveScenarioCuts(redSea), ...resolveScenarioCuts(westAfrica)]);
 
 		expect(combined.cablesAffected).toBeGreaterThanOrEqual(single.cablesAffected);

@@ -126,8 +126,8 @@ function splitCablePath(
 	for (let li = 0; li < origLines.length; li++) {
 		const lineCuts = cutsByLine.get(li);
 		if (!lineCuts) {
-			// Intact line — not severed
-			out.push({ coords: [...origLines[li]], severed: false });
+			// Intact line — inherits severed state from the cable (entire cable is broken)
+			out.push({ coords: [...origLines[li]], severed: true });
 			continue;
 		}
 		lineCuts.sort((a, b) => a.segIdx - b.segIdx);
@@ -544,6 +544,7 @@ export function GlobeView() {
 		cutMode,
 		addCut,
 		severedSegIds,
+		activeTerrestrialIds,
 	]);
 
 	const resetView = () => {
