@@ -6,9 +6,13 @@ Interactive submarine cable failure simulator. Cut cables on a globe, watch traf
 
 ## What it does
 
-Click a submarine cable or select a historical scenario (Red Sea 2024, Baltic Sea 2024, Luzon Strait 2006, etc.) to simulate a failure. The app computes which metros lose connectivity, how much bandwidth disappears, where traffic reroutes, and whether the network absorbs the cut.
+Select a historical scenario or enter Cut Mode to sever cables yourself. The app computes which metros lose connectivity, how much bandwidth disappears, where traffic reroutes, and whether the network absorbs the cut.
 
-Built on real data: 594 operational cables from TeleGeography (110 with verified/estimated capacity from primary sources), 930 metro nodes, 151 hand-researched terrestrial backbone edges, 92 hub metros, and a graph engine that runs in a Web Worker. Search across everything with `/`.
+**Cut Mode**: press C or tap the Cut Mode button, then click any cable. The cable splits at the click point with a visible gap. The entire broken cable turns muted red. Undo with Ctrl+Z or the Undo button. Cuts snap precisely to the cable path.
+
+**Scenarios**: 10 documented real-world events with exact cut locations, historical date filtering, and source links. The simulation uses only cables that existed at the time of each event.
+
+Built on real data: 594 operational cables from TeleGeography (110 with verified capacity from primary sources), 930 metro nodes, 151 hand-researched terrestrial backbone edges, 92 hub metros, and a graph engine that runs in a Web Worker.
 
 ## Quick start
 
@@ -31,8 +35,8 @@ pnpm data:build    # ~1 sec — clusters metros, estimates capacity, writes JSON
 ### Run tests
 
 ```bash
-pnpm test          # 16 validation tests against real-world cable cut events
-pnpm test:e2e      # 24 Puppeteer E2E tests across desktop + mobile viewports
+pnpm test          # 41 integration tests (simulation accuracy for all 10 scenarios)
+pnpm test:e2e      # 44 Puppeteer E2E tests across desktop + mobile viewports
 ```
 
 ## Data sources
@@ -40,20 +44,34 @@ pnpm test:e2e      # 24 Puppeteer E2E tests across desktop + mobile viewports
 | Data | Source | License |
 |------|--------|---------|
 | Cable routes & landing stations | [TeleGeography Submarine Cable Map](https://www.submarinecablemap.com/) | CC BY-SA |
-| Cable capacity | Estimated via RFS-year heuristic calibrated against real cables (see comments in `build-data.ts`) | — |
-| Terrestrial backbone edges | Hand-curated from industry publications (Lightwave, TelecomTV, Capacity Media, SubTel Forum), operator press releases, and network maps. 127 of 151 edges have source URLs. | — |
-| Chokepoint definitions | Hand-defined polygons from geographic research | — |
+| Cable capacity | 110 cables with verified/estimated capacity from press releases and industry sources. Remaining ~484 use an RFS-year heuristic (see `build-data.ts`). | -- |
+| Terrestrial backbone edges | Hand-curated from industry publications. 127 of 151 edges have source URLs. | -- |
+| Chokepoint definitions | Hand-defined polygons from geographic research | -- |
 
-Every capacity number has a confidence level (`verified`, `estimated`, `approximated`). Click "Sources" in the app for methodology, or click any cable or terrestrial link on the map to see its specific source and confidence.
+Every capacity number has a confidence level (`verified`, `estimated`, `approximated`). Click "About" in the app for methodology, or click any cable or terrestrial link on the map to see its specific source.
 
 ## How the simulation works
 
 1. Build a weighted graph: metros as nodes, cable segments + terrestrial links as edges weighted by capacity (Tbps)
-2. Compute baseline metrics: each metro's aggregate bandwidth to 92 global hub metros via bottleneck shortest paths
-3. On cut: remove edges that cross the cut location, recompute metrics, diff against baseline
-4. Report per-metro: bandwidth loss %, latency change, path diversity, rerouting paths
+2. Compute baseline metrics: each metro's aggregate bandwidth to 92 global hub metros via capacity-weighted bottleneck shortest paths
+3. On cut: remove edges at the cut location, recompute metrics, diff against baseline
+4. BFS from cut segments along each cable's topology to determine which portions are severed
+5. Report per-metro: bandwidth loss %, latency change, path diversity, rerouting paths
 
 Graph engine runs in a Web Worker. Full simulation completes in <200ms.
+
+### Visual hierarchy
+
+The map uses a three-layer visual system:
+
+| Visual | Color | Meaning |
+|--------|-------|---------|
+| Cut marker (red dot) | Bright red | Where the break is |
+| Severed cable | Muted red | Entire cable is broken |
+| Isolated metro | Magenta + large dot | Completely offline |
+| Severe loss metro | Orange | >50% bandwidth lost |
+| Degraded metro | Amber | >10% bandwidth lost |
+| Active terrestrial | Bright cyan | Absorbing rerouted traffic |
 
 ## Validation
 
@@ -62,19 +80,19 @@ The simulation is tested against 10 documented real-world cable cut events:
 | Event | Year | Key result | Sources |
 |-------|------|------------|---------|
 | Red Sea (Houthi) | 2024 | 3 cables cut (AAE-1, EIG, SEACOM), 25% Asia-Europe traffic disrupted | [Al Jazeera](https://www.aljazeera.com/news/2024/3/6/why-are-people-blaming-the-houthis-for-cutting-the-red-sea-cables), [Cloudflare](https://blog.cloudflare.com/east-african-internet-connectivity-again-impacted-by-submarine-cable-cuts/) |
-| Baltic Sea sabotage | 2024 | BCS + C-Lion1 cut, high redundancy — near-zero impact | [Wikipedia](https://en.wikipedia.org/wiki/2024_Baltic_Sea_submarine_cable_disruptions) |
+| Baltic Sea sabotage | 2024 | BCS + C-Lion1 cut, high redundancy -- near-zero impact | [Wikipedia](https://en.wikipedia.org/wiki/2024_Baltic_Sea_submarine_cable_disruptions) |
 | Mediterranean cuts | 2008 | SEA-ME-WE 4 + FLAG cut, Egypt -70%, India -60% | [Wikipedia](https://en.wikipedia.org/wiki/2008_submarine_cable_disruption) |
 | Taiwan earthquake | 2006 | 8-22 cable breaks in Luzon Strait, Asia-wide disruption | [Wikipedia](https://en.wikipedia.org/wiki/2006_Hengchun_earthquakes) |
-| Tonga eruption | 2022 | Tonga Cable destroyed, 5 weeks isolated | [Wikipedia](https://en.wikipedia.org/wiki/2022_Hunga_Tonga%E2%80%93Hunga_Ha%CA%BBapai_eruption_and_tsunami) |
+| Tonga eruption | 2022 | Tonga Cable + TDCE destroyed, 5 weeks isolated | [Wikipedia](https://en.wikipedia.org/wiki/2022_Hunga_Tonga%E2%80%93Hunga_Ha%CA%BBapai_eruption_and_tsunami) |
 | West Africa cuts | 2024 | WACS + MainOne + SAT-3 + ACE cut, 13 countries impacted | [Cloudflare](https://blog.cloudflare.com/undersea-cable-failures-cause-internet-disruptions-across-africa-march-14-2024/) |
-| East Africa cuts | 2024 | EASSy + Seacom cut near Durban, compounding Red Sea damage | [Cloudflare](https://blog.cloudflare.com/east-african-internet-connectivity-again-impacted-by-submarine-cable-cuts/) |
-| Egypt landing damage | 2022 | AAE-1 + SMW-5 cut at landing points | [Cloudflare](https://blog.cloudflare.com/aae-1-smw5-cable-cuts/) |
+| East Africa cuts | 2024 | EASSy + Seacom cut off Mozambique, compounding Red Sea damage | [Cloudflare](https://blog.cloudflare.com/east-african-internet-connectivity-again-impacted-by-submarine-cable-cuts/) |
+| Egypt landing damage | 2022 | AAE-1 cut at Abu Talat + SMW-5 cut at Zafarana (two locations) | [Cloudflare](https://blog.cloudflare.com/aae-1-smw5-cable-cuts/) |
 | Japan Tohoku earthquake | 2011 | 6+ cables cut, 22% trans-Pacific capacity lost | [SubmarineNetworks](https://www.submarinenetworks.com/en/nv/news/cables-cut-after-magnitude-89-earthquake-in-japan), [Lightwave](https://www.lightwaveonline.com/network-design/article/16660580/fiber-effect-of-japan-earthquake-still-sorting-out) |
-| Vietnam cable failures | 2023 | All 5 international cables degraded, -75% capacity | [The Register](https://www.theregister.com/2023/02/23/vietnam_submarine_cable_outages/), [The Register](https://www.theregister.com/2024/06/18/vietnam_internet_cables/) |
+| Vietnam cable failures | 2023 | 4 international cables degraded, -75% capacity | [The Register](https://www.theregister.com/2023/02/23/vietnam_submarine_cable_outages/), [The Register](https://www.theregister.com/2024/06/18/vietnam_internet_cables/) |
 
 ## Tech stack
 
-React 19, TypeScript, Vite, Deck.gl 9, MapLibre GL, Zustand, Tailwind CSS 4, D3, Vitest, Biome, pnpm.
+React 19, TypeScript, Vite, Deck.gl 9, MapLibre GL, Zustand, Tailwind CSS 4, D3, Vitest, Biome, Puppeteer, pnpm.
 
 CARTO Dark Matter basemap (free, no API key).
 
@@ -82,14 +100,14 @@ CARTO Dark Matter basemap (free, no API key).
 
 ```
 src/
-  components/     UI — globe, impact panel, sidebar, mobile scenario bar
-  engine/         Graph, pathfinding, simulation, Web Worker
+  components/     UI -- globe, impact panel, sidebar, mobile scenario bar, about panel
+  engine/         Graph, pathfinding, simulation (BFS + Dijkstra), Web Worker
   data/           Types, data loader
   state/          Zustand store
-  utils/          Geo math, color scales
+  utils/          Geo math, color scales, path projection
 scripts/          Data pipeline (fetch TeleGeography, build static JSON)
 public/data/      Pre-built static datasets (committed)
-e2e/              Puppeteer E2E tests (desktop + mobile viewports)
+e2e/              Puppeteer E2E tests (22 suites, desktop + mobile)
 ```
 
 ## License
