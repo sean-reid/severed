@@ -459,13 +459,13 @@ export function GlobeView() {
 			);
 		}
 
-		// Cut break markers — only for user-placed segment cuts (not scenario area cuts)
-		const allVisibleCuts = cuts.filter((c) => c.type === "segment");
-		if (allVisibleCuts.length > 0) {
+		// Cut markers — red dots at every cut with valid coordinates
+		const visibleCuts = cuts.filter((c) => c.lat !== 0 || c.lng !== 0);
+		if (visibleCuts.length > 0) {
 			result.push(
 				new ScatterplotLayer({
 					id: "cut-breaks",
-					data: allVisibleCuts,
+					data: visibleCuts,
 					getPosition: (d: CutLocation) => [d.lng, d.lat],
 					getRadius: 5,
 					radiusUnits: "pixels" as const,
