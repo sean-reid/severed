@@ -76,10 +76,7 @@ function resolveScenarioCuts(scenario: Scenario): CutLocation[] {
 						}
 						let dLng = Math.abs((cutLoc.cutLng ?? 0) - midLng);
 						if (dLng > 180) dLng = 360 - dLng;
-						const distDeg = Math.hypot(
-							(cutLoc.cutLat ?? 0) - midLat,
-							dLng,
-						);
+						const distDeg = Math.hypot((cutLoc.cutLat ?? 0) - midLat, dLng);
 						if (distDeg * 111 < cutRadius) {
 							segmentIds.push(`${cableId}:${i}`);
 						}
@@ -115,17 +112,11 @@ function simulate(cuts: CutLocation[], historicalDate?: string) {
 	return runSimulation(input);
 }
 
-function impactForMetro(
-	result: ReturnType<typeof simulate>,
-	metroId: string,
-) {
+function impactForMetro(result: ReturnType<typeof simulate>, metroId: string) {
 	return result.impacts.find((i) => i.metroId === metroId);
 }
 
-function maxLossForCountry(
-	result: ReturnType<typeof simulate>,
-	countryCode: string,
-): number {
+function maxLossForCountry(result: ReturnType<typeof simulate>, countryCode: string): number {
 	const impacts = result.impacts.filter((i) => i.countryCode === countryCode);
 	if (impacts.length === 0) return 0;
 	return Math.max(...impacts.map((i) => i.bandwidthLossPct));
@@ -263,9 +254,7 @@ describe("Tonga Eruption (2022)", () => {
 		const hasTongaCable = result.affectedEdgeIds.some((id: string) =>
 			id.startsWith("tonga-cable:"),
 		);
-		const hasTDCE = result.affectedEdgeIds.some((id: string) =>
-			id.startsWith("tonga-domestic"),
-		);
+		const hasTDCE = result.affectedEdgeIds.some((id: string) => id.startsWith("tonga-domestic"));
 		expect(hasTongaCable).toBe(true);
 		expect(hasTDCE).toBe(true);
 	});
@@ -340,10 +329,7 @@ describe("Cross-scenario consistency", () => {
 		const single = simulate(resolveScenarioCuts(redSea));
 
 		const westAfrica = scenarios.find((s) => s.id === "west-africa-2024")!;
-		const combined = simulate([
-			...resolveScenarioCuts(redSea),
-			...resolveScenarioCuts(westAfrica),
-		]);
+		const combined = simulate([...resolveScenarioCuts(redSea), ...resolveScenarioCuts(westAfrica)]);
 
 		expect(combined.cablesAffected).toBeGreaterThanOrEqual(single.cablesAffected);
 	});
