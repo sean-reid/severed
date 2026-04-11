@@ -27,6 +27,8 @@ export interface SimulationOutput {
 	metrosAffected: number;
 	cablesAffected: number;
 	affectedEdgeIds: string[];
+	/** All segments on cables that contain a cut — BFS from cut points along each cable's topology. */
+	severedEdgeIds: string[];
 }
 
 interface BaselineMetrics {
@@ -244,6 +246,7 @@ export function runSimulation(input: SimulationInput): SimulationOutput {
 			metrosAffected: 0,
 			cablesAffected: 0,
 			affectedEdgeIds: [],
+			severedEdgeIds: [],
 		};
 	}
 
@@ -296,14 +299,71 @@ export function runSimulation(input: SimulationInput): SimulationOutput {
 		}
 	}
 
+	// BFS from cut segments outward along each cable's own segment graph.
+	// A cut anywhere on a cable breaks the entire fiber, so all segments
+	// reachable from the cut through the cable's topology are "severed."
+	// For branching cables, only the branch containing the cut is marked.
+	const severedEdgeIds = new Set<string>(affectedEdgeIds);
+	const affectedCableIds = new Set<string>();
+	for (const edgeId of affectedEdgeIds) {
+		const cableId = edgeId.split(":")[0];
+		if (cableId !== "terr") affectedCableIds.add(cableId);
+	}
+
+	for (const cableId of affectedCableIds) {
+		const cable = activeCables.find((c) => c.id === cableId);
+		if (!cable) continue;
+
+		// Build adjacency along this cable's segments
+		const adj = new Map<string, { metro: string; segIdx: number }[]>();
+		for (let i = 0; i < cable.segments.length; i++) {
+			const seg = cable.segments[i];
+			const a = adj.get(seg.from) ?? [];
+			a.push({ metro: seg.to, segIdx: i });
+			adj.set(seg.from, a);
+			const b = adj.get(seg.to) ?? [];
+			b.push({ metro: seg.from, segIdx: i });
+			adj.set(seg.to, b);
+		}
+
+		// Seed BFS from metros on cut segments
+		const visited = new Set<string>();
+		const queue: string[] = [];
+		for (const edgeId of affectedEdgeIds) {
+			const [cId, idxStr] = edgeId.split(":");
+			if (cId !== cableId) continue;
+			const seg = cable.segments[Number(idxStr)];
+			if (!seg) continue;
+			if (!visited.has(seg.from)) {
+				visited.add(seg.from);
+				queue.push(seg.from);
+			}
+			if (!visited.has(seg.to)) {
+				visited.add(seg.to);
+				queue.push(seg.to);
+			}
+		}
+
+		// Flood-fill along all segments of this cable
+		while (queue.length > 0) {
+			const m = queue.shift();
+			if (!m) break;
+			for (const { metro, segIdx } of adj.get(m) ?? []) {
+				severedEdgeIds.add(`${cableId}:${segIdx}`);
+				if (!visited.has(metro)) {
+					visited.add(metro);
+					queue.push(metro);
+				}
+			}
+		}
+	}
+
 	// Compute per-metro impacts
 	let totalCapacityRemoved = 0;
-	const affectedCableIds = new Set<string>();
 	for (const edgeId of affectedEdgeIds) {
 		const edge = baselineGraph.edges.find((e) => e.id === edgeId);
 		if (edge) {
 			totalCapacityRemoved += edge.capacityTbps;
-			if (edge.cableId) affectedCableIds.add(edge.cableId);
 		}
 	}
 
@@ -360,5 +420,6 @@ export function runSimulation(input: SimulationInput): SimulationOutput {
 		metrosAffected,
 		cablesAffected: affectedCableIds.size,
 		affectedEdgeIds: [...affectedEdgeIds],
+		severedEdgeIds: [...severedEdgeIds],
 	};
 }

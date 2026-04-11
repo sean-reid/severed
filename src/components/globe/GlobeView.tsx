@@ -217,14 +217,16 @@ export function GlobeView() {
 		}
 	}, [flyTo, fitBounds, clearFlyTo]);
 
-	// Resolved affected segment IDs (e.g., "2africa:5") — from simulation + direct cuts
-	const affectedSegIds = useMemo(() => {
+	// Severed segment IDs — BFS-expanded from simulation (includes all segments
+	// on cables that contain a cut, traced along the cable's own topology)
+	const severedSegIds = useMemo(() => {
 		const ids = new Set<string>();
-		if (simulation?.affectedEdgeIds) {
-			for (const edgeId of simulation.affectedEdgeIds) {
+		if (simulation?.severedEdgeIds) {
+			for (const edgeId of simulation.severedEdgeIds) {
 				if (!edgeId.startsWith("terr")) ids.add(edgeId);
 			}
 		}
+		// Also include pre-resolved segments from cuts (before simulation runs)
 		for (const cut of cuts) {
 			for (const segId of cut.affectedSegmentIds) {
 				if (!segId.startsWith("terr")) ids.add(segId);
@@ -233,14 +235,14 @@ export function GlobeView() {
 		return ids;
 	}, [simulation, cuts]);
 
-	// Cable IDs that have at least one affected segment (for split path logic)
+	// Cable IDs that have at least one severed segment
 	const cutCableIds = useMemo(() => {
 		const ids = new Set<string>();
-		for (const segId of affectedSegIds) {
+		for (const segId of severedSegIds) {
 			ids.add(segId.split(":")[0]);
 		}
 		return ids;
-	}, [affectedSegIds]);
+	}, [severedSegIds]);
 
 	const layers = useMemo((): Layer[] => {
 		const result: Layer[] = [];
@@ -256,124 +258,24 @@ export function GlobeView() {
 				cutsByCable.set(cut.cableId, arr);
 			}
 
-			// For every cable with affected segments (user cuts OR scenario cuts),
-			// trace the cable's segment graph to find which portions are isolated.
-			// Remove affected edges, BFS from hub metros, mark unreachable segments.
-			const isolatedSegIds = new Set<string>();
-			for (const cableId of cutCableIds) {
-				const cable = cables.find((cb) => cb.id === cableId);
-				if (!cable) continue;
-
-				// Collect all affected segment indices for this cable
-				const cutSegSet = new Set<number>();
-				for (const segId of affectedSegIds) {
-					const [cId, idx] = segId.split(":");
-					if (cId === cableId) cutSegSet.add(Number(idx));
-				}
-
-				// Build adjacency list excluding cut segments
-				const adj = new Map<string, { metro: string; segIdx: number }[]>();
-				for (let i = 0; i < cable.segments.length; i++) {
-					if (cutSegSet.has(i)) continue;
-					const seg = cable.segments[i];
-					const a = adj.get(seg.from) ?? [];
-					a.push({ metro: seg.to, segIdx: i });
-					adj.set(seg.from, a);
-					const b = adj.get(seg.to) ?? [];
-					b.push({ metro: seg.from, segIdx: i });
-					adj.set(seg.to, b);
-				}
-
-				// BFS from hub metros to find reachable segments
-				const hubMetros = new Set(
-					cable.segments.flatMap((s) => [s.from, s.to]).filter((m) => metrosById.get(m)?.isHub),
-				);
-				const reachableSegs = new Set<number>();
-				const visited = new Set<string>();
-				for (const hub of hubMetros) {
-					if (visited.has(hub)) continue;
-					const queue = [hub];
-					visited.add(hub);
-					while (queue.length > 0) {
-						const m = queue.shift();
-						if (!m) break;
-						for (const { metro, segIdx } of adj.get(m) ?? []) {
-							reachableSegs.add(segIdx);
-							if (!visited.has(metro)) {
-								visited.add(metro);
-								queue.push(metro);
-							}
-						}
-					}
-				}
-
-				// Cut segments + segments unreachable from hubs = isolated
-				for (let i = 0; i < cable.segments.length; i++) {
-					if (cutSegSet.has(i) || !reachableSegs.has(i)) {
-						isolatedSegIds.add(`${cableId}:${i}`);
-					}
-				}
-			}
-
-			// Helper: for a feature, find which logical segment its midpoint is closest to
-			const nearestSegment = (c: Cable, coords: Position[]): number => {
-				const mid = coords[Math.floor(coords.length / 2)];
-				let bestSeg = 0;
-				let bestDist = Number.MAX_VALUE;
-				for (let i = 0; i < c.segments.length; i++) {
-					const seg = c.segments[i];
-					const from = metrosById.get(seg.from);
-					const to = metrosById.get(seg.to);
-					if (!from || !to) continue;
-					const d =
-						(mid[0] - (from.lng + to.lng) / 2) ** 2 + (mid[1] - (from.lat + to.lat) / 2) ** 2;
-					if (d < bestDist) {
-						bestDist = d;
-						bestSeg = i;
-					}
-				}
-				return bestSeg;
-			};
-
+			// Rendering: cables in cutCableIds are severed (the simulation's BFS
+			// already traced connectivity along each cable's topology).
 			const cableFeatures = cables.flatMap((c) => {
 				const baseProps = { ...(c.path.properties ?? {}), cableId: c.id, cable: c };
+				const isSevered = cutCableIds.has(c.id);
 
-				// User segment cuts: split path visually, mark isolated fragments red
+				// User segment cuts: split path visually at the break point
 				const cableCuts = cutsByCable.get(c.id);
 				if (cableCuts && cableCuts.length > 0) {
-					const features = splitCablePath(
-						{ ...c.path, properties: baseProps } as Feature<LineString | MultiLineString>,
+					return splitCablePath(
+						{ ...c.path, properties: { ...baseProps, severed: true } } as Feature<
+							LineString | MultiLineString
+						>,
 						cableCuts,
 					);
-					for (const f of features) {
-						const props = f.properties as Record<string, unknown> | null;
-						if (!props?.severed) continue;
-						const coords = (f.geometry as { coordinates: Position[] }).coordinates;
-						props.severed = isolatedSegIds.has(`${c.id}:${nearestSegment(c, coords)}`);
-					}
-					return features;
 				}
 
-				// Scenario/chokepoint cuts: no visual split, but mark isolated segments
-				if (cutCableIds.has(c.id)) {
-					const geom = c.path.geometry;
-					const lines: Position[][] =
-						geom.type === "MultiLineString" ? geom.coordinates : [geom.coordinates];
-					// Render each line of the MultiLineString separately so branches
-					// can be colored independently
-					return lines
-						.filter((l) => l.length >= 2)
-						.map((coords) => ({
-							type: "Feature" as const,
-							properties: {
-								...baseProps,
-								severed: isolatedSegIds.has(`${c.id}:${nearestSegment(c, coords)}`),
-							},
-							geometry: { type: "LineString" as const, coordinates: coords },
-						}));
-				}
-
-				return [{ ...c.path, properties: { ...baseProps, severed: false } }];
+				return [{ ...c.path, properties: { ...baseProps, severed: isSevered } }];
 			});
 
 			result.push(
@@ -445,8 +347,8 @@ export function GlobeView() {
 						hoverCable(info.object?.properties.cable.id ?? null);
 					},
 					updateTriggers: {
-						getLineColor: [affectedSegIds, hoveredCableId, selectedCableId],
-						getData: [cuts, affectedSegIds],
+						getLineColor: [severedSegIds, hoveredCableId, selectedCableId],
+						getData: [cuts, severedSegIds],
 					},
 				}),
 			);
@@ -602,7 +504,7 @@ export function GlobeView() {
 		flyToBounds,
 		cutMode,
 		addCut,
-		affectedSegIds,
+		severedSegIds,
 	]);
 
 	const resetView = () => {

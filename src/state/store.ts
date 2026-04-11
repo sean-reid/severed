@@ -18,6 +18,7 @@ interface SimulationState {
 	metrosAffected: number;
 	cablesAffected: number;
 	affectedEdgeIds: string[];
+	severedEdgeIds: string[];
 }
 
 interface StoreState {
