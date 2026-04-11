@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "../../state/store";
 
 export function DataSourcesPanel() {
@@ -9,6 +9,15 @@ export function DataSourcesPanel() {
 	const selectedTerrestrialId = useStore((s) => s.selectedTerrestrialId);
 	const sheetDragging = useStore((s) => s.mobileSheetDragging);
 	const hasSelection = selectedCableId || selectedMetroId || selectedTerrestrialId;
+
+	useEffect(() => {
+		if (!open) return;
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === "Escape") setOpen(false);
+		};
+		window.addEventListener("keydown", onKey);
+		return () => window.removeEventListener("keydown", onKey);
+	}, [open]);
 
 	return (
 		<>
@@ -39,22 +48,16 @@ export function DataSourcesPanel() {
 
 			{open && (
 				<div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-					{/* Backdrop */}
 					<button
 						type="button"
 						className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-default"
 						onClick={() => setOpen(false)}
-						onKeyDown={(e) => {
-							if (e.key === "Enter") setOpen(false);
-						}}
 					/>
 
 					{/* Panel */}
 					<div className="relative w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-2xl bg-surface border border-border shadow-2xl">
 						<div className="sticky top-0 flex items-center justify-between px-6 py-4 bg-surface border-b border-border">
-							<h2 className="font-data text-sm font-semibold tracking-wider">
-								ABOUT
-							</h2>
+							<h2 className="font-data text-sm font-semibold tracking-wider">ABOUT</h2>
 							<button
 								type="button"
 								onClick={() => setOpen(false)}
