@@ -256,22 +256,25 @@ export function GlobeView() {
 				cutsByCable.set(cut.cableId, arr);
 			}
 
-			// For cables with segment cuts, determine which side of each cut is isolated.
-			// Build a local graph of the cable's segments, remove cut edges, then check
-			// which connected components still reach a hub metro.
+			// For every cable with affected segments (user cuts OR scenario cuts),
+			// trace the cable's segment graph to find which portions are isolated.
+			// Remove affected edges, BFS from hub metros, mark unreachable segments.
 			const isolatedSegIds = new Set<string>();
-			for (const [cableId] of cutsByCable) {
+			for (const cableId of cutCableIds) {
 				const cable = cables.find((cb) => cb.id === cableId);
 				if (!cable) continue;
-				// Build adjacency list for this cable's metros
-				const cutSegSet = new Set(
-					cuts
-						.filter((ct) => ct.type === "segment" && ct.cableId === cableId)
-						.map((ct) => ct.segmentIndex),
-				);
+
+				// Collect all affected segment indices for this cable
+				const cutSegSet = new Set<number>();
+				for (const segId of affectedSegIds) {
+					const [cId, idx] = segId.split(":");
+					if (cId === cableId) cutSegSet.add(Number(idx));
+				}
+
+				// Build adjacency list excluding cut segments
 				const adj = new Map<string, { metro: string; segIdx: number }[]>();
 				for (let i = 0; i < cable.segments.length; i++) {
-					if (cutSegSet.has(i)) continue; // skip cut edges
+					if (cutSegSet.has(i)) continue;
 					const seg = cable.segments[i];
 					const a = adj.get(seg.from) ?? [];
 					a.push({ metro: seg.to, segIdx: i });
@@ -280,7 +283,8 @@ export function GlobeView() {
 					b.push({ metro: seg.from, segIdx: i });
 					adj.set(seg.to, b);
 				}
-				// BFS from each hub metro on this cable to find reachable segments
+
+				// BFS from hub metros to find reachable segments
 				const hubMetros = new Set(
 					cable.segments.flatMap((s) => [s.from, s.to]).filter((m) => metrosById.get(m)?.isHub),
 				);
@@ -291,7 +295,8 @@ export function GlobeView() {
 					const queue = [hub];
 					visited.add(hub);
 					while (queue.length > 0) {
-						const m = queue.shift()!;
+						const m = queue.shift();
+						if (!m) break;
 						for (const { metro, segIdx } of adj.get(m) ?? []) {
 							reachableSegs.add(segIdx);
 							if (!visited.has(metro)) {
@@ -301,7 +306,8 @@ export function GlobeView() {
 						}
 					}
 				}
-				// Segments NOT reachable from any hub are isolated
+
+				// Cut segments + segments unreachable from hubs = isolated
 				for (let i = 0; i < cable.segments.length; i++) {
 					if (cutSegSet.has(i) || !reachableSegs.has(i)) {
 						isolatedSegIds.add(`${cableId}:${i}`);
@@ -309,46 +315,62 @@ export function GlobeView() {
 				}
 			}
 
+			// Helper: for a feature, find which logical segment its midpoint is closest to
+			const nearestSegment = (c: Cable, coords: Position[]): number => {
+				const mid = coords[Math.floor(coords.length / 2)];
+				let bestSeg = 0;
+				let bestDist = Number.MAX_VALUE;
+				for (let i = 0; i < c.segments.length; i++) {
+					const seg = c.segments[i];
+					const from = metrosById.get(seg.from);
+					const to = metrosById.get(seg.to);
+					if (!from || !to) continue;
+					const d =
+						(mid[0] - (from.lng + to.lng) / 2) ** 2 + (mid[1] - (from.lat + to.lat) / 2) ** 2;
+					if (d < bestDist) {
+						bestDist = d;
+						bestSeg = i;
+					}
+				}
+				return bestSeg;
+			};
+
 			const cableFeatures = cables.flatMap((c) => {
 				const baseProps = { ...(c.path.properties ?? {}), cableId: c.id, cable: c };
 
-				// User-placed segment cuts: split path, mark isolated fragments red
+				// User segment cuts: split path visually, mark isolated fragments red
 				const cableCuts = cutsByCable.get(c.id);
 				if (cableCuts && cableCuts.length > 0) {
 					const features = splitCablePath(
 						{ ...c.path, properties: baseProps } as Feature<LineString | MultiLineString>,
 						cableCuts,
 					);
-					// Refine: only fragments whose nearest segment is isolated stay red.
-					// For each fragment, find the closest logical segment midpoint to its center.
 					for (const f of features) {
 						const props = f.properties as Record<string, unknown> | null;
 						if (!props?.severed) continue;
 						const coords = (f.geometry as { coordinates: Position[] }).coordinates;
-						const mid = coords[Math.floor(coords.length / 2)];
-						let bestSeg = -1;
-						let bestDist = Number.MAX_VALUE;
-						for (let i = 0; i < c.segments.length; i++) {
-							const seg = c.segments[i];
-							const from = metrosById.get(seg.from);
-							const to = metrosById.get(seg.to);
-							if (!from || !to) continue;
-							const mx = (from.lng + to.lng) / 2;
-							const my = (from.lat + to.lat) / 2;
-							const d = (mid[0] - mx) ** 2 + (mid[1] - my) ** 2;
-							if (d < bestDist) {
-								bestDist = d;
-								bestSeg = i;
-							}
-						}
-						props.severed = isolatedSegIds.has(`${c.id}:${bestSeg}`);
+						props.severed = isolatedSegIds.has(`${c.id}:${nearestSegment(c, coords)}`);
 					}
 					return features;
 				}
 
-				// Scenario cuts: mark affected cables red
+				// Scenario/chokepoint cuts: no visual split, but mark isolated segments
 				if (cutCableIds.has(c.id)) {
-					return [{ ...c.path, properties: { ...baseProps, severed: true } }];
+					const geom = c.path.geometry;
+					const lines: Position[][] =
+						geom.type === "MultiLineString" ? geom.coordinates : [geom.coordinates];
+					// Render each line of the MultiLineString separately so branches
+					// can be colored independently
+					return lines
+						.filter((l) => l.length >= 2)
+						.map((coords) => ({
+							type: "Feature" as const,
+							properties: {
+								...baseProps,
+								severed: isolatedSegIds.has(`${c.id}:${nearestSegment(c, coords)}`),
+							},
+							geometry: { type: "LineString" as const, coordinates: coords },
+						}));
 				}
 
 				return [{ ...c.path, properties: { ...baseProps, severed: false } }];
