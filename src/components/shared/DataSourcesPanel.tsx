@@ -188,7 +188,7 @@ export function DataSourcesPanel() {
 
 							<section className="pt-2 border-t border-border/50 flex flex-col gap-2">
 								<a
-									href="https://sean-reid.github.io/blog/severed.html"
+									href="https://seanre.id/blog/severed.html"
 									target="_blank"
 									rel="noopener noreferrer"
 									className="inline-flex items-center gap-1.5 text-xs text-cable-high hover:text-text-primary transition-colors"
@@ -224,7 +224,7 @@ export function DataSourcesPanel() {
 								<p className="text-[10px] text-text-secondary/40 pt-2">
 									Built by{" "}
 									<a
-										href="https://sean-reid.github.io"
+										href="https://seanre.id"
 										target="_blank"
 										rel="noopener noreferrer"
 										className="hover:text-text-secondary transition-colors"
